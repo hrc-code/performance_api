@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_12lym4h" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.19.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.20.0">
+  <bpmn:process id="Process_0scky72" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="StartEvent_1" name="begin">
+      <bpmn:outgoing>Flow_1v6wp8j</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_1cttrce" name="over">
+      <bpmn:incoming>Flow_05hluio</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_0swfc1y" name="back_score" camunda:assignee="${as}">
+      <bpmn:incoming>Flow_1v6wp8j</bpmn:incoming>
+      <bpmn:outgoing>Flow_1jve7v8</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics camunda:collection="ASList" camunda:elementVariable="as">
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${nrOfInstances == nrOfCompletedInstances}</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_043lj72" name="back_third_score" camunda:assignee="${Assessor}">
+      <bpmn:incoming>Flow_1jve7v8</bpmn:incoming>
+      <bpmn:outgoing>Flow_1afoyj7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1v6wp8j" sourceRef="StartEvent_1" targetRef="Activity_0swfc1y" />
+    <bpmn:sequenceFlow id="Flow_1jve7v8" sourceRef="Activity_0swfc1y" targetRef="Activity_043lj72" />
+    <bpmn:sequenceFlow id="Flow_1afoyj7" sourceRef="Activity_043lj72" targetRef="Activity_1ralsvo" />
+    <bpmn:sequenceFlow id="Flow_05hluio" sourceRef="Activity_1ralsvo" targetRef="Event_1cttrce" />
+    <bpmn:userTask id="Activity_1ralsvo" name="back_second_score" camunda:assignee="${Assessor}">
+      <bpmn:incoming>Flow_1afoyj7</bpmn:incoming>
+      <bpmn:outgoing>Flow_05hluio</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0scky72">
+      <bpmndi:BPMNShape id="BPMNShape_0qpclei" bpmnElement="StartEvent_1">
+        <dc:Bounds x="162" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="167" y="145" width="28" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1cttrce_di" bpmnElement="Event_1cttrce">
+        <dc:Bounds x="682" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="689" y="145" width="23" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1cu0frh_di" bpmnElement="Activity_0swfc1y">
+        <dc:Bounds x="263" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0913oqq_di" bpmnElement="Activity_043lj72">
+        <dc:Bounds x="400" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13ixtpq_di" bpmnElement="Activity_1ralsvo">
+        <dc:Bounds x="540" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1v6wp8j_di" bpmnElement="Flow_1v6wp8j">
+        <di:waypoint x="198" y="120" />
+        <di:waypoint x="263" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1jve7v8_di" bpmnElement="Flow_1jve7v8">
+        <di:waypoint x="363" y="120" />
+        <di:waypoint x="400" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1afoyj7_di" bpmnElement="Flow_1afoyj7">
+        <di:waypoint x="500" y="120" />
+        <di:waypoint x="540" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05hluio_di" bpmnElement="Flow_05hluio">
+        <di:waypoint x="640" y="120" />
+        <di:waypoint x="682" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

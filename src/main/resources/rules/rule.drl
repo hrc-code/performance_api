@@ -1,0 +1,25 @@
+package resources.rules
+import com.performance.entity.Order
+
+rule "rule1"
+when
+	 $order: Order(inNum >=100.0)
+then
+$order.setOutNum(1.0);
+end
+
+rule "rule2"
+when
+	 $order: Order(inNum <100.0&& inNum>=90.0)
+then
+$order.setOutNum(0.9);
+end
+
+rule "rule3"
+when
+	 $order: Order(inNum <100.0&& inNum>=80.0)
+then
+$order.setOutNum(0.8);
+end
+ 
+ 
