@@ -1,5 +1,6 @@
 package com.example.workflow.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 @Data
@@ -7,6 +8,7 @@ public class DeptFormDto {
     /**
      * 父部门id
      */
+    @JsonFormat(shape =JsonFormat.Shape.STRING )
     private Long parentId;
     /**
      * 父部门等级
