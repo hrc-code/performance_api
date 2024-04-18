@@ -66,6 +66,7 @@ public class EmpPieceController {
         Page<EmpPieceView> pageInfo=new Page<EmpPieceView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpPieceView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByAsc(EmpPieceView::getEmpId)
+                .eq(EmpPieceView::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -87,6 +88,7 @@ public class EmpPieceController {
         queryWrapper.like(EmpPieceView::getEmpId,empId)
                 .like(EmpPieceView::getEmpName,empName)
                 .orderByAsc(EmpPieceView::getEmpId)
+                .eq(EmpPieceView::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -106,6 +108,7 @@ public class EmpPieceController {
         Page<EmpPieceView> pageInfo=new Page<EmpPieceView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpPieceView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByAsc(EmpPieceView::getEmpId)
+                .eq(EmpPieceView::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
         EmpPieceViewService.page(pageInfo,queryWrapper);
@@ -124,12 +127,13 @@ public class EmpPieceController {
 
         Page<EmpPieceView> pageInfo=new Page<EmpPieceView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpPieceView> queryWrapper=new LambdaQueryWrapper<>();
-        if(beginTime.equals("")){
+        if(beginTime.isEmpty()){
             LocalDate today = LocalDate.now();
             LocalDateTime beginDay = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
 
             queryWrapper.like(EmpPieceView::getEmpId,empId)
                     .like(EmpPieceView::getEmpName,empName)
+                    .eq(EmpPieceView::getState,1)
                     .orderByAsc(EmpPieceView::getEmpId)
                     .apply(StringUtils.checkValNotNull(beginDay),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
@@ -141,6 +145,7 @@ public class EmpPieceController {
             queryWrapper.like(EmpPieceView::getEmpId,empId)
                     .like(EmpPieceView::getEmpName,empName)
                     .orderByAsc(EmpPieceView::getEmpId)
+                    .eq(EmpPieceView::getState,1)
                     .apply(StringUtils.checkValNotNull(beginDay),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay)
                     .apply(StringUtils.checkValNotNull(endDay),
@@ -260,7 +265,7 @@ public class EmpPieceController {
 
     @PostMapping("/reDelete")
     private R reAdd(@RequestBody EmpPiece one){
-        one.setState(new Short("0"));
+        one.setState(Short.parseShort("0"));
         EmpPieceService.updateById(one);
 
         EmpPieceService.reChange(one.getId(),one.getEmpId());
@@ -282,7 +287,25 @@ public class EmpPieceController {
         return R.success(empPieces);
     }
 
-    public void updateFlow(Long empId){
+    @GetMapping("/Search")
+    public R<Page> Serach(@RequestParam("page") String page
+            , @RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String workOrder
+            ,@RequestParam(defaultValue = "") String name
+            ,@RequestParam(defaultValue = "") String empName){
 
+        Page<EmpPieceView> pageInfo=new Page<EmpPieceView>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<EmpPieceView> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.like(EmpPieceView::getWorkOrder,workOrder)
+                .like(EmpPieceView::getName,name)
+                .like(EmpPieceView::getEmpName,empName)
+                .orderByAsc(EmpPieceView::getEmpId)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        EmpPieceViewService.page(pageInfo,queryWrapper);
+
+        return R.success(pageInfo);
     }
 }
