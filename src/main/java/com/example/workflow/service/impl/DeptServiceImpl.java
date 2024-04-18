@@ -341,6 +341,11 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
             if (!CollectionUtils.isEmpty(deleteDeptIdSet)) {
                 wrapper.in(Position::getDeptId, deleteDeptIdSet);
                 positionService.remove(wrapper);
+
+                //在部门继承表中删除该部门的继承关系
+                LambdaQueryWrapper<DeptHierarchy> wrapper1 = new LambdaQueryWrapper<>();
+                wrapper1.in(DeptHierarchy::getChildId,deleteDeptIdSet);
+                deptHierarchyService.remove(wrapper1);
             }
             return removed;
         }
