@@ -5,12 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.PositionScore;
-import com.example.workflow.entity.PositionScoreView;
-import com.example.workflow.entity.ScoreAssessors;
-import com.example.workflow.entity.ScoreContactAssessors;
-import com.example.workflow.entity.ScoreRule;
-import com.example.workflow.entity.ScoreRuleForm;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.PositionScoreMapper;
 import com.example.workflow.mapper.PositionScoreViewMapper;
 import com.example.workflow.mapper.ScoreContactAssessorsMapper;
@@ -302,6 +297,40 @@ public class ScoreRuleController {
         LambdaQueryWrapper<ScoreRule> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.apply(StringUtils.checkValNotNull(beginTime),
                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
+        ScoreRuleService.page(pageInfo,queryWrapper);
+
+        return R.success(pageInfo);
+    }
+
+    @GetMapping("/pastSearch")
+    public R<Page> pastPage(@RequestParam("page") String page
+            ,@RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String target
+            ,@RequestParam(defaultValue = "") String beginTime
+            ,@RequestParam(defaultValue = "") String endTime){
+
+        Page<ScoreRule> pageInfo=new Page<ScoreRule>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<ScoreRule> queryWrapper=new LambdaQueryWrapper<>();
+        if(beginTime.equals("")){
+            LocalDate today = LocalDate.now();
+            LocalDateTime beginDay = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+
+            queryWrapper.like(ScoreRule::getTarget,target)
+                    .orderByAsc(ScoreRule::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
+        }
+        else {
+            LocalDateTime beginDay = LocalDateTime.of(LocalDate.parse(beginTime), LocalTime.MIN);
+            LocalDateTime endDay = LocalDateTime.of(LocalDate.parse(endTime), LocalTime.MAX);
+
+            queryWrapper.like(ScoreRule::getTarget,target)
+                    .orderByAsc(ScoreRule::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay)
+                    .apply(StringUtils.checkValNotNull(endDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endDay);
+        }
         ScoreRuleService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);

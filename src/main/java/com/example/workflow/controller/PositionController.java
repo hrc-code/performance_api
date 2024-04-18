@@ -131,8 +131,8 @@ public class PositionController {
     }
 
 
-    @PostMapping("/delete")
-    private R delete(@RequestBody Position form){
+    @PostMapping("/deleteOne")
+    private R deleteOne(@RequestBody Position form){
         PositionMapper.deleteById(form);
 
         LambdaQueryWrapper<PositionScore> queryWrapper1=new LambdaQueryWrapper<>();
