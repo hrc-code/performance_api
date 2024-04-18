@@ -187,7 +187,7 @@ public class EmpScoreController {
 
         Page<EmpScoreView> pageInfo=new Page<EmpScoreView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpScoreView> queryWrapper=new LambdaQueryWrapper<>();
-        if(beginTime.equals("")){
+        if(beginTime.isEmpty()){
             LocalDate today = LocalDate.now();
             LocalDateTime beginDay = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
 
@@ -195,7 +195,7 @@ public class EmpScoreController {
                     .like(EmpScoreView::getEmpName,empName)
                     .orderByAsc(EmpScoreView::getEmpId)
                     .apply(StringUtils.checkValNotNull(beginDay),
-                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay);
         }
         else {
             LocalDateTime beginDay = LocalDateTime.of(LocalDate.parse(beginTime), LocalTime.MIN);

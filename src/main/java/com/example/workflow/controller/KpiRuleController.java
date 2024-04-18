@@ -5,12 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.KpiPercent;
-import com.example.workflow.entity.KpiRule;
-import com.example.workflow.entity.KpiRuleForm;
-import com.example.workflow.entity.KpiRulePercent;
-import com.example.workflow.entity.PositionKpi;
-import com.example.workflow.entity.PositionKpiView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.KpiRuleMapper;
 import com.example.workflow.mapper.PositionKpiMapper;
 import com.example.workflow.mapper.PositionKpiViewMapper;
@@ -291,6 +286,41 @@ public class KpiRuleController {
         LambdaQueryWrapper<KpiRulePercent> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.apply(StringUtils.checkValNotNull(beginTime),
                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
+        KpiRulePercentService.page(pageInfo,queryWrapper);
+
+        return R.success(pageInfo);
+    }
+
+    @GetMapping("/pastSearch")
+    public R<Page> pastPage(@RequestParam("page") String page
+            ,@RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String name
+            ,@RequestParam(defaultValue = "") String beginTime
+            ,@RequestParam(defaultValue = "") String endTime){
+
+        Page<KpiRulePercent> pageInfo=new Page<KpiRulePercent>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<KpiRulePercent> queryWrapper=new LambdaQueryWrapper<>();
+
+        if(beginTime.isEmpty()){
+            LocalDate today = LocalDate.now();
+            LocalDateTime beginDay = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+
+            queryWrapper.like(KpiRulePercent::getName,name)
+                    .orderByAsc(KpiRulePercent::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay);
+        }
+        else {
+            LocalDateTime beginDay = LocalDateTime.of(LocalDate.parse(beginTime), LocalTime.MIN);
+            LocalDateTime endDay = LocalDateTime.of(LocalDate.parse(endTime), LocalTime.MAX);
+
+            queryWrapper.like(KpiRulePercent::getName,name)
+                    .orderByAsc(KpiRulePercent::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay)
+                    .apply(StringUtils.checkValNotNull(endDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endDay);
+        }
         KpiRulePercentService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);

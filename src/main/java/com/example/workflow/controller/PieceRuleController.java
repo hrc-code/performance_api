@@ -8,6 +8,7 @@ import com.example.workflow.common.R;
 import com.example.workflow.entity.PieceRule;
 import com.example.workflow.entity.PositionPiece;
 import com.example.workflow.entity.PositionPieceView;
+import com.example.workflow.entity.ScoreRule;
 import com.example.workflow.mapper.PieceRuleMapper;
 import com.example.workflow.mapper.PositionPieceMapper;
 import com.example.workflow.mapper.PositionPieceViewMapper;
@@ -240,6 +241,41 @@ public class PieceRuleController {
         LambdaQueryWrapper<PieceRule> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.apply(StringUtils.checkValNotNull(beginTime),
                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
+        PieceRuleService.page(pageInfo,queryWrapper);
+
+        return R.success(pageInfo);
+    }
+
+    @GetMapping("/pastSearch")
+    public R<Page> pastPage(@RequestParam("page") String page
+            ,@RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String name
+            ,@RequestParam(defaultValue = "") String beginTime
+            ,@RequestParam(defaultValue = "") String endTime){
+
+        Page<PieceRule> pageInfo=new Page<PieceRule>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<PieceRule> queryWrapper=new LambdaQueryWrapper<>();
+
+        if(beginTime.isEmpty()){
+            LocalDate today = LocalDate.now();
+            LocalDateTime beginDay = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+
+            queryWrapper.like(PieceRule::getName,name)
+                    .orderByAsc(PieceRule::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay);
+        }
+        else {
+            LocalDateTime beginDay = LocalDateTime.of(LocalDate.parse(beginTime), LocalTime.MIN);
+            LocalDateTime endDay = LocalDateTime.of(LocalDate.parse(endTime), LocalTime.MAX);
+
+            queryWrapper.like(PieceRule::getName,name)
+                    .orderByAsc(PieceRule::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay)
+                    .apply(StringUtils.checkValNotNull(endDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endDay);
+        }
         PieceRuleService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);

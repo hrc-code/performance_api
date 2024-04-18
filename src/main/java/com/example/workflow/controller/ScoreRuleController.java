@@ -311,14 +311,15 @@ public class ScoreRuleController {
 
         Page<ScoreRule> pageInfo=new Page<ScoreRule>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<ScoreRule> queryWrapper=new LambdaQueryWrapper<>();
-        if(beginTime.equals("")){
+
+        if(beginTime.isEmpty()){
             LocalDate today = LocalDate.now();
             LocalDateTime beginDay = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
 
             queryWrapper.like(ScoreRule::getTarget,target)
                     .orderByAsc(ScoreRule::getId)
                     .apply(StringUtils.checkValNotNull(beginDay),
-                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay);
         }
         else {
             LocalDateTime beginDay = LocalDateTime.of(LocalDate.parse(beginTime), LocalTime.MIN);
