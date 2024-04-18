@@ -7,16 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.PositionAssessor;
-import com.example.workflow.entity.PositionForm;
-import com.example.workflow.entity.PositionKpi;
-import com.example.workflow.entity.PositionPiece;
-import com.example.workflow.entity.PositionScore;
-import com.example.workflow.entity.PositionView;
-import com.example.workflow.entity.ScoreAssessors;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.listener.EmployeeRewardExcelReadListener;
 import com.example.workflow.listener.PositionExcelReadListener;
 import com.example.workflow.mapper.EmployeePositionMapper;
@@ -24,15 +15,7 @@ import com.example.workflow.mapper.PositionMapper;
 import com.example.workflow.mapper.TaskViewMapper;
 import com.example.workflow.pojo.EmployeeRewardExcel;
 import com.example.workflow.pojo.PositionExcel;
-import com.example.workflow.service.DeptService;
-import com.example.workflow.service.EmployeePositionService;
-import com.example.workflow.service.PositionAssessorService;
-import com.example.workflow.service.PositionKpiSerivce;
-import com.example.workflow.service.PositionPieceService;
-import com.example.workflow.service.PositionScoreService;
-import com.example.workflow.service.PositionService;
-import com.example.workflow.service.PositionViewService;
-import com.example.workflow.service.ScoreAssessorsService;
+import com.example.workflow.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.RuntimeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +66,14 @@ public class PositionController {
     private EmployeePositionMapper EmployeePositionMapper;
     @Autowired
     private DeptService DeptService;
+    @Autowired
+            private OkrKeyService OkrKeyService;
+    @Autowired
+            private EmpRewardService EmpRewardService;
+
+    LocalDate today = LocalDate.now();
+    LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+    LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
 
     @PostMapping("/list")
@@ -144,9 +135,6 @@ public class PositionController {
     private R delete(@RequestBody Position form){
         PositionMapper.deleteById(form);
 
-        LocalDate today = LocalDate.now();
-        LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
-        LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
         LambdaQueryWrapper<PositionScore> queryWrapper1=new LambdaQueryWrapper<>();
         queryWrapper1.eq(PositionScore::getPositionId,form.getId())
                 .apply(StringUtils.checkValNotNull(beginTime),
@@ -181,6 +169,22 @@ public class PositionController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         PositionKpiSerivce.remove(queryWrapper3);
 
+        LambdaQueryWrapper<OkrKey> queryWrapper5=new LambdaQueryWrapper<>();
+        queryWrapper5.eq(OkrKey::getPositionId,form.getId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        OkrKeyService.remove(queryWrapper5);
+
+        LambdaQueryWrapper<EmpReward> queryWrapper6=new LambdaQueryWrapper<>();
+        queryWrapper6.eq(EmpReward::getPositionId,form.getId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        EmpRewardService.remove(queryWrapper6);
+
         LambdaQueryWrapper<EmployeePosition> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(EmployeePosition::getPositionId,form.getId());
         List<EmployeePosition> empList=EmployeePositionMapper.selectList(queryWrapper);
@@ -198,7 +202,11 @@ public class PositionController {
         EmployeePositionService.removeBatchByIds(empList);
 
         LambdaQueryWrapper<PositionAssessor> queryWrapper4=new LambdaQueryWrapper<>();
-        queryWrapper4.eq(PositionAssessor::getPositionId,form.getId());
+        queryWrapper4.eq(PositionAssessor::getPositionId,form.getId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
         PositionAssessorService.remove(queryWrapper4);
 
         return R.success();
