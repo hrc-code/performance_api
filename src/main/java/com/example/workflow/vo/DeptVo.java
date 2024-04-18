@@ -18,6 +18,7 @@ public class DeptVo {
     /**
      * 部门ID
      */
+    @JsonFormat(shape =JsonFormat.Shape.STRING )
     private Long id;
     /**
      * 部门名称

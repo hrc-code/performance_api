@@ -19,7 +19,6 @@ public class EmployeeVo {
     private List<PostIdAndName> posts;
     //员工所属角色id
     private Long roleId;
-
     /**
      * 部门名称集合
      **/
@@ -39,6 +38,7 @@ public class EmployeeVo {
 
     /**
      *  员工id*/
+    @JsonFormat(shape =JsonFormat.Shape.STRING )
     private Long id;
     /**
      * 工号
@@ -90,6 +90,7 @@ public class EmployeeVo {
     /**
      * 所属部门id
      */
+    @JsonFormat(shape =JsonFormat.Shape.STRING )
     private Long deptId;
 
     /**
