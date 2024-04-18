@@ -175,6 +175,14 @@ public class EmpPieceController {
 
     @PostMapping("/add")
     private R add(@RequestBody List<EmpPiece> form){
+        for(EmpPiece x:form){
+            if(x.getEmpId()==null)
+                R.error("员工姓名不得为空");
+            else if(x.getPieceId()==null)
+                R.error("计件条目不得为空");
+            else if(x.getWorkOrder()==null)
+                R.error("工单不得为空");
+        }
         EmpPieceService.saveBatch(form);
         return R.success();
     }

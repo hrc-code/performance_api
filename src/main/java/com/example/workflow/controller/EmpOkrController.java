@@ -7,12 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.BackWait;
-import com.example.workflow.entity.EmpOkr;
-import com.example.workflow.entity.EmpOkrView;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.PositionAssessor;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.TaskViewMapper;
 import com.example.workflow.service.BackWaitService;
 import com.example.workflow.service.EmpOkrService;
@@ -74,6 +69,10 @@ public class EmpOkrController {
         List<EmpOkr> list = new ArrayList<>();
         for (int i = 0; i < formArray.size(); i++) {
             JSONObject formObject = formArray.getJSONObject(i);
+
+            if(formObject.get("score").toString()==null||formObject.get("score").toString().isEmpty()){
+                return R.error("评分不得为空");
+            }
 
             EmpOkr one = new EmpOkr();
             one.setOkrKeyId(Long.valueOf(String.valueOf(formObject.get("okrKeyId"))));

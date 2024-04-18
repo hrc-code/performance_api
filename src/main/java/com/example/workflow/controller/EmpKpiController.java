@@ -63,6 +63,15 @@ public class EmpKpiController {
             helper.addContent(rules, ResourceType.DRL);
             KieSession kSession = helper.build().newKieSession();
 
+            if(x.getEmpId()==null)
+                R.error("员工姓名不得为空");
+            else if(x.getInTarget1()==null)
+                R.error("kpi条目一不得为空");
+            else if(x.getInTarget2()==null)
+                R.error("kpi条目二不得为空");
+            else if(x.getKpiId()==null)
+                R.error("kpi项目不得为空");
+
             Order3 order = new Order3();
             order.setInTarget1(x.getInTarget1());
             order.setInTarget2(x.getInTarget2());
@@ -170,7 +179,7 @@ public class EmpKpiController {
 
     @PostMapping("/reDelete")
     private R reAdd(@RequestBody EmpKpi one){
-        one.setState(new Short("0"));
+        one.setState(Short.parseShort("0"));
         EmpKpiService.updateById(one);
         return R.success();
     }
