@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
@@ -609,11 +610,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
         ids.forEach(id -> {
             //首先删除员工表中的信息 不能实际删除，将state 设为 0 视为 删除
-            Employee employee = getById(id);
-            if (Objects.nonNull(employee)) {
-                employee.setState(0);
-                Db.updateById(employee);
-            }
+            LambdaUpdateWrapper<Employee> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.set(Employee::getState, 0).eq(Employee::getId, id);
+            update(updateWrapper);
             //然后删除员工岗位表的信息
             LambdaQueryWrapper<EmployeePosition> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(EmployeePosition::getEmpId, id);
