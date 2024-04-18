@@ -2,7 +2,9 @@ package com.example.workflow.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.example.workflow.common.R;
+import com.example.workflow.listener.EmployeeExcelReadListener;
 import com.example.workflow.listener.EmployeeRewardExcelReadListener;
+import com.example.workflow.pojo.EmployeeExcel;
 import com.example.workflow.pojo.EmployeeRewardExcel;
 import com.example.workflow.service.EmpRewardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +37,7 @@ public class ExcelController {
     public void downloadEmployeeRewardExcel(HttpServletResponse response)   {
        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
        response.setCharacterEncoding("utf-8");
-       String fileName = null;
+       String fileName;
        try {
            fileName = URLEncoder.encode("employeeReward", "UTF-8").replaceAll("\\+", "%20");
        } catch (UnsupportedEncodingException e) {
@@ -48,4 +50,11 @@ public class ExcelController {
            throw new RuntimeException(e);
        }
    }
+
+    /** 导入员工基本信息*/
+    @PostMapping("/employee/upload")
+    public R importEmployee(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), EmployeeExcel.class, new EmployeeExcelReadListener()).sheet().doRead();
+        return R.success();
+    }
 }
