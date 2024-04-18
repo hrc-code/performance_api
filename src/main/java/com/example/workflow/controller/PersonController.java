@@ -4,17 +4,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.EmpKpiView;
-import com.example.workflow.entity.EmpOkrView;
-import com.example.workflow.entity.EmpPieceView;
-import com.example.workflow.entity.EmpPositionView;
-import com.example.workflow.entity.EmpScoreView;
-import com.example.workflow.entity.TaskState;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.EmpKpiViewMapper;
 import com.example.workflow.mapper.EmpOkrViewMapper;
 import com.example.workflow.mapper.EmpPieceViewMapper;
 import com.example.workflow.mapper.EmpScoreViewMapper;
 import com.example.workflow.service.EmpPositionViewService;
+import com.example.workflow.service.PositionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +42,8 @@ public class PersonController {
     private EmpKpiViewMapper EmpKpiViewMapper;
     @Autowired
             private EmpPositionViewService EmpPositionViewService;
+    @Autowired
+            private PositionService PositionService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -145,5 +143,31 @@ public class PersonController {
         object.put("pages", pages);
 
         return R.success(object);
+    }
+
+    @PostMapping("/state")
+    public R<Boolean> state(@RequestBody JSONObject obj){
+        Long empId=Long.valueOf(obj.getString("empId"));
+
+        LambdaQueryWrapper<EmpPositionView> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.eq(EmpPositionView::getEmpId,empId);
+        List<EmpPositionView> positionList= EmpPositionViewService.list(queryWrapper);
+
+        if(positionList.isEmpty()){
+            return R.success(false);
+        }
+        else{
+            for (EmpPositionView x: positionList) {
+                Position queriedPosition = PositionService.lambdaQuery()
+                        .eq(Position::getId, x.getPositionId())
+                        .eq(Position::getState, 1)
+                        .one();
+                if (queriedPosition.getAuditStatus() == 1||queriedPosition.getAuditStatus() ==0) {
+                    return R.success(false);
+                }
+            }
+
+            return R.success(true);
+        }
     }
 }
