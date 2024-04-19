@@ -122,6 +122,7 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 //向员工岗位表添加信息
                 EmployeePosition employeePosition = new EmployeePosition();
                 employeePosition.setEmpId(employeeId);
+
                 Long positionId = Db.lambdaQuery(Position.class).eq(Position::getDeptId, deptId).eq(Position::getTypeName, employeeExcel.getTypeName()).eq(Position::getPosition, employeeExcel.getPosition()).one().getId();
                 employeePosition.setPositionId(positionId);
                 Db.save(employeePosition);
@@ -131,7 +132,12 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 EmpCoefficient empCoefficient = new EmpCoefficient();
                 empCoefficient.setEmpId(employeeId);
                 empCoefficient.setPositionCoefficient(employeeExcel.getPositionCoefficient());
-                Long regionCoefficientId = Db.lambdaQuery(RegionCoefficient.class).eq(RegionCoefficient::getRegion, employeeExcel.getRegion()).one().getId();
+                Long regionCoefficientId = Db.lambdaQuery(RegionCoefficient.class).eq(RegionCoefficient::getRegion, employeeExcel.getRegion())
+                        .apply(StringUtils.checkValNotNull(beginTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                        .apply(StringUtils.checkValNotNull(endTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .one().getId();
                 empCoefficient.setRegionCoefficientId(regionCoefficientId);
                 Db.save(empCoefficient);
             });
