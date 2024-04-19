@@ -272,7 +272,8 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
         wrapper.like( num != null, Employee::getNum, num)
                 .like(name != null, Employee::getName, name)
-                .eq(roleId != null, Employee::getRoleId, roleId);
+                .eq(roleId != null, Employee::getRoleId, roleId)
+                .eq(Employee::getState, 1);
         //获取全部满足条件的员工
         List<Employee> employees = page(page, wrapper).getRecords();
         if (CollectionUtils.isEmpty(employees)) {
