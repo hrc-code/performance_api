@@ -3,6 +3,7 @@ package com.example.workflow.listener;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.util.ListUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.entity.EmpCoefficient;
 import com.example.workflow.entity.Employee;
@@ -13,6 +14,9 @@ import com.example.workflow.entity.Role;
 import com.example.workflow.pojo.EmployeeExcel;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +27,10 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
      * 每隔10条存储数据库，实际使用中可以100条，然后清理list ，方便内存回收
      */
     private static final int BATCH_COUNT = 20;
+
+    LocalDate today = LocalDate.now();
+    LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+    LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
     /**
      * 缓存的数据
@@ -77,7 +85,12 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 } else {
                     //查询地域是否存在
                     String region = employeeExcel.getRegion();
-                    RegionCoefficient one = Db.lambdaQuery(RegionCoefficient.class).eq(RegionCoefficient::getRegion, region).one();
+                    RegionCoefficient one = Db.lambdaQuery(RegionCoefficient.class).eq(RegionCoefficient::getRegion, region)
+                            .apply(StringUtils.checkValNotNull(beginTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                            .apply(StringUtils.checkValNotNull(endTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                            .one();
                     if (one == null) {
                         needDelNumSet.add(num);
                     }

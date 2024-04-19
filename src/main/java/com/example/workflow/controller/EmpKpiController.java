@@ -143,11 +143,20 @@ public class EmpKpiController {
                 .eq(KpiPercent::getKpiId,form.getKpiId());
         List<KpiPercent> list=KpiPercentMapper.selectList(queryWrapper);
 
-            String rules=EmpKpiService.defineRule(list,form.getInTarget2());
+        String rules=EmpKpiService.defineRule(list,form.getInTarget2());
 
-            KieHelper helper = new KieHelper();
-            helper.addContent(rules, ResourceType.DRL);
-            KieSession kSession = helper.build().newKieSession();
+        KieHelper helper = new KieHelper();
+        helper.addContent(rules, ResourceType.DRL);
+        KieSession kSession = helper.build().newKieSession();
+
+            if(form.getEmpId()==null)
+                R.error("员工姓名不得为空");
+            else if(form.getInTarget1()==null)
+                R.error("kpi条目一不得为空");
+            else if(form.getInTarget2()==null)
+                R.error("kpi条目二不得为空");
+            else if(form.getKpiId()==null)
+                R.error("kpi项目不得为空");
 
             Order3 order = new Order3();
             order.setInTarget1(form.getInTarget1());

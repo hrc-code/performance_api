@@ -183,7 +183,7 @@ public class RoleController {
     }
 
     /**
-     * 检测角色名称是否重复
+     * 检测职务名称是否重复
      * @return R
      */
     @GetMapping("/validate")
@@ -195,7 +195,7 @@ public class RoleController {
                                     .ne(id != null,Role::getId,id)
                                     .one();
 
-        if (role != null) return R.error("角色名称重复");
+        if (role != null) return R.error("职务名称重复");
         return R.success();
     }
 }

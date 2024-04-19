@@ -50,7 +50,7 @@ public class PositionExcelReadListener implements ReadListener<PositionExcel> {
                     type=3;
                 else if(positionExcel.getType().equals("四级CEO岗"))
                     type=4;
-                else if(positionExcel.getType().equals("基层员工岗"))
+                else if(positionExcel.getType().equals("普通员工岗"))
                     type=5;
 
                 if (Check.noNull(deptId,type)) {

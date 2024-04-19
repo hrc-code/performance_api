@@ -22,7 +22,7 @@ public class PositionServiceImpl extends ServiceImpl<PositionMapper, Position> i
         else if(form.getPositionType().equals(4))
             position.setTypeName("四级CEO岗");
         else if(form.getPositionType().equals(5))
-            position.setTypeName("基层员工岗");
+            position.setTypeName("普通员工岗");
         position.setIns(form.getIns());
         position.setState(form.getState()? (short) 1 : (short) 0);
         return position;
