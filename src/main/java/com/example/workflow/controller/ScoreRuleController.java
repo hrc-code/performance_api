@@ -1,15 +1,18 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.listener.ScoreExcelReadListener;
 import com.example.workflow.mapper.PositionScoreMapper;
 import com.example.workflow.mapper.PositionScoreViewMapper;
 import com.example.workflow.mapper.ScoreContactAssessorsMapper;
 import com.example.workflow.mapper.ScoreRuleMapper;
+import com.example.workflow.pojo.ScoreExcel;
 import com.example.workflow.service.PositionScoreService;
 import com.example.workflow.service.ScoreAssessorsService;
 import com.example.workflow.service.ScoreRuleService;
@@ -21,7 +24,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -335,5 +340,11 @@ public class ScoreRuleController {
         ScoreRuleService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);
+    }
+
+    @PostMapping("/upload")
+    public R uploadExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), ScoreExcel.class, new ScoreExcelReadListener()).sheet().doRead();
+        return R.success();
     }
 }

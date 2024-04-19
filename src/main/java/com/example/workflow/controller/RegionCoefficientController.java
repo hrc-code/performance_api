@@ -1,13 +1,19 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.EmpCoefficient;
+import com.example.workflow.entity.PieceRule;
 import com.example.workflow.entity.RegionCoefficient;
+import com.example.workflow.listener.PieceExcelReadListener;
+import com.example.workflow.listener.RegionExcelReadListener;
 import com.example.workflow.mapper.EmployeeCoefficientMapper;
 import com.example.workflow.mapper.RegionCoefficientMapper;
+import com.example.workflow.pojo.PieceExcel;
+import com.example.workflow.pojo.RegionExcel;
 import com.example.workflow.service.EmployeeCoefficientService;
 import com.example.workflow.service.RegionCoefficientService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +27,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -135,5 +143,46 @@ public class RegionCoefficientController {
         RegionCoefficientService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);
+    }
+
+    @GetMapping("/pastSearch")
+    public R<Page> pastPage(@RequestParam("page") String page
+            ,@RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String region
+            ,@RequestParam(defaultValue = "") String beginTime
+            ,@RequestParam(defaultValue = "") String endTime){
+
+        Page<RegionCoefficient> pageInfo=new Page<RegionCoefficient>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<RegionCoefficient> queryWrapper=new LambdaQueryWrapper<>();
+
+        if(beginTime.isEmpty()){
+            LocalDate today = LocalDate.now();
+            LocalDateTime beginDay = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+
+            queryWrapper.like(RegionCoefficient::getRegion,region)
+                    .orderByAsc(RegionCoefficient::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay);
+        }
+        else {
+            LocalDateTime beginDay = LocalDateTime.of(LocalDate.parse(beginTime), LocalTime.MIN);
+            LocalDateTime endDay = LocalDateTime.of(LocalDate.parse(endTime), LocalTime.MAX);
+
+            queryWrapper.like(RegionCoefficient::getRegion,region)
+                    .orderByAsc(RegionCoefficient::getId)
+                    .apply(StringUtils.checkValNotNull(beginDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay)
+                    .apply(StringUtils.checkValNotNull(endDay),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endDay);
+        }
+        RegionCoefficientService.page(pageInfo,queryWrapper);
+
+        return R.success(pageInfo);
+    }
+
+    @PostMapping("/upload")
+    public R uploadExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), RegionExcel.class, new RegionExcelReadListener()).sheet().doRead();
+        return R.success();
     }
 }
