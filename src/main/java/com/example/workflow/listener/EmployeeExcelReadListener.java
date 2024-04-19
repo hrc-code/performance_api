@@ -5,6 +5,7 @@ import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.example.workflow.entity.Dept;
 import com.example.workflow.entity.EmpCoefficient;
 import com.example.workflow.entity.Employee;
 import com.example.workflow.entity.EmployeePosition;
@@ -116,11 +117,12 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
 
                 Long employeeId = employee.getId();
 
-                // 员工岗位表-员工表id-岗位表id
+                // 员工岗位表-员工表id-岗位表id-部门表id
+                Long deptId = Db.lambdaQuery(Dept.class).eq(Dept::getDeptName, employeeExcel.getDeptName()).one().getId();
                 //向员工岗位表添加信息
                 EmployeePosition employeePosition = new EmployeePosition();
                 employeePosition.setEmpId(employeeId);
-                Long positionId = Db.lambdaQuery(Position.class).eq(Position::getPosition, employeeExcel.getPosition()).one().getId();
+                Long positionId = Db.lambdaQuery(Position.class).eq(Position::getDeptId, deptId).eq(Position::getTypeName, employeeExcel.getTypeName()).eq(Position::getPosition, employeeExcel.getPosition()).one().getId();
                 employeePosition.setPositionId(positionId);
                 Db.save(employeePosition);
 

@@ -31,4 +31,8 @@ public class EmployeeExcel {
     private String region;
     @ExcelProperty("岗位绩效")
     private BigDecimal positionCoefficient;
+    @ExcelProperty("部门名")
+    private String deptName;
+    @ExcelProperty("岗位类型")
+    private String typeName;
 }
