@@ -588,11 +588,11 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             employeePosition1.setPosiPercent(percent);
             employeePositionService.save(employeePosition1);
         });
-
+        LocalDateTime[] time = getTheStartAndEndTimeOfMonth();
         //更改员工的地域
-        EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).one();
+        EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]).one();
         if (empCoefficient == null) {
-            throw new Exception("地域信息为空");
+            throw new Exception("员工绩效信息为空");
         }
         empCoefficient.setRegionCoefficientId(employeeFormDto.getRegionId());
         empCoefficient.setPositionCoefficient(employeeFormDto.getGrade());
