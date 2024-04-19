@@ -85,6 +85,7 @@ public class RegionCoefficientController {
             return R.error("地区不得为空");
         if(form.getCoefficient()==null)
             return R.error("地区系数不得为空");
+
         RegionCoefficientMapper.insert(form);
         return R.success();
     }
@@ -113,6 +114,11 @@ public class RegionCoefficientController {
     }
     @PostMapping("/update")
     private R update(@RequestBody RegionCoefficient form){
+        if(form.getRegion()==null)
+            return R.error("地区不得为空");
+        if(form.getCoefficient()==null)
+            return R.error("地区系数不得为空");
+
         RegionCoefficientMapper.updateById(form);
         return R.success();
     }
