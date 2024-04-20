@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Data
 public class PieceExcel {
-    @ExcelProperty("评分条目")
+    @ExcelProperty("计件条目")
     private String name;
     @ExcelProperty("条目一")
     private String target1;

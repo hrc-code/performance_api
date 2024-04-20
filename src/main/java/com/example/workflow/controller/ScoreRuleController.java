@@ -347,4 +347,6 @@ public class ScoreRuleController {
         EasyExcel.read(file.getInputStream(), ScoreExcel.class, new ScoreExcelReadListener()).sheet().doRead();
         return R.success();
     }
+
+
 }
