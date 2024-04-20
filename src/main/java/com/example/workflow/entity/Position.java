@@ -25,6 +25,8 @@ public class Position implements Serializable {
     private Long deptId;
     private Short type;
     private String typeName;
+    private Short kind;
+    private String kindName;
     private Short auditStatus;
     @JsonDeserialize(using = StateChange.class)
     private Short state;

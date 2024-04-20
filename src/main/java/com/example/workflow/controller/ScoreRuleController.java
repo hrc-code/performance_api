@@ -7,11 +7,13 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.listener.PositionScoreExcelReadListener;
 import com.example.workflow.listener.ScoreExcelReadListener;
 import com.example.workflow.mapper.PositionScoreMapper;
 import com.example.workflow.mapper.PositionScoreViewMapper;
 import com.example.workflow.mapper.ScoreContactAssessorsMapper;
 import com.example.workflow.mapper.ScoreRuleMapper;
+import com.example.workflow.pojo.PositionScoreExcel;
 import com.example.workflow.pojo.ScoreExcel;
 import com.example.workflow.service.PositionScoreService;
 import com.example.workflow.service.ScoreAssessorsService;
@@ -348,5 +350,9 @@ public class ScoreRuleController {
         return R.success();
     }
 
-
+    @PostMapping("/uploadPosition")
+    public R uploadPositionExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), PositionScoreExcel.class, new PositionScoreExcelReadListener()).sheet().doRead();
+        return R.success();
+    }
 }

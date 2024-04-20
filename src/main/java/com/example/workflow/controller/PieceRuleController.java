@@ -11,10 +11,14 @@ import com.example.workflow.entity.PositionPiece;
 import com.example.workflow.entity.PositionPieceView;
 import com.example.workflow.entity.ScoreRule;
 import com.example.workflow.listener.PieceExcelReadListener;
+import com.example.workflow.listener.PositionPieceExcelReadListener;
+import com.example.workflow.listener.PositionScoreExcelReadListener;
 import com.example.workflow.mapper.PieceRuleMapper;
 import com.example.workflow.mapper.PositionPieceMapper;
 import com.example.workflow.mapper.PositionPieceViewMapper;
 import com.example.workflow.pojo.PieceExcel;
+import com.example.workflow.pojo.PositionPieceExcel;
+import com.example.workflow.pojo.PositionScoreExcel;
 import com.example.workflow.service.PieceRuleService;
 import com.example.workflow.service.PositionPieceService;
 import lombok.extern.slf4j.Slf4j;
@@ -289,6 +293,12 @@ public class PieceRuleController {
     @PostMapping("/upload")
     public R uploadExcel(MultipartFile file) throws IOException {
         EasyExcel.read(file.getInputStream(), PieceExcel.class, new PieceExcelReadListener()).sheet().doRead();
+        return R.success();
+    }
+
+    @PostMapping("/uploadPosition")
+    public R uploadPositionExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), PositionPieceExcel.class, new PositionPieceExcelReadListener()).sheet().doRead();
         return R.success();
     }
 }

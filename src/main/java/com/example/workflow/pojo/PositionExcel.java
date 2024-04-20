@@ -13,4 +13,6 @@ public class PositionExcel {
     private String position;
     @ExcelProperty("岗位类型")
     private String type;
+    @ExcelProperty("绩效挂钩")
+    private String kind;
 }

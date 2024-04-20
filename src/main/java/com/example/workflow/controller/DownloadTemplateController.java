@@ -2,6 +2,7 @@ package com.example.workflow.controller;
 
 import com.example.workflow.common.R;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,35 +15,42 @@ import java.io.InputStream;
 @RequestMapping("/DownloadTemplate")
 public class DownloadTemplateController {
 
-    @RequestMapping("/positionScore")
+    @PostMapping("/positionScore")
     public R positionScore(HttpServletResponse response) throws Exception {
         download(response,"excel/positionScore.xlsx");
 
         return R.success();
     }
 
-    @RequestMapping("/position")
+    @PostMapping("/positionPiece")
+    public R positionPiece(HttpServletResponse response) throws Exception {
+        download(response,"excel/positionPiece.xlsx");
+
+        return R.success();
+    }
+
+    @PostMapping ("/position")
     public R position(HttpServletResponse response) throws Exception {
         download(response,"excel/position.xlsx");
 
         return R.success();
     }
 
-    @RequestMapping("/score")
+    @PostMapping("/score")
     public R score(HttpServletResponse response) throws Exception {
         download(response,"excel/score.xlsx");
 
         return R.success();
     }
 
-    @RequestMapping("/piece")
+    @PostMapping("/piece")
     public R piece(HttpServletResponse response) throws Exception {
         download(response,"excel/peice.xlsx");
 
         return R.success();
     }
 
-    @RequestMapping("/employee")
+    @PostMapping("/employee")
     public R employee(HttpServletResponse response) throws Exception {
         download(response,"excel/employee.xlsx");
 

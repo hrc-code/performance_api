@@ -53,12 +53,24 @@ public class PositionExcelReadListener implements ReadListener<PositionExcel> {
                 else if(positionExcel.getType().equals("普通员工岗"))
                     type=5;
 
+                Short kind=0;
+                if(positionExcel.getKind().equals("无"))
+                    kind=0;
+                else if(positionExcel.getKind().equals("绩效与业绩挂钩"))
+                    kind=1;
+                else if(positionExcel.getKind().equals("绩效与服务挂钩"))
+                    kind=2;
+                else if(positionExcel.getKind().equals("绩效与工作量挂钩"))
+                    kind=3;
+
                 if (Check.noNull(deptId,type)) {
                     Position position = new Position();;
                     position.setPosition(positionExcel.getPosition());
                     position.setType(type);
                     position.setTypeName(positionExcel.getType());
                     position.setDeptId(deptId);
+                    position.setKind(kind);
+                    position.setKindName(positionExcel.getKind());
                     Db.save(position);
                 }
             });

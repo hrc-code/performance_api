@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -238,8 +239,25 @@ public class PositionController {
 
     @PostMapping("/update")
     private R update(@RequestBody Position form){
+        if(form.getType()==2)
+            form.setTypeName("二级CEO岗");
+        else if(form.getType()==3)
+            form.setTypeName("三级CEO岗");
+        else if(form.getType()==4)
+            form.setTypeName("四级CEO岗");
+        else if(form.getType()==5)
+            form.setTypeName("普通员工岗");
+
+        if(form.getKind()==0)
+            form.setKindName("无");
+        else if(form.getKind()==1)
+            form.setKindName("绩效与业绩挂钩");
+        else if(form.getKind()==2)
+            form.setKindName("绩效与服务挂钩");
+        else if(form.getKind()==3)
+            form.setKindName("绩效与工作量挂钩");
+
         PositionMapper.updateById(form);
-        log.info("1");
         return R.success();
 
     }
@@ -274,7 +292,6 @@ public class PositionController {
             x.setAuditStatus(Short.parseShort("0"));
             PositionService.updateById(x);
         });
-        log.info("1");
 
         return R.success();
     }
@@ -283,6 +300,16 @@ public class PositionController {
     public R uploadExcel(MultipartFile file) throws IOException {
         EasyExcel.read(file.getInputStream(), PositionExcel.class, new PositionExcelReadListener()).sheet().doRead();
         return R.success();
+    }
+
+    @PostMapping("/getTree")
+   private R<Map<String, Map<String, List<Position>>>> getTree() {
+        List<Position> list=PositionService.lambdaQuery().list();
+        Map<String, Map<String, List<Position>>> groupedByKind = list.stream()
+                .collect(Collectors.groupingBy(Position::getKindName,
+                        Collectors.groupingBy(Position::getPosition)));
+
+        return R.success(groupedByKind);
     }
 
 }

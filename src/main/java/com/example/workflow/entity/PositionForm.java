@@ -16,6 +16,7 @@ public class PositionForm {
         private Long deptId;
         /*private List<Long> personList;*/
         private Integer positionType;
+        private Integer kind;
         private Boolean state;
         private String ins;
 

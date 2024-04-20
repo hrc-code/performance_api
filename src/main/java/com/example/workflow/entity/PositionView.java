@@ -20,6 +20,8 @@ public class PositionView {
     private String deptName;
     private Short type;
     private String typeName;
+    private Short kind;
+    private String kindName;
     private Short auditStatus;
     private Short state;
     private String ins;
