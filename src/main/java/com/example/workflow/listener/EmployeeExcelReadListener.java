@@ -77,8 +77,9 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 //检查是num是否存在
                 Employee employee = Db.lambdaQuery(Employee.class).eq(Employee::getNum, num).one();
                 String position = employeeExcel.getPosition();
+                Long deptId = Db.lambdaQuery(Dept.class).eq(Dept::getDeptName, employeeExcel.getDeptName()).one().getId();
                 //去岗位表查询该岗位是否存在
-                Position position1 = Db.lambdaQuery(Position.class).eq(Position::getPosition, position).one();
+                Position position1 = Db.lambdaQuery(Position.class).eq(Position::getDeptId, deptId).eq(Position::getTypeName, employeeExcel.getTypeName()).eq(Position::getPosition, employeeExcel.getPosition()).one();
                 if (employee != null) {
                     needDelNumSet.add(num);
                 } else if (position1 == null) {
