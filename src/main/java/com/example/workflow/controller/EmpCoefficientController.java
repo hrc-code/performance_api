@@ -30,6 +30,7 @@ import com.example.workflow.service.CoefficientViewService;
 import com.example.workflow.service.EmpCoefficientService;
 import com.example.workflow.service.EmpWageService;
 import com.example.workflow.service.EmployeePositionService;
+import com.example.workflow.vo.PositionAssessorView;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,6 +117,23 @@ public class EmpCoefficientController {
         EmpCoefficientService.monthCopy();
 
         return R.success();
+    }
+
+    @GetMapping("/search")
+    public R<Page> searchPage(@RequestParam("page") String page
+            , @RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String empName){
+        Page<CoefficientView> pageInfo=new Page<CoefficientView>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<CoefficientView> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(CoefficientView::getEmpId)
+                .like(CoefficientView::getEmpName,empName)
+                .eq(CoefficientView::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        CoefficientViewService.page(pageInfo,queryWrapper);
+        return R.success(pageInfo);
     }
 
     @GetMapping("/coefficientPastPage")

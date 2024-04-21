@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.PositionAssessor;
+import com.example.workflow.entity.PositionView;
 import com.example.workflow.service.PositionAssessorService;
 import com.example.workflow.service.PositionAssessorViewService;
 import com.example.workflow.vo.PositionAssessorView;
@@ -92,6 +93,23 @@ public class PositionAssessorController {
                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
         PositionAssessorViewService.page(pageInfo,queryWrapper);
 
+        return R.success(pageInfo);
+    }
+
+    @GetMapping("/search")
+    public R<Page> searchPage(@RequestParam("page") String page
+            , @RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String position){
+        Page<PositionAssessorView> pageInfo=new Page<PositionAssessorView>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<PositionAssessorView> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(PositionAssessorView::getPosition)
+                .like(PositionAssessorView::getPosition,position)
+                .eq(PositionAssessorView::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        PositionAssessorViewService.page(pageInfo,queryWrapper);
         return R.success(pageInfo);
     }
 }

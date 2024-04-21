@@ -72,6 +72,13 @@ public class PositionExcelReadListener implements ReadListener<PositionExcel> {
                     position.setKind(kind);
                     position.setKindName(positionExcel.getKind());
                     Db.save(position);
+
+                    PositionAssessor positionAssessor=new PositionAssessor();
+                    positionAssessor.setPositionId(position.getId());
+                    positionAssessor.setFourthTimer("P1D");
+                    positionAssessor.setFourthTimer("P1D");
+                    positionAssessor.setFourthTimer("P1D");
+                    Db.save(positionAssessor);
                 }
             });
         }

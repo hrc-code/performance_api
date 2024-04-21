@@ -77,8 +77,12 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 //检查是num是否存在
                 Employee employee = Db.lambdaQuery(Employee.class).eq(Employee::getNum, num).one();
                 String position = employeeExcel.getPosition();
+                Long deptId = Db.lambdaQuery(Dept.class).eq(Dept::getDeptName, employeeExcel.getDeptName()).one().getId();
                 //去岗位表查询该岗位是否存在
-                Position position1 = Db.lambdaQuery(Position.class).eq(Position::getPosition, position).one();
+                Position position1 = Db.lambdaQuery(Position.class)
+                        .eq(Position::getDeptId, deptId)
+                        .eq(Position::getTypeName, employeeExcel.getTypeName())
+                        .eq(Position::getPosition, employeeExcel.getPosition()).one();
                 if (employee != null) {
                     needDelNumSet.add(num);
                 } else if (position1 == null) {
@@ -123,8 +127,18 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 EmployeePosition employeePosition = new EmployeePosition();
                 employeePosition.setEmpId(employeeId);
 
-                Long positionId = Db.lambdaQuery(Position.class).eq(Position::getDeptId, deptId).eq(Position::getTypeName, employeeExcel.getTypeName()).eq(Position::getPosition, employeeExcel.getPosition()).one().getId();
-                employeePosition.setPositionId(positionId);
+                Position posi = Db.lambdaQuery(Position.class)
+                        .eq(Position::getDeptId, deptId).eq(Position::getTypeName, employeeExcel.getTypeName())
+                        .eq(Position::getPosition, employeeExcel.getPosition()).one();
+                employeePosition.setPositionId(posi.getId());
+                Short type= posi.getType();
+
+                if(type==5)
+                    employeePosition.setProcessKey("Process_1gzouwy");
+                else if(type==4)
+                    employeePosition.setProcessKey("Process_1whe0gq");
+                else if(type==3)
+                    employeePosition.setProcessKey("Process_01p7ac7");
                 Db.save(employeePosition);
 
                 // 员工绩效表-员工表id-地区绩效表id

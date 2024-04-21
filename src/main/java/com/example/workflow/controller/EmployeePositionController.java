@@ -4,18 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.EmpPositionView;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.TaskInf;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.EmpPositionViewMapper;
 import com.example.workflow.mapper.TaskViewMapper;
-import com.example.workflow.service.EmpPositionViewService;
-import com.example.workflow.service.EmployeePositionService;
-import com.example.workflow.service.PositionService;
+import com.example.workflow.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,6 +42,17 @@ public class EmployeePositionController {
     private EmployeePositionService EmployeePositionService;
     @Autowired
     private PositionService PositionService;
+    @Autowired
+            private EmpScoreService EmpScoreService;
+    @Autowired
+            private EmpPieceService EmpPieceService;
+    @Autowired
+            private EmpKpiService EmpKpiService;
+    @Autowired
+            private EmpOkrService EmpOkrService;
+    @Autowired
+            private EmpRewardService EmpRewardService;
+
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -211,11 +217,64 @@ public class EmployeePositionController {
         queryWrapper.eq(EmployeePosition::getEmpId,form.getEmpId());
         EmployeePositionService.remove(queryWrapper);
 
-        LambdaQueryWrapper<EmployeePosition> queryWrapper1=new LambdaQueryWrapper<>();
-        queryWrapper1.eq(EmployeePosition::getEmpId,form.getEmpId());
-        EmployeePositionService.remove(queryWrapper1);
+        LambdaQueryWrapper<EmpScore> queryWrapper1=new LambdaQueryWrapper<>();
+        queryWrapper1.eq(EmpScore::getEmpId,form.getEmpId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+        EmpScoreService.remove(queryWrapper1);
+
+        LambdaQueryWrapper<EmpPiece> queryWrapper2=new LambdaQueryWrapper<>();
+        queryWrapper2.eq(EmpPiece::getEmpId,form.getEmpId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+        EmpPieceService.remove(queryWrapper2);
+
+        LambdaQueryWrapper<EmpKpi> queryWrapper3=new LambdaQueryWrapper<>();
+        queryWrapper3.eq(EmpKpi::getEmpId,form.getEmpId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+        EmpKpiService.remove(queryWrapper3);
+
+        LambdaQueryWrapper<EmpOkr> queryWrapper4=new LambdaQueryWrapper<>();
+        queryWrapper4.eq(EmpOkr::getEmpId,form.getEmpId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+        EmpOkrService.remove(queryWrapper4);
+
+        LambdaQueryWrapper<EmpReward> queryWrapper5=new LambdaQueryWrapper<>();
+        queryWrapper5.eq(EmpReward::getEmpId,form.getEmpId())
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+        EmpRewardService.remove(queryWrapper5);
 
         return R.success();
+    }
+
+    @GetMapping("/search")
+    public R<Page> searchPage(@RequestParam("page") String page
+            , @RequestParam("page_size") String pageSize
+            ,@RequestParam(defaultValue = "") String empName){
+        Page<EmpPositionView> pageInfo=new Page<EmpPositionView>(Long.parseLong(page),Long.parseLong(pageSize));
+        LambdaQueryWrapper<EmpPositionView> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(EmpPositionView::getEmpId)
+                .like(EmpPositionView::getEmpName,empName)
+                .eq(EmpPositionView::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        EmpPositionViewService.page(pageInfo,queryWrapper);
+        return R.success(pageInfo);
     }
 
 }
