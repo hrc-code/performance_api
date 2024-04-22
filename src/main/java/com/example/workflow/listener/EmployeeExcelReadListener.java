@@ -103,7 +103,8 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 }
             });
 
-            cachedDataList.stream().filter(Objects::nonNull).filter(employeeExcel -> !needDelNumSet.contains(employeeExcel.getNum())).forEach(employeeExcel -> {
+            cachedDataList.stream().filter(Objects::nonNull)
+                    .filter(employeeExcel -> !needDelNumSet.contains(employeeExcel.getNum())).forEach(employeeExcel -> {
                 //员工表-角色表id
                 //向员工表添加信息
                 Employee employee = new Employee();
@@ -118,6 +119,8 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 //去角色表查角色id
                 Role role = Db.lambdaQuery(Role.class).eq(Role::getRoleName, employeeExcel.getRoleName()).one();
                 employee.setRoleId(role.getId());
+
+                System.out.println(employee);
                 Db.save(employee);
 
                 Long employeeId = employee.getId();

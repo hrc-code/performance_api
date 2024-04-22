@@ -14,10 +14,7 @@ import com.example.workflow.mapper.EmpPositionViewMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.mapper.PositionViewMapper;
 import com.example.workflow.mapper.TaskViewMapper;
-import com.example.workflow.service.BackWaitService;
-import com.example.workflow.service.PositionAssessorService;
-import com.example.workflow.service.PositionViewService;
-import com.example.workflow.service.TaskViewService;
+import com.example.workflow.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,6 +54,8 @@ public class TaskViewController {
             private TaskViewService TaskViewService;
     @Autowired
             private BackWaitService BackWaitService;
+    @Autowired
+            private EmployeePositionService EmployeePositionService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -225,13 +224,13 @@ public class TaskViewController {
 
         Map<Long, Integer> countMap = new HashMap<>();
         for (Long num : positionList) {
-            countMap.put(num, countMap.getOrDefault(num, 0) + 1);
+            countMap.put(num, countMap.getOrDefault(num, 0)+1);
         }
 
-        List<PositionView> positionViews= PositionViewService.list();
+        List<EmployeePosition> EmployeePositionServices=EmployeePositionService.list();
         List<Long> allPosition=new ArrayList<>();
-        positionViews.forEach(x->{
-            allPosition.add(x.getId());
+        EmployeePositionServices.forEach(x->{
+            allPosition.add(x.getPositionId());
         });
         Map<Long, Integer> count = new HashMap<>();
         for (Long num : allPosition) {
@@ -704,7 +703,7 @@ public class TaskViewController {
                 .eq(TaskView::getState,"ACTIVE")
                 .and(qw -> qw.eq(TaskView::getName, "score")
                         .or().eq(TaskView::getName, "okr"));
-        List<TaskView> task3=TaskViewMapper.selectList(Wrapper2);
+        List<TaskView> task3=TaskViewMapper.selectList(Wrapper3);
         List<TaskView> taskList3 = task3.stream()
                 .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
@@ -790,13 +789,13 @@ public class TaskViewController {
 
         Map<Long, Integer> countMap = new HashMap<>();
         for (Long num : positionList) {
-            countMap.put(num, countMap.getOrDefault(num, 0) + 1);
+            countMap.put(num, countMap.getOrDefault(num, 0)+1);
         }
 
-        List<PositionView> positionViews= PositionViewService.list();
+        List<EmployeePosition> EmployeePositionServices=EmployeePositionService.list();
         List<Long> allPosition=new ArrayList<>();
-        positionViews.forEach(x->{
-            allPosition.add(x.getId());
+        EmployeePositionServices.forEach(x->{
+            allPosition.add(x.getPositionId());
         });
         Map<Long, Integer> count = new HashMap<>();
         for (Long num : allPosition) {

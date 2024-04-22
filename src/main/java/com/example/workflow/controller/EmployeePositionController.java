@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -118,6 +119,7 @@ public class EmployeePositionController {
 
         JSONArray formArray = form.getJSONArray("positionList");
         List<String> positionList = new ArrayList<>();
+
         for (int i = 0; i < formArray.size(); i++) {
             JSONObject formObject = formArray.getJSONObject(i);
             positionList.add(formObject.getString("positionId"));
@@ -138,6 +140,9 @@ public class EmployeePositionController {
             EmployeePosition x=new EmployeePosition();
             x.setEmpId(Long.valueOf(form.getString("empId")));
             x.setPositionId(Long.valueOf(formObject.getString("positionId")));
+            String valueAsString = formObject.getString("posiPercent");
+            BigDecimal valueAsBigDecimal = new BigDecimal(valueAsString);
+            x.setPosiPercent(valueAsBigDecimal);
 
             LambdaQueryWrapper<Position> Wrapper=new LambdaQueryWrapper<>();
             Wrapper.eq(Position::getId,Long.valueOf(formObject.getString("positionId")));
@@ -192,6 +197,9 @@ public class EmployeePositionController {
             EmployeePosition x=new EmployeePosition();
             x.setEmpId(Long.valueOf(form.getString("empId")));
             x.setPositionId(Long.valueOf(formObject.getString("positionId")));
+            String valueAsString = formObject.getString("posiPercent");
+            BigDecimal valueAsBigDecimal = new BigDecimal(valueAsString);
+            x.setPosiPercent(valueAsBigDecimal);
 
             LambdaQueryWrapper<Position> Wrapper=new LambdaQueryWrapper<>();
             Wrapper.eq(Position::getId,Long.valueOf(formObject.getString("positionId")));

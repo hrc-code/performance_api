@@ -312,5 +312,32 @@ public class PositionController {
         return R.success(groupedByKind);
     }
 
+    @PostMapping("/getCheckTree")
+    private R<List<Map<String, Object>>> getCheckTree() {
+        List<Dept> list=DeptService.lambdaQuery().list();
+        List<Map<String, Object>> tree=new ArrayList<>();
+        list.forEach(x->{
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", x.getId());
+            map.put("label", x.getDeptName());
+            map.put("disabled",true);
+
+            List<Position> positionList=PositionService.lambdaQuery()
+                            .eq(Position::getDeptId,x.getId())
+                                    .list();
+            List<Map<String, Object>> position=new ArrayList<>();
+            positionList.forEach(y->{
+                Map<String, Object> positionMap = new HashMap<>();
+                positionMap.put("id", y.getId());
+                positionMap.put("label",y.getPosition());
+                position.add(positionMap);
+            });
+            map.put("children",position);
+
+            tree.add(map);
+        });
+
+        return R.success(tree);
+    }
 }
 
