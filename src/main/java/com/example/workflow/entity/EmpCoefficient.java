@@ -3,6 +3,7 @@ package com.example.workflow.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
@@ -25,9 +26,11 @@ public class EmpCoefficient {
     private BigDecimal performanceWage;
     private Short state;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(fill= FieldFill.INSERT)//插入时填充字段
     private LocalDateTime createTime;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(fill=FieldFill.INSERT_UPDATE)//插入和更新时填充字段
     private LocalDateTime updateTime;
 
