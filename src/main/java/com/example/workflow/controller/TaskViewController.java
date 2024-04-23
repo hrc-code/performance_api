@@ -89,7 +89,6 @@ public class TaskViewController {
         LambdaQueryWrapper<TaskView> Wrapper=new LambdaQueryWrapper<>();
         Wrapper.eq(TaskView::getAssignee,obj.getString("assessorId"))
                 .eq(TaskView::getState,"ACTIVE")
-                .eq(TaskView::getName,"piece")
                 .and(qw -> qw.eq(TaskView::getName, "piece")
                         .or().eq(TaskView::getName, "kpi"));
         List<TaskView> task=TaskViewMapper.selectList(Wrapper);

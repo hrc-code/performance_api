@@ -318,7 +318,7 @@ public class PositionController {
         List<Map<String, Object>> tree=new ArrayList<>();
         list.forEach(x->{
             Map<String, Object> map = new HashMap<>();
-            map.put("id", x.getId());
+            map.put("id", x.getId().toString());
             map.put("label", x.getDeptName());
             map.put("disabled",true);
 
@@ -328,7 +328,7 @@ public class PositionController {
             List<Map<String, Object>> position=new ArrayList<>();
             positionList.forEach(y->{
                 Map<String, Object> positionMap = new HashMap<>();
-                positionMap.put("id", y.getId());
+                positionMap.put("id", y.getId().toString());
                 positionMap.put("label",y.getPosition());
                 position.add(positionMap);
             });

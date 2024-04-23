@@ -15,6 +15,9 @@ public class PositionAssessorView {
     private String position;
     private Short positionType;
     @JsonSerialize(using= ToStringSerializer.class)
+    private Long deptId;
+    private String deptName;
+    @JsonSerialize(using= ToStringSerializer.class)
     private Long fourthAssessorId;
     private String fourthAssessorName;
     private String fourthTimer;
