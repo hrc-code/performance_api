@@ -176,7 +176,7 @@ public class EmployeePositionController {
     @PostMapping("/update")
     private R update(@RequestBody JSONObject form){
         JSONArray formArray = form.getJSONArray("positionList");
-        List<String> positionList = new ArrayList<>();
+        /*List<String> positionList = new ArrayList<>();
         for (int i = 0; i < formArray.size(); i++) {
             JSONObject formObject = formArray.getJSONObject(i);
             positionList.add(formObject.getString("positionId"));
@@ -184,7 +184,7 @@ public class EmployeePositionController {
         Set<String> set = new HashSet<>(positionList);
         if (set.size() < positionList.size()) {
             return R.error("员工不可重复任职同一岗位");
-        }
+        }*/
 
         LambdaQueryWrapper<EmployeePosition> queryWrapper =new LambdaQueryWrapper<>();
         queryWrapper.eq(EmployeePosition::getEmpId,form.getString("empId"));

@@ -313,12 +313,13 @@ public class EmpCoefficientController {
                 .eq(EmployeePosition::getState,1);
         EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
 
-        BigDecimal result = okrTotal.get()
+        BigDecimal result = (okrTotal.get()
                 .add(kpiTotal.get())
                 .add(scoreTotal.get())
                 .add(pieceTotal.get())
-                .add(rewardTotal.get())
-                .multiply(EmployeePosition.getPosiPercent());
+                .add(rewardTotal.get()))
+                .multiply(EmployeePosition.getPosiPercent())
+                .divide(new BigDecimal(100),2);
         wage.setTotal(result);
 
         EmpWageService.save(wage);
