@@ -63,7 +63,7 @@ public class PositionExcelReadListener implements ReadListener<PositionExcel> {
                 else if(positionExcel.getKind().equals("绩效与工作量挂钩"))
                     kind=3;
 
-                if (Check.noNull(deptId,type)) {
+                if (Check.noNull(deptId,type,kind)) {
                     Position position = new Position();;
                     position.setPosition(positionExcel.getPosition());
                     position.setType(type);
@@ -76,8 +76,8 @@ public class PositionExcelReadListener implements ReadListener<PositionExcel> {
                     PositionAssessor positionAssessor=new PositionAssessor();
                     positionAssessor.setPositionId(position.getId());
                     positionAssessor.setFourthTimer("P1D");
-                    positionAssessor.setFourthTimer("P1D");
-                    positionAssessor.setFourthTimer("P1D");
+                    positionAssessor.setSecondTimer("P1D");
+                    positionAssessor.setThirdTimer("P1D");
                     Db.save(positionAssessor);
                 }
             });

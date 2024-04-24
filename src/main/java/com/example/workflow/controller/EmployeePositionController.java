@@ -196,13 +196,19 @@ public class EmployeePositionController {
 
             EmployeePosition x=new EmployeePosition();
             x.setEmpId(Long.valueOf(form.getString("empId")));
+
+            if(formObject.getString("positionId").isEmpty())
+                return R.error("请选择人员岗位");
             x.setPositionId(Long.valueOf(formObject.getString("positionId")));
+
+            if(formObject.getString("posiPercent").isEmpty())
+                return R.error("请填写岗位比例");
             String valueAsString = formObject.getString("posiPercent");
             BigDecimal valueAsBigDecimal = new BigDecimal(valueAsString);
             x.setPosiPercent(valueAsBigDecimal);
 
             LambdaQueryWrapper<Position> Wrapper=new LambdaQueryWrapper<>();
-            Wrapper.eq(Position::getId,Long.valueOf(formObject.getString("positionId")));
+            Wrapper.eq(Position::getId,formObject.getString("positionId"));
             Short type= PositionService.getOne(Wrapper).getType();
 
             if(type==5)
