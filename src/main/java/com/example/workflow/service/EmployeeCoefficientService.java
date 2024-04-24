@@ -4,4 +4,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.workflow.entity.EmpCoefficient;
 
 public interface EmployeeCoefficientService extends IService<EmpCoefficient> {
+
+    void fileOne(Long empId, Long positionId);
 }

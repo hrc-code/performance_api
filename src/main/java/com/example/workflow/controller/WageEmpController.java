@@ -124,7 +124,6 @@ public class WageEmpController {
         return R.success(state);
     }
 
-
     @PostMapping("/updateFlow")
     private R updateFlow(@RequestBody JSONObject obj){
 
@@ -240,6 +239,124 @@ public class WageEmpController {
         return R.success();
     }
 
+    @PostMapping("/updateFlowAll")
+    private R updateFlowAll(@RequestBody List<EmployeePosition> list){
+        if(list.isEmpty())
+            return R.error("未选择申报对象，请选择申报对象");
+
+        list.forEach(x->{
+            Map<String,Object> map = new HashMap<>();
+
+            List<String> assessorList1 = new ArrayList<>();
+            LambdaQueryWrapper<PositionScore> query1=new LambdaQueryWrapper<>();
+            query1.eq(PositionScore::getPositionId,x.getPositionId());
+            List<PositionScore> num1= PositionScoreService.list(query1);
+
+            num1.forEach(y->{
+                List<ScoreAssessors> assessor= ScoreAssessorsService.lambdaQuery()
+                        .eq(ScoreAssessors::getPositionScoreId,y.getId())
+                        .apply(StringUtils.checkValNotNull(beginTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                        .apply(StringUtils.checkValNotNull(endTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
+                        .list();
+                assessor.forEach(z->{
+                    assessorList1.add(String.valueOf(z.getAssessorId()));
+                });
+            });
+
+            List<String> assessors1=assessorList1.stream().distinct().collect(Collectors.toList());
+            if(assessors1.isEmpty())
+                map.put("scoreAppoint", "false");
+            else{
+                map.put("ASList", assessors1);
+                map.put("scoreAppoint", "true");
+            }
+
+            List<PositionPiece> pieceList= PositionPieceService.lambdaQuery()
+                    .eq(PositionPiece::getPositionId,x.getPositionId())
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
+                    .list();
+            if(pieceList.isEmpty())
+                map.put("pieceAppoint", "false");
+            else
+                map.put("pieceAppoint", "true");
+
+            List<PositionKpi> kpiList= PositionKpiSerivce.lambdaQuery()
+                    .eq(PositionKpi::getPositionId,x.getPositionId())
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
+                    .list();
+            if(kpiList.isEmpty())
+                map.put("kpiAppoint", "false");
+            else
+                map.put("kpiAppoint", "true");
+
+            List<OkrKey> keyList=OkrKeyService.lambdaQuery()
+                    .eq(OkrKey::getLiaEmpId,x.getEmpId())
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .list();
+            List<String> assessorList2=new ArrayList<>();
+            keyList.forEach(y->{
+                assessorList2.add(OkrRuleService.lambdaQuery()
+                        .eq(OkrRule::getId,y.getRuleId())
+                        .one().getAssessorId().toString());
+            });
+            List<String> assessors2=assessorList2.stream().distinct().collect(Collectors.toList());
+            if(assessors2.isEmpty())
+                map.put("okrAppoint", "false");
+            else{
+                map.put("AOList", assessors2);
+                map.put("okrAppoint", "true");
+            }
+
+            Position position=PositionService.lambdaQuery()
+                    .eq(Position::getId,x.getPositionId())
+                    .one();
+
+            PositionAssessor assessor=PositionAssessorService.lambdaQuery()
+                    .eq(PositionAssessor::getPositionId,x.getPositionId())
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .one();
+
+            if(position.getType()==5){
+                map.put("fourthAssessor",assessor.getFourthAssessorId().toString());
+                map.put("fourthTimer",assessor.getFourthTimer());
+            }
+            else if(position.getType()==4){
+                map.put("thirdAssessor",assessor.getThirdAssessorId().toString());
+                map.put("thirdTimer",assessor.getThirdTimer());
+            }
+            else if(position.getType()==3){
+                map.put("secondAssessor",assessor.getSecondAssessorId().toString());
+                map.put("secondTimer",assessor.getSecondTimer());
+            }
+
+            LambdaQueryWrapper<EmployeePosition> wrapper=new LambdaQueryWrapper<>();
+            wrapper.eq(EmployeePosition::getEmpId,x.getEmpId())
+                    .eq(EmployeePosition::getPositionId,x.getPositionId());
+            EmployeePosition EmployeePosition=EmployeePositionService.getOne(wrapper);
+
+            LambdaQueryWrapper<TaskView> query=new LambdaQueryWrapper<>();
+            query.eq(TaskView::getStartUserId,x.getEmpId())
+                    .eq(TaskView::getProcInstId,EmployeePosition.getProcessDefinitionId());
+            TaskView task=TaskViewMapper.selectOne(query);
+            taskService.complete(task.getId(),map);
+        });
+
+        return R.success();
+    }
 
     @PostMapping("/reAddPiece")
     private R reAddPiece(@RequestBody JSONObject obj){
