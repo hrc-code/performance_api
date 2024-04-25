@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,7 +72,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
         List<Dept> depts = lambdaQuery().in(Dept::getId, ids).list();
         if (CollectionUtils.isEmpty(depts)) {
             //没有对应的部门
-            return null;
+            return Collections.emptyMap();
         }
         //根据部门id分组后的部门name
         Map<Long, String> deptNameMap = depts.stream().filter(Objects::nonNull).collect(Collectors.toMap(Dept::getId, Dept::getDeptName));
@@ -162,8 +163,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
             if (threeDeptId != null) {
                 String threeDeptName =  threeDeptNameMap.get(threeDeptId);
                 if (threeDeptName != null) {
-                    String deptName = deptNameMap.get(deptId);
-                    deptNameMap.put(deptId, threeDeptName + "/" + deptName);
+                    deptNameMap.compute(deptId, (k, deptName) -> threeDeptName + "/" + deptName);
                 }
             }
         });

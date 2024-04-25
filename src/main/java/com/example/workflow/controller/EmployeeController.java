@@ -28,6 +28,13 @@ import java.util.Objects;
 @RequestMapping("/auth/employee")
 public class EmployeeController {
     private final EmployeeService employeeService;
+
+    /** 根据员工姓名获取信息， 信息可以不全*/
+    @GetMapping("/infoByName")
+    public R<EmployeeVo> getByName(@RequestParam String name) {
+        return employeeService.getByName(name);
+    }
+
     /*
     * 根据ceoId查询其下的全部员工
     * ceoId 即ceo的员工id*/

@@ -11,7 +11,14 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.bean.PageBean;
 import com.example.workflow.common.R;
 import com.example.workflow.dto.EmployeeFormDto;
-import com.example.workflow.entity.*;
+import com.example.workflow.entity.DeptHierarchy;
+import com.example.workflow.entity.EmpCoefficient;
+import com.example.workflow.entity.Employee;
+import com.example.workflow.entity.EmployeePosition;
+import com.example.workflow.entity.Position;
+import com.example.workflow.entity.RegionCoefficient;
+import com.example.workflow.entity.Role;
+import com.example.workflow.entity.RoleBtn;
 import com.example.workflow.mapper.EmployeeMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.pojo.DeptIdAndNape;
@@ -25,6 +32,7 @@ import com.example.workflow.service.EmployeeService;
 import com.example.workflow.service.PositionService;
 import com.example.workflow.service.RegionCoefficientService;
 import com.example.workflow.service.RoleBtnService;
+import com.example.workflow.service.RoleService;
 import com.example.workflow.utils.Find;
 import com.example.workflow.vo.EmployeeVo;
 import com.example.workflow.vo.RouterAndButtonVo;
@@ -41,6 +49,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -77,6 +86,76 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
     private  final RoleBtnService roleBtnService;
 
     private  final ButtonService buttonService;
+
+    private final RoleService roleService;
+
+    /**
+     * 通过名字获取员工信息 可以获得不完整信息
+     */
+
+    @Override
+    public R<EmployeeVo> getByName(String name) {
+        EmployeeVo employeeVo = new EmployeeVo();
+
+        //获取员工基本信息
+        LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Employee::getName, name);
+        Employee employee = getOne(wrapper);
+        if (Objects.nonNull(employee)) {
+            BeanUtils.copyProperties(employee, employeeVo);
+
+            //获得职务名
+            Long roleId = employee.getRoleId();
+            Role role = roleService.getById(roleId);
+            //允许职务名为空
+            String roleName;
+            if (Objects.nonNull(role)) {
+                roleName = role.getRoleName();
+                employeeVo.setRoleName(roleName);
+            }
+
+
+            //获取地域
+            Long employeeId = employee.getId();
+            LambdaQueryWrapper<EmpCoefficient> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.eq(EmpCoefficient::getEmpId, employeeId);
+            EmpCoefficient empCoefficient = empCoefficientService.getOne(wrapper1);
+            //允许地域为空
+            String region ;
+            if (Objects.nonNull(empCoefficient)) {
+                Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
+                RegionCoefficient regionCoefficient = regionCoefficientService.getById(regionCoefficientId);
+                region = regionCoefficient.getRegion();
+                employeeVo.setRegionName(region);
+            }
+
+
+            //获取岗位名
+            LambdaQueryWrapper<EmployeePosition> wrapper2 = new LambdaQueryWrapper<>();
+            wrapper2.eq(EmployeePosition::getEmpId, employeeId);
+            List<EmployeePosition> employeePositionList = employeePositionService.list(wrapper2);
+            //允许岗位名为空
+            ArrayList<String> positionNames ;
+            Collection<String> deptNames ;
+            if (CollectionUtil.isNotEmpty(employeePositionList)) {
+                //position_id 设置为 not null,所以集合不会为空
+                Set<Long> positionIdList = employeePositionList.stream().filter(Objects::nonNull).map(EmployeePosition::getPositionId).collect(Collectors.toSet());
+                List<Position> positions = positionService.listByIds(positionIdList);
+                if (CollectionUtil.isNotEmpty(positions)) {
+                    positionNames = positions.stream().map(Position::getPosition).distinct().collect(Collectors.toCollection(ArrayList::new));
+                    employeeVo.setPostName(positionNames);
+
+                    // 查询部门名
+                    List<Long> detpIdList = positions.stream().map(Position::getDeptId).distinct().collect(Collectors.toList());
+                    deptNames = deptService.getDeptNameMap(detpIdList).values();
+                    employeeVo.setDeptNames(new ArrayList<>(deptNames));
+                }
+            }
+
+        }
+
+        return R.success(employeeVo);
+    }
 
     /*
      * 根据ceoId查询其下的全部员工
