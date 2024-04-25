@@ -112,7 +112,7 @@ public class FlowController {
             }
         }
         else if(empList.get(0).getType()==4){
-            if(assessor.getSecondAssessorId()==null||assessor.getFourthAssessorId()==null){
+            if(assessor.getSecondAssessorId()==null||assessor.getThirdAssessorId()==null){
                 return R.error("该岗位未配置对应的审核人与审核时限，请前往配置");
             }
         }
