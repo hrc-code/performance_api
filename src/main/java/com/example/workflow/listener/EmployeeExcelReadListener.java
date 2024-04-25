@@ -120,7 +120,6 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 Role role = Db.lambdaQuery(Role.class).eq(Role::getRoleName, employeeExcel.getRoleName()).one();
                 employee.setRoleId(role.getId());
 
-                System.out.println(employee);
                 Db.save(employee);
 
                 Long employeeId = employee.getId();
@@ -132,8 +131,10 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
                 employeePosition.setEmpId(employeeId);
 
                 Position posi = Db.lambdaQuery(Position.class)
-                        .eq(Position::getDeptId, deptId).eq(Position::getTypeName, employeeExcel.getTypeName())
-                        .eq(Position::getPosition, employeeExcel.getPosition()).one();
+                        .eq(Position::getDeptId, deptId)
+                        .eq(Position::getTypeName, employeeExcel.getTypeName())
+                        .eq(Position::getPosition, employeeExcel.getPosition())
+                        .one();
                 employeePosition.setPositionId(posi.getId());
                 Short type= posi.getType();
 
