@@ -16,45 +16,52 @@ import java.io.InputStream;
 public class DownloadTemplateController {
 
     @PostMapping("/positionScore")
-    public R positionScore(HttpServletResponse response) throws Exception {
+    public R<String> positionScore(HttpServletResponse response) throws Exception {
         download(response,"excel/positionScore.xlsx");
 
-        return R.success();
+        return R.success("岗位-评分导入表");
     }
 
     @PostMapping("/positionPiece")
-    public R positionPiece(HttpServletResponse response) throws Exception {
+    public R<String> positionPiece(HttpServletResponse response) throws Exception {
         download(response,"excel/positionPiece.xlsx");
 
-        return R.success();
+        return R.success("岗位-计件导入表");
     }
 
     @PostMapping ("/position")
-    public R position(HttpServletResponse response) throws Exception {
+    public R<String> position(HttpServletResponse response) throws Exception {
         download(response,"excel/position.xlsx");
 
-        return R.success();
+        return R.success("岗位导入表");
     }
 
     @PostMapping("/score")
-    public R score(HttpServletResponse response) throws Exception {
+    public R<String> score(HttpServletResponse response) throws Exception {
         download(response,"excel/score.xlsx");
 
-        return R.success();
+        return R.success("评分条目导入表");
     }
 
     @PostMapping("/piece")
-    public R piece(HttpServletResponse response) throws Exception {
+    public R<String> piece(HttpServletResponse response) throws Exception {
         download(response,"excel/peice.xlsx");
 
-        return R.success();
+        return R.success("计件条目导入表");
     }
 
     @PostMapping("/employee")
-    public R employee(HttpServletResponse response) throws Exception {
+    public R<String> employee(HttpServletResponse response) throws Exception {
         download(response,"excel/employee.xlsx");
 
-        return R.success();
+        return R.success("人员导入表");
+    }
+
+    @PostMapping("/reward")
+    public R<String> reward(HttpServletResponse response) throws Exception {
+        download(response,"excel/reward.xlsx");
+
+        return R.success("员工上月特殊绩效导入表");
     }
 
     public void download(HttpServletResponse response,String excel) throws Exception{

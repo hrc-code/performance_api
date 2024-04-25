@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class PositionPieceExcelReadListener implements ReadListener<PositionPieceExcel> {
 
@@ -43,9 +44,41 @@ public class PositionPieceExcelReadListener implements ReadListener<PositionPiec
         saveData();
     }
 
-    private void saveData() {
+    private String saveData() {
         if (!CollectionUtils.isEmpty(cachedDataList)) {
-            cachedDataList.stream().filter(Objects::nonNull).forEach(positionPieceExcel -> {
+            for(PositionPieceExcel positionPieceExcel:cachedDataList){
+                Long pieceId= Db.lambdaQuery(PieceRule.class).eq(PieceRule::getName,positionPieceExcel.getPiece())
+                        .apply(StringUtils.checkValNotNull(beginTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                        .apply(StringUtils.checkValNotNull(endTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .one().getId();
+                if(pieceId==null)
+                    return positionPieceExcel.getNum()+"缺少对应的计件条目";
+
+                Long deptId= Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,positionPieceExcel.getDept())
+                        .eq(Dept::getState,1).one().getId();
+                if(deptId==null)
+                    return positionPieceExcel.getNum()+"该员工所属部门错误";
+
+                Long positionId=Db.lambdaQuery(Position.class).eq(Position::getPosition,positionPieceExcel.getPosition())
+                        .eq(Position::getDeptId,deptId)
+                        .apply(StringUtils.checkValNotNull(beginTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                        .apply(StringUtils.checkValNotNull(endTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .one().getId();
+                if(positionId==null)
+                    return positionPieceExcel.getNum()+"该员工所属岗位";
+
+                PositionPiece positionPiece=new PositionPiece();
+                if(Check.noNull(pieceId,deptId,positionId)){
+                    positionPiece.setPositionId(positionId);
+                    positionPiece.setPieceId(pieceId);
+                    Db.save(positionPiece);
+                }
+            }
+            /*cachedDataList.stream().filter(Objects::nonNull).forEach(positionPieceExcel -> {
                 Long pieceId= Db.lambdaQuery(PieceRule.class).eq(PieceRule::getName,positionPieceExcel.getPiece())
                         .apply(StringUtils.checkValNotNull(beginTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -70,7 +103,8 @@ public class PositionPieceExcelReadListener implements ReadListener<PositionPiec
                     positionPiece.setPieceId(pieceId);
                     Db.save(positionPiece);
                 }
-            });
+            });*/
         }
+        return "成功";
     }
 }

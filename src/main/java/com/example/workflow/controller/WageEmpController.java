@@ -142,6 +142,7 @@ public class WageEmpController {
                         .apply(StringUtils.checkValNotNull(endTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
                         .list();
+
                 assessor.forEach(z->{
                     assessorList1.add(String.valueOf(z.getAssessorId()));
                 });

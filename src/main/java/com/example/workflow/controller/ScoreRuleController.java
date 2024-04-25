@@ -127,6 +127,7 @@ public class ScoreRuleController {
 
         LambdaQueryWrapper<ScoreContactAssessors> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(ScoreContactAssessors::getPositionId,obj.getString("id"))
+                .orderByAsc(ScoreContactAssessors::getScoreId)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),

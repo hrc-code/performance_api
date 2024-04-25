@@ -138,7 +138,13 @@ public class EmployeePositionController {
             JSONObject formObject = formArray.getJSONObject(i);
 
             EmployeePosition x=new EmployeePosition();
+
+            if(formObject.getString("positionId").isEmpty())
+                return R.error("请选择人员岗位");
             x.setEmpId(Long.valueOf(form.getString("empId")));
+
+            if(formObject.getString("posiPercent").isEmpty())
+                return R.error("请填写岗位比例");
             x.setPositionId(Long.valueOf(formObject.getString("positionId")));
             String valueAsString = formObject.getString("posiPercent");
             BigDecimal valueAsBigDecimal = new BigDecimal(valueAsString);
@@ -277,11 +283,13 @@ public class EmployeePositionController {
     @GetMapping("/search")
     public R<Page> searchPage(@RequestParam("page") String page
             , @RequestParam("page_size") String pageSize
-            ,@RequestParam(defaultValue = "") String empName){
+            ,@RequestParam(defaultValue = "") String empName
+            ,@RequestParam(defaultValue = "") String position){
         Page<EmpPositionView> pageInfo=new Page<EmpPositionView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpPositionView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(EmpPositionView::getEmpId)
                 .like(EmpPositionView::getEmpName,empName)
+                .like(EmpPositionView::getPosition,position)
                 .eq(EmpPositionView::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)

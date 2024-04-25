@@ -38,7 +38,7 @@ public class R<T> {
     public static <T> R<T> error(String msg){
         R r=new R();
         r.message=msg;
-        r.code=0;
+        r.code=100;
         return r;
     }
     public static <T> R<T> error(String msg,T data){

@@ -41,10 +41,10 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${pieceAppoint=='true'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_06nt9by" sourceRef="Gateway_1qgomfv" targetRef="Activity_1f92un6">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${scoreAppoint=='true'}</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kpiAppoint=='true'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0qkxhfa" sourceRef="Gateway_0wmag4f" targetRef="Activity_0syenop">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kpiAppoint=='true'}</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${scoreAppoint=='true'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_130sscg" sourceRef="Gateway_05bcaoa" targetRef="Activity_1k4qnlj">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${okrAppoint=='true'}</bpmn:conditionExpression>
@@ -78,14 +78,14 @@
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0cumc6d" sourceRef="Event_1rss2is" targetRef="Gateway_01ekuqo" />
     <bpmn:sequenceFlow id="Flow_1p8ob14" sourceRef="Gateway_1qgomfv" targetRef="Gateway_03k4k7q">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${scoreAppoint=='false'}</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kpiAppoint=='false'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_123opsd" sourceRef="Event_0ucm97k" targetRef="Gateway_03k4k7q" />
     <bpmn:sequenceFlow id="Flow_1tpg1ap" sourceRef="Activity_0iweuwo" targetRef="Gateway_01ekuqo" />
     <bpmn:sequenceFlow id="Flow_0wqdm7h" sourceRef="Event_0yg3yx4" targetRef="Gateway_1n3i28d" />
     <bpmn:sequenceFlow id="Flow_0hd03hw" sourceRef="Activity_0syenop" targetRef="Gateway_1n3i28d" />
     <bpmn:sequenceFlow id="Flow_1o1q8h2" sourceRef="Gateway_0wmag4f" targetRef="Gateway_1n3i28d">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kpiAppoint=='false'}</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${scoreAppoint=='false'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1vghcv2" sourceRef="Event_0zgygth" targetRef="Gateway_1q1jrc1" />
     <bpmn:sequenceFlow id="Flow_0q0hu02" sourceRef="Activity_1k4qnlj" targetRef="Gateway_1q1jrc1" />

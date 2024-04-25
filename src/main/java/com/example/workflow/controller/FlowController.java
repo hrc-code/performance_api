@@ -3,11 +3,9 @@ package com.example.workflow.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.ActReDeployment;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.ActReDeploymentMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.mapper.TaskViewMapper;
@@ -95,6 +93,17 @@ public class FlowController {
 
     @PostMapping("/startFlow")
     private R startFlow(@RequestBody JSONObject obj){
+        PositionAssessor assessor=PositionAssessorService.lambdaQuery()
+                .eq(PositionAssessor::getPositionId,obj.getString("positionId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+        if(assessor.getSecondAssessorId()==null||assessor.getFourthAssessorId()==null||assessor.getThirdAssessorId()==null){
+            return R.error("该岗位未配置对应的审核人与审核时限，请前往配置");
+        }
+
         LambdaQueryWrapper<EmployeePosition> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(EmployeePosition::getPositionId,obj.getString("positionId"));
         List<EmployeePosition> empList=EmployeePositionMapper.selectList(queryWrapper);

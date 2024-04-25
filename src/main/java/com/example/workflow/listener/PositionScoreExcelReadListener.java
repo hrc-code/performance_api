@@ -66,10 +66,22 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
 
                 PositionScore positionScore=new PositionScore();
                 if(Check.noNull(scoreId,deptId,positionId)){
-                    positionScore.setPositionId(positionId);
-                    positionScore.setScoreId(scoreId);
-                    positionScore.setPercent(positionScoreExcel.getScorePercent());
-                    Db.save(positionScore);
+                    positionScore=Db.lambdaQuery(PositionScore.class)
+                            .eq(PositionScore::getPositionId,positionId)
+                            .eq(PositionScore::getScoreId,scoreId)
+                            .apply(StringUtils.checkValNotNull(beginTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                            .apply(StringUtils.checkValNotNull(endTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                            .eq(PositionScore::getState,1).one();
+
+                    if(positionScore==null){
+                        positionScore=new PositionScore();
+                        positionScore.setPositionId(positionId);
+                        positionScore.setScoreId(scoreId);
+                        positionScore.setPercent(positionScoreExcel.getScorePercent());
+                        Db.save(positionScore);
+                    }
                 }
 
                 Long assessorId=Db.lambdaQuery(Employee.class).eq(Employee::getNum,positionScoreExcel.getNum())
