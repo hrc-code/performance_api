@@ -1,13 +1,18 @@
 package com.example.workflow.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.workflow.bean.CheckCode;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.*;
+import com.example.workflow.entity.Employee;
+import com.example.workflow.entity.LoginDto;
 import com.example.workflow.service.EmployeeService;
 import com.example.workflow.utils.JWTHelper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 import com.example.workflow.utils.VerifyCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
@@ -45,7 +50,7 @@ public class LoginController {
             String randomText = VerifyCode.drawRandomText(width,height,verifyImg);
 
             //功能是生成验证码字符并加上噪点，干扰线，返回值为验证码字符
-            CheckCode checkCode = new CheckCode(randomText.toString(),60);
+            CheckCode checkCode = new CheckCode(randomText,60);
 
             session.setAttribute("verifyCode", checkCode);
             System.out.println(session);
@@ -81,9 +86,10 @@ public class LoginController {
 
 //        if(checkCode.isExpired()) return R.error("验证码已过期，请点击重新生成！");
 //        if (!checkCode.getCode().equals(dto.getVerifyCode())) return R.error("验证码错误，请重新输入！");
+        LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Employee::getNum, dto.getUsername()).eq(Employee::getPassword, dto.getPassword());
 
-        Employee employee = employeeService.lambdaQuery().eq(Employee::getNum,dto.getUsername())
-                .eq(Employee::getPassword,dto.getPassword()).one();
+        Employee employee = employeeService.getOne(wrapper);
 
         if(employee != null) {
             Map<String, String> payload = new HashMap<>();
