@@ -1,5 +1,7 @@
 package com.example.workflow.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.util.List;
@@ -9,6 +11,7 @@ public class MenuVo {
     /**
      * 路由或按钮的id
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private String id;
     /**
      * 路由或按钮名称

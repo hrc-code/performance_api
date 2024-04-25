@@ -4,6 +4,8 @@ import com.example.workflow.pojo.DeptIdAndNape;
 import com.example.workflow.pojo.PostIdAndName;
 import com.example.workflow.pojo.PostIdPercent;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -18,6 +20,7 @@ public class EmployeeVo {
      */
     private List<PostIdAndName> posts;
     //员工所属角色id
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long roleId;
     /**
      * 部门名称集合
@@ -26,6 +29,7 @@ public class EmployeeVo {
 
     /**
      * 部门iid集合*/
+    @JsonSerialize(using = ToStringSerializer.class)
     private List<Long> deptIds;
 
     /**
@@ -100,6 +104,7 @@ public class EmployeeVo {
     /**
      * 所属岗位id(可能有多个值)
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private List<Long> postId;
 
     /**
@@ -113,6 +118,7 @@ public class EmployeeVo {
     /**
      * 所属地域id
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long regionId;
 
     /**
