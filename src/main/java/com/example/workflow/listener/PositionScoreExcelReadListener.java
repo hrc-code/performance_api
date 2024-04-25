@@ -76,6 +76,7 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
                             .eq(PositionScore::getState,1).one();
 
                     if(positionScore==null){
+                        positionScore=new PositionScore();
                         positionScore.setPositionId(positionId);
                         positionScore.setScoreId(scoreId);
                         positionScore.setPercent(positionScoreExcel.getScorePercent());

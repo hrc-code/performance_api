@@ -25,10 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -144,7 +141,8 @@ public class TaskViewController {
         List<TaskView> task=TaskViewMapper.selectList(Wrapper);
 
         List<TaskView> taskList = task.stream()
-                .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
+                .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
+                        , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
