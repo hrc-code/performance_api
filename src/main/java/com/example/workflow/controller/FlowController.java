@@ -9,11 +9,7 @@ import com.example.workflow.entity.*;
 import com.example.workflow.mapper.ActReDeploymentMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.mapper.TaskViewMapper;
-import com.example.workflow.service.EmployeePositionService;
-import com.example.workflow.service.PositionAssessorService;
-import com.example.workflow.service.PositionService;
-import com.example.workflow.service.ResultSecondExamineService;
-import com.example.workflow.service.ResultThirdExamineService;
+import com.example.workflow.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.IdentityService;
@@ -69,6 +65,8 @@ public class FlowController {
     private ResultSecondExamineService ResultSecondExamineService;
     @Autowired
     private TaskViewMapper TaskViewMapper;
+    @Autowired
+            private EmpPositionViewService EmpPositionViewService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -100,15 +98,31 @@ public class FlowController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
-        if(assessor.getSecondAssessorId()==null||assessor.getFourthAssessorId()==null||assessor.getThirdAssessorId()==null){
-            return R.error("该岗位未配置对应的审核人与审核时限，请前往配置");
+
+        LambdaQueryWrapper<EmpPositionView> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.eq(EmpPositionView::getPositionId,obj.getString("positionId"));
+        List<EmpPositionView> empList= EmpPositionViewService.list(queryWrapper);
+        if(empList==null){
+            return R.error("没有员工在该岗位");
         }
 
-        LambdaQueryWrapper<EmployeePosition> queryWrapper=new LambdaQueryWrapper<>();
-        queryWrapper.eq(EmployeePosition::getPositionId,obj.getString("positionId"));
-        List<EmployeePosition> empList=EmployeePositionMapper.selectList(queryWrapper);
+        if(empList.get(0).getType()==5){
+            if(assessor.getSecondAssessorId()==null||assessor.getFourthAssessorId()==null||assessor.getThirdAssessorId()==null){
+                return R.error("该岗位未配置对应的审核人与审核时限，请前往配置");
+            }
+        }
+        else if(empList.get(0).getType()==4){
+            if(assessor.getSecondAssessorId()==null||assessor.getThirdAssessorId()==null){
+                return R.error("该岗位未配置对应的审核人与审核时限，请前往配置");
+            }
+        }
+        else if(empList.get(0).getType()==3){
+            if(assessor.getSecondAssessorId()==null){
+                return R.error("该岗位未配置对应的审核人与审核时限，请前往配置");
+            }
+        }
 
-        for(EmployeePosition x:empList){
+        for(EmpPositionView x:empList){
             Map<String,Object> map = new HashMap<>();
             map.put("declarer",obj.getString("empId"));
 

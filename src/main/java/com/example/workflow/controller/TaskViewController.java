@@ -91,7 +91,8 @@ public class TaskViewController {
         List<TaskView> task=TaskViewMapper.selectList(Wrapper);
 
         List<TaskView> taskList = task.stream()
-                .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
+                .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
+                        , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
@@ -554,7 +555,8 @@ public class TaskViewController {
                         .or().eq(TaskView::getName, "kpi"));
         List<TaskView> task1=TaskViewMapper.selectList(Wrapper1);
         List<TaskView> taskList1 = task1.stream()
-                .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
+                .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
+                        , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
@@ -568,7 +570,8 @@ public class TaskViewController {
                         .or().eq(TaskView::getName, "okr"));
         List<TaskView> task2=TaskViewMapper.selectList(Wrapper2);
         List<TaskView> taskList2 = task2.stream()
-                .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
+                .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
+                        , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
@@ -681,7 +684,8 @@ public class TaskViewController {
                         .or().eq(TaskView::getName, "kpi"));
         List<TaskView> task1=TaskViewMapper.selectList(Wrapper1);
         List<TaskView> taskList1 = task1.stream()
-                .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
+                .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
+                        , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
@@ -702,7 +706,8 @@ public class TaskViewController {
                         .or().eq(TaskView::getName, "okr"));
         List<TaskView> task3=TaskViewMapper.selectList(Wrapper3);
         List<TaskView> taskList3 = task3.stream()
-                .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
+                .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
+                        , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
@@ -816,7 +821,8 @@ public class TaskViewController {
                         .or().eq(TaskView::getName, "okr"));
         List<TaskView> task2=TaskViewMapper.selectList(Wrapper2);
         List<TaskView> taskList2 = task2.stream()
-                .collect(Collectors.toMap(TaskView::getEmpName, Function.identity(), (oldValue, newValue) -> oldValue))
+                .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
+                        , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
