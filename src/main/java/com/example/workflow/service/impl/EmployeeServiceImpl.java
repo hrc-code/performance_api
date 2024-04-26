@@ -153,7 +153,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             }
 
         }
-
+        if (employeeVo.getId() == null) return R.error("查无此人");
         return R.success(employeeVo);
     }
 

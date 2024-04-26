@@ -30,8 +30,8 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     /** 根据员工姓名获取信息， 信息可以不全*/
-    @GetMapping("/infoByName")
-    public R<EmployeeVo> getByName(@RequestParam String name) {
+    @GetMapping("/infoByName/{name}")
+    public R<EmployeeVo> getByName(@PathVariable String name) {
         return employeeService.getByName(name);
     }
 
