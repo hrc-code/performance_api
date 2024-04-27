@@ -78,7 +78,6 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
         List<EmpScoreView> scoreList= EmpScoreViewMapper.selectList(queryWrapper);
 
         AtomicReference<BigDecimal> scoreTotal = new AtomicReference<>(new BigDecimal(0));
-
         if(!scoreList.isEmpty()&&scoreList != null){
             scoreList.forEach(x->{
                 if(x.getCorrectedValue()==null){
@@ -180,7 +179,8 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
         wage.setEmpId(empId);
         wage.setPositionId(positionId);
         if(!scoreTotal.get().equals(new BigDecimal(0))){
-            wage.setScoreWage(scoreTotal.get().multiply(coefficientView.getPerformanceWage())
+            wage.setScoreWage(scoreTotal.get()
+                    .multiply(coefficientView.getPerformanceWage())
                     .divide(new BigDecimal(100),2)
                     .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
                     .multiply(coefficientView.getPositionCoefficient()));
@@ -189,7 +189,8 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
             wage.setScoreWage(scoreTotal.get());
         }
         if(!okrTotal.equals(new BigDecimal(0))){
-            wage.setOkrWage(okrTotal.get().multiply(coefficientView.getPerformanceWage())
+            wage.setOkrWage(okrTotal.get()
+                    .multiply(coefficientView.getPerformanceWage())
                     .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
                     .divide(new BigDecimal(100),2)
                     .multiply(coefficientView.getPositionCoefficient()));;
@@ -207,13 +208,15 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 .eq(EmployeePosition::getState,1);
         EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
 
-        BigDecimal result = (okrTotal.get()
-                .add(kpiTotal.get())
-                .add(scoreTotal.get())
-                .add(pieceTotal.get())
-                .add(rewardTotal.get()))
+        BigDecimal result = (wage.getOkrWage()
+                .add(wage.getScoreWage())
+                .add(wage.getKpiWage())
+                .add(wage.getPieceWage())
+                .add(wage.getRewardWage())
                 .multiply(EmployeePosition.getPosiPercent())
-                .divide(new BigDecimal(100),2);
+                .divide(new BigDecimal(100),2))
+                .add(coefficientView.getWage());
+        System.out.println(result);
         wage.setTotal(result);
 
         EmpWageService.save(wage);

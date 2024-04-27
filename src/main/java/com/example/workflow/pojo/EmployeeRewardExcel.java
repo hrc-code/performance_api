@@ -18,4 +18,6 @@ public class EmployeeRewardExcel {
     private BigDecimal reward;
     @ExcelProperty("员工岗位")
     private String positionName;
+    @ExcelProperty("所属部门")
+    private String dept;
 }

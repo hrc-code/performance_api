@@ -29,6 +29,13 @@ public class DownloadTemplateController {
         return R.success("岗位-计件导入表");
     }
 
+    @PostMapping("/positionKpi")
+    public R<String> positionKpi(HttpServletResponse response) throws Exception {
+        download(response,"excel/positionKpi.xlsx");
+
+        return R.success("岗位-提成导入表");
+    }
+
     @PostMapping ("/position")
     public R<String> position(HttpServletResponse response) throws Exception {
         download(response,"excel/position.xlsx");
@@ -48,6 +55,13 @@ public class DownloadTemplateController {
         download(response,"excel/peice.xlsx");
 
         return R.success("计件条目导入表");
+    }
+
+    @PostMapping("/kpi")
+    public R<String> kpi(HttpServletResponse response) throws Exception {
+        download(response,"excel/kpi.xlsx");
+
+        return R.success("提成条目导入表");
     }
 
     @PostMapping("/employee")

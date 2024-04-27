@@ -536,7 +536,8 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
         List<PostIdPercent> postIdPercentList = employeeFormDto.getPostIdPercent();
         // 岗位所对应的绩效
-        Map<Long, BigDecimal> map = postIdPercentList.stream().collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
+        Map<Long, BigDecimal> map = postIdPercentList.stream()
+                .collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
         map.forEach((postId, percent) -> {
             // 向员工岗位表插入数据
             EmployeePosition employeePosition = new EmployeePosition();
@@ -544,6 +545,16 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             employeePosition.setState(1);
             employeePosition.setPositionId(postId);
             employeePosition.setPosiPercent(map.get(postId));
+
+            Short type=Db.lambdaQuery(Position.class)
+                    .eq(Position::getId, postId)
+                    .one().getType();
+            if(type==5)
+                employeePosition.setProcessKey("Process_1gzouwy");
+            else if(type==4)
+                employeePosition.setProcessKey("Process_1whe0gq");
+            else if(type==3)
+                employeePosition.setProcessKey("Process_01p7ac7");
             employeePositionService.save(employeePosition);
         });
 

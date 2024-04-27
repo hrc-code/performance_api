@@ -1,14 +1,23 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.listener.KpiExcelReadListener;
+import com.example.workflow.listener.PieceExcelReadListener;
+import com.example.workflow.listener.PositionKpiExcelReadListener;
+import com.example.workflow.listener.PositionPieceExcelReadListener;
 import com.example.workflow.mapper.KpiRuleMapper;
 import com.example.workflow.mapper.PositionKpiMapper;
 import com.example.workflow.mapper.PositionKpiViewMapper;
+import com.example.workflow.pojo.KpiExcel;
+import com.example.workflow.pojo.PieceExcel;
+import com.example.workflow.pojo.PositionKpiExcel;
+import com.example.workflow.pojo.PositionPieceExcel;
 import com.example.workflow.service.KpiPercentService;
 import com.example.workflow.service.KpiRulePercentService;
 import com.example.workflow.service.KpiRuleService;
@@ -21,7 +30,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -324,6 +335,18 @@ public class KpiRuleController {
         KpiRulePercentService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);
+    }
+
+    @PostMapping("/upload")
+    public R uploadExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), KpiExcel.class, new KpiExcelReadListener()).sheet().doRead();
+        return R.success();
+    }
+
+    @PostMapping("/uploadPosition")
+    public R uploadPositionExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), PositionKpiExcel.class, new PositionKpiExcelReadListener()).sheet().doRead();
+        return R.success();
     }
 
 }

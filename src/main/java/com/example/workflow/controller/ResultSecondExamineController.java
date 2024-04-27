@@ -137,6 +137,7 @@ public class ResultSecondExamineController {
 
         LambdaQueryWrapper<EmpScoreView> queryWrapper1=new LambdaQueryWrapper<>();
         queryWrapper1.eq(EmpScoreView::getPositionId,obj.getString("positionId"))
+                .orderByAsc(EmpScoreView::getEmpId)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -147,6 +148,7 @@ public class ResultSecondExamineController {
 
         LambdaQueryWrapper<EmpPieceView> queryWrapper2=new LambdaQueryWrapper<>();
         queryWrapper2.eq(EmpPieceView::getPositionId,obj.getString("positionId"))
+                .orderByAsc(EmpPieceView::getEmpId)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -157,6 +159,7 @@ public class ResultSecondExamineController {
 
         LambdaQueryWrapper<EmpKpiView> queryWrapper3=new LambdaQueryWrapper<>();
         queryWrapper3.eq(EmpKpiView::getPositionId,obj.getString("positionId"))
+                .orderByAsc(EmpKpiView::getEmpId)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -167,6 +170,7 @@ public class ResultSecondExamineController {
 
         LambdaQueryWrapper<EmpOkrView> queryWrapper4=new LambdaQueryWrapper<>();
         queryWrapper4.eq(EmpOkrView::getPositionId,obj.getString("positionId"))
+                .orderByAsc(EmpOkrView::getLiaEmpId)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),

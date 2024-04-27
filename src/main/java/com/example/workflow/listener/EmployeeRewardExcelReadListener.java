@@ -4,11 +4,7 @@ import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.example.workflow.entity.EmpReward;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.entity.PdfFile;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.Role;
+import com.example.workflow.entity.*;
 import com.example.workflow.pojo.EmployeeRewardExcel;
 import com.example.workflow.utils.Check;
 import org.springframework.util.CollectionUtils;
@@ -69,8 +65,12 @@ public class EmployeeRewardExcelReadListener implements ReadListener<EmployeeRew
                 Employee employee = Db.lambdaQuery(Employee.class).eq(Employee::getNum, num).one();
                 // 去角色表中把 name = 绩效专员 的 id查出来
                 Role role = Db.lambdaQuery(Role.class).eq(Role::getRoleName, "绩效专员").one();
+
+                Dept dept=Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,employeeRewardExcel.getDept()).eq(Dept::getState,1).one();
                 // 通过岗位名去岗位表查询对应的岗位id
-                Position position = Db.lambdaQuery(Position.class).eq(Position::getPosition, employeeRewardExcel.getPositionName()).one();
+                Position position = Db.lambdaQuery(Position.class)
+                        .eq(Position::getPosition, employeeRewardExcel.getPositionName())
+                        .eq(Position::getDeptId,dept.getId()).one();
                 // 通过fileName 去pdf文件表查询 file_id
                 String fileName = employeeRewardExcel.getFileName();
                 PdfFile pdfFile = Db.lambdaQuery(PdfFile.class).eq(PdfFile::getFileName, fileName).one();

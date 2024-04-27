@@ -1,5 +1,6 @@
 package com.example.workflow.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class PositionAssessorView {
     @JsonSerialize(using= ToStringSerializer.class)
     private Long deptId;
     private String deptName;
+    private Short auditStatus;
     @JsonSerialize(using= ToStringSerializer.class)
     private Long fourthAssessorId;
     private String fourthAssessorName;
