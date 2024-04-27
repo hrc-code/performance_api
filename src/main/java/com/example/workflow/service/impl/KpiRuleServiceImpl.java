@@ -79,6 +79,7 @@ public class KpiRuleServiceImpl extends ServiceImpl<KpiRuleMapper, KpiRule> impl
             one.setName(form.getName());
             one.setTarget1(form.getTarget1());
             one.setTarget2(form.getTarget2());
+            one.setType(form.getType());
         return one;
     }
 }

@@ -59,7 +59,11 @@ public class EmpPieceServiceImpl extends ServiceImpl<EmpPieceMapper, EmpPiece> i
         AtomicReference<BigDecimal> pieceTotal = new AtomicReference<>(new BigDecimal(0));
         if(!pieceList.isEmpty()){
             pieceList.forEach(x->{
-                pieceTotal.updateAndGet(total -> total.add(x.getTargetNum()));
+                BigDecimal currentScore =(x.getTargetNum()
+                        .multiply(new BigDecimal(x.getWorkOrder()))
+                        .multiply(x.getQuality())
+                        .divide(new BigDecimal(100),2));
+                pieceTotal.updateAndGet(total -> total.add(currentScore));
             });
         }
 

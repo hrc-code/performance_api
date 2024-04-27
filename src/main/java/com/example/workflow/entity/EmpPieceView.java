@@ -18,8 +18,8 @@ public class EmpPieceView {
     private Long pieceId;
     @JsonSerialize(using= ToStringSerializer.class)
     private Long positionId;
-    @JsonSerialize(using= ToStringSerializer.class)
-    private Long workOrder;
+    private Integer workOrder;
+    private BigDecimal quality;
     private String name;
     private BigDecimal targetNum;
     private String empName;

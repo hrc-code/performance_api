@@ -9,7 +9,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface EmpKpiService extends IService<EmpKpi> {
-    String defineRule(List<KpiPercent> list, BigDecimal inTarget2);
+    String defineRule1(List<KpiPercent> list, BigDecimal inTarget2);
+
+    BigDecimal defineRule2(KpiPercent kpiPercent, BigDecimal inTarget1, BigDecimal inTarget2);
 
     void reChange(Long empKpiId, Long empId);
 }

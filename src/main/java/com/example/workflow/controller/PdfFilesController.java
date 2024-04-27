@@ -218,7 +218,7 @@ public class PdfFilesController {
      * @return  List<EmpPiece> 错误的计件条目
      * @throws IOException
      */
-    @PostMapping("/importNumber")
+    /*@PostMapping("/importNumber")
     public R importNumber(MultipartFile file) throws IOException {
         ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
         List<EmpPieceExcel> empPieceExcels = reader.readAll(EmpPieceExcel.class);
@@ -256,7 +256,7 @@ public class PdfFilesController {
 
         if (noEmpPieces.isEmpty()) return R.success();
         else return R.error("导入错误");
-    }
+    }*/
 
     /**
      * 导入kpi

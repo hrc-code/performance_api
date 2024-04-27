@@ -112,7 +112,11 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
         AtomicReference<BigDecimal> pieceTotal = new AtomicReference<>(new BigDecimal(0));
         if(!pieceList.isEmpty()){
             pieceList.forEach(x->{
-                pieceTotal.updateAndGet(total -> total.add(x.getTargetNum()));
+                BigDecimal currentScore =(x.getTargetNum()
+                        .multiply(new BigDecimal(x.getWorkOrder()))
+                        .multiply(x.getQuality())
+                        .divide(new BigDecimal(100),2));
+                pieceTotal.updateAndGet(total -> total.add(currentScore));
             });
         }
 
@@ -216,7 +220,6 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 .multiply(EmployeePosition.getPosiPercent())
                 .divide(new BigDecimal(100),2))
                 .add(coefficientView.getWage());
-        System.out.println(result);
         wage.setTotal(result);
 
         EmpWageService.save(wage);

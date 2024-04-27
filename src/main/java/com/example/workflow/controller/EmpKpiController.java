@@ -6,13 +6,12 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.EmpKpi;
-import com.example.workflow.entity.EmpKpiView;
-import com.example.workflow.entity.KpiPercent;
-import com.example.workflow.entity.Order3;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.KpiPercentMapper;
 import com.example.workflow.service.EmpKpiService;
 import com.example.workflow.service.EmpKpiViewService;
+import com.example.workflow.service.KpiPercentService;
+import com.example.workflow.service.KpiRuleService;
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
@@ -41,6 +40,10 @@ public class EmpKpiController {
     private EmpKpiService EmpKpiService;
     @Autowired
     private EmpKpiViewService EmpKpiViewService;
+    @Autowired
+            private KpiRuleService KpiRuleService;
+    @Autowired
+            private KpiPercentService KpiPercentService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -49,40 +52,69 @@ public class EmpKpiController {
 
     @PostMapping("/match")
     private R matchCoefficient(@RequestBody List<EmpKpi> form){
-        Long kpiPercent=form.get(0).getKpiId();
+        Long kpiRuleId=form.get(0).getKpiId();
 
-        LambdaQueryWrapper<KpiPercent> queryWrapper=new LambdaQueryWrapper<>();
-        queryWrapper.orderByAsc(KpiPercent::getKpiKey)
-                .eq(KpiPercent::getKpiId,kpiPercent);
-        List<KpiPercent> list=KpiPercentMapper.selectList(queryWrapper);
+        KpiRule kpiRule= KpiRuleService.lambdaQuery()
+                .eq(KpiRule::getId,kpiRuleId)
+                .eq(KpiRule::getState,1)
+                .one();
 
-        form.forEach(x->{
-            String rules=EmpKpiService.defineRule(list,x.getInTarget2());
+        if(kpiRule.getType()==1){
+            LambdaQueryWrapper<KpiPercent> queryWrapper=new LambdaQueryWrapper<>();
+            queryWrapper.orderByAsc(KpiPercent::getKpiKey)
+                    .eq(KpiPercent::getKpiId,kpiRuleId)
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+            List<KpiPercent> list=KpiPercentMapper.selectList(queryWrapper);
 
-            KieHelper helper = new KieHelper();
-            helper.addContent(rules, ResourceType.DRL);
-            KieSession kSession = helper.build().newKieSession();
+            form.forEach(x->{
+                String rules=EmpKpiService.defineRule1(list,x.getInTarget2());
 
-            if(x.getEmpId()==null)
-                R.error("员工姓名不得为空");
-            else if(x.getInTarget1()==null)
-                R.error("kpi条目一不得为空");
-            else if(x.getInTarget2()==null)
-                R.error("kpi条目二不得为空");
-            else if(x.getKpiId()==null)
-                R.error("kpi项目不得为空");
+                KieHelper helper = new KieHelper();
+                helper.addContent(rules, ResourceType.DRL);
+                KieSession kSession = helper.build().newKieSession();
 
-            Order3 order = new Order3();
-            order.setInTarget1(x.getInTarget1());
-            order.setInTarget2(x.getInTarget2());
+                if(x.getEmpId()==null)
+                    R.error("员工姓名不得为空");
+                else if(x.getInTarget1()==null)
+                    R.error("kpi条目一不得为空");
+                else if(x.getInTarget2()==null)
+                    R.error("kpi条目二不得为空");
+                else if(x.getKpiId()==null)
+                    R.error("kpi项目不得为空");
 
-            kSession.insert(order);
-            kSession.fireAllRules();
+                Order3 order = new Order3();
+                order.setInTarget1(x.getInTarget1());
+                order.setInTarget2(x.getInTarget2());
 
-            x.setResult(BigDecimal.valueOf(order.getOutNum()));
-            kSession.dispose();
-        });
-        EmpKpiService.saveBatch(form);
+                kSession.insert(order);
+                kSession.fireAllRules();
+
+                x.setResult(BigDecimal.valueOf(order.getOutNum()));
+                kSession.dispose();
+            });
+            EmpKpiService.saveBatch(form);
+        }
+        else if(kpiRule.getType()==2){
+            KpiPercent kpiPercent= KpiPercentService.lambdaQuery()
+                    .eq(KpiPercent::getKpiId,kpiRuleId)
+                    .eq(KpiPercent::getState,1)
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .one();
+
+            form.forEach(x->{
+                BigDecimal result=EmpKpiService.defineRule2(kpiPercent,x.getInTarget1(),x.getInTarget2());
+
+                x.setResult(result);
+            });
+            EmpKpiService.saveBatch(form);
+
+        }
 
         return R.success();
     }
@@ -138,24 +170,30 @@ public class EmpKpiController {
 
         EmpKpiService.removeById(form);
 
-        LambdaQueryWrapper<KpiPercent> queryWrapper=new LambdaQueryWrapper<>();
-        queryWrapper.orderByAsc(KpiPercent::getKpiKey)
-                .eq(KpiPercent::getKpiId,form.getKpiId());
-        List<KpiPercent> list=KpiPercentMapper.selectList(queryWrapper);
+        KpiRule kpiRule= KpiRuleService.lambdaQuery()
+                .eq(KpiRule::getId,form.getKpiId())
+                .eq(KpiRule::getState,1)
+                .one();
 
-        String rules=EmpKpiService.defineRule(list,form.getInTarget2());
+        if(kpiRule.getType()==1) {
+            LambdaQueryWrapper<KpiPercent> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.orderByAsc(KpiPercent::getKpiKey)
+                    .eq(KpiPercent::getKpiId, form.getKpiId());
+            List<KpiPercent> list = KpiPercentMapper.selectList(queryWrapper);
 
-        KieHelper helper = new KieHelper();
-        helper.addContent(rules, ResourceType.DRL);
-        KieSession kSession = helper.build().newKieSession();
+            String rules = EmpKpiService.defineRule1(list, form.getInTarget2());
 
-            if(form.getEmpId()==null)
+            KieHelper helper = new KieHelper();
+            helper.addContent(rules, ResourceType.DRL);
+            KieSession kSession = helper.build().newKieSession();
+
+            if (form.getEmpId() == null)
                 R.error("员工姓名不得为空");
-            else if(form.getInTarget1()==null)
+            else if (form.getInTarget1() == null)
                 R.error("kpi条目一不得为空");
-            else if(form.getInTarget2()==null)
+            else if (form.getInTarget2() == null)
                 R.error("kpi条目二不得为空");
-            else if(form.getKpiId()==null)
+            else if (form.getKpiId() == null)
                 R.error("kpi项目不得为空");
 
             Order3 order = new Order3();
@@ -167,6 +205,20 @@ public class EmpKpiController {
 
             form.setResult(BigDecimal.valueOf(order.getOutNum()));
             kSession.dispose();
+        }
+        else if(kpiRule.getType()==2){
+            KpiPercent kpiPercent= KpiPercentService.lambdaQuery()
+                    .eq(KpiPercent::getKpiId,form.getKpiId())
+                    .eq(KpiPercent::getState,1)
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .one();
+
+                BigDecimal result=EmpKpiService.defineRule2(kpiPercent,form.getInTarget1(),form.getInTarget2());
+                form.setResult(result);
+        }
 
         EmpKpiService.save(form);
         return R.success();

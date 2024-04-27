@@ -181,7 +181,9 @@ public class EmpPieceController {
             else if(x.getPieceId()==null)
                 R.error("计件条目不得为空");
             else if(x.getWorkOrder()==null)
-                R.error("工单不得为空");
+                R.error("数量不得为空");
+            else if(x.getQuality()==null)
+                R.error("质量不得为空");
         }
         EmpPieceService.saveBatch(form);
         return R.success();

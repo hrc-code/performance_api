@@ -41,7 +41,7 @@ public class EmpKpiServiceImpl extends ServiceImpl<EmpKpiMapper, EmpKpi> impleme
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
     @Override
-    public String defineRule(List<KpiPercent> list, BigDecimal inTarget2){
+    public String defineRule1(List<KpiPercent> list, BigDecimal inTarget2){
         String rule= "package resources.rules;\r\n";
         rule+="import com.example.workflow.entity.Order3;\r\n";
         BigDecimal previous=new BigDecimal(0);
@@ -83,6 +83,16 @@ public class EmpKpiServiceImpl extends ServiceImpl<EmpKpiMapper, EmpKpi> impleme
             }
         }
         return rule;
+    }
+
+    @Override
+    public BigDecimal defineRule2(KpiPercent kpiPercent, BigDecimal inTarget1, BigDecimal inTarget2){
+        BigDecimal result=new BigDecimal(0);
+        result=result.add(inTarget1)
+                .subtract(inTarget2)
+                .multiply(kpiPercent.getResultPercent())
+                .divide(new BigDecimal(100),2);
+        return result;
     }
 
     @Override

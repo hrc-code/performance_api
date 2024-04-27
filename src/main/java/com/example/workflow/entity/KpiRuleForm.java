@@ -13,6 +13,7 @@ public class KpiRuleForm {
     private String name;
     private String target1;
     private String target2;
+    private Integer type;
     private List<KpiPercent> percentList;
     private String ins;
 }

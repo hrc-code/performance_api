@@ -7,8 +7,7 @@ import java.math.BigDecimal;
 
 @Data
 public class EmployeeRewardExcel {
-    /** 员工工号*/
-    @ExcelProperty("序号")
+    @ExcelProperty("工号")
     private String num;
     @ExcelProperty("员工姓名")
     private String employeeName;

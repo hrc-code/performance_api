@@ -24,6 +24,7 @@ public class KpiRule {
     private String name;
     private String target1;
     private String target2;
+    private Integer type;
     @JsonDeserialize(using = StateChange.class)
     private Short state;
     private String ins;

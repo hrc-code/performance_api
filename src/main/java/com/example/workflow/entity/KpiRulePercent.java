@@ -13,6 +13,7 @@ public class KpiRulePercent {
     private String name;
     private String target1;
     private String target2;
+    private Integer type;
     private Short state;
     private String ins;
     @JsonSerialize(using= ToStringSerializer.class)

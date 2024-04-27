@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -24,7 +25,8 @@ public class EmpPiece implements Serializable {
     private Long empId;
     @JsonSerialize(using= ToStringSerializer.class)
     private Long pieceId;
-    private String workOrder;
+    private Integer workOrder;
+    private BigDecimal quality;
     private Short state;
     @TableField(fill= FieldFill.INSERT)//插入时填充字段
     private LocalDateTime createTime;
