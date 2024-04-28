@@ -8,6 +8,7 @@ import com.example.workflow.entity.EmpReward;
 import com.example.workflow.entity.EmpRewardView;
 import com.example.workflow.service.EmpRewardService;
 import com.example.workflow.service.EmpRewardViewService;
+import com.example.workflow.service.EmployeeCoefficientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,8 @@ public class EmpRewardController {
             private EmpRewardService EmpRewardService;
     @Autowired
             private EmpRewardViewService EmpRewardViewService;
+    @Autowired
+            private EmployeeCoefficientService EmployeeCoefficientService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -39,6 +42,8 @@ public class EmpRewardController {
     @PostMapping("/add")
     private R add(@RequestBody List<EmpReward> form){
         EmpRewardService.saveBatch(form);
+
+        EmployeeCoefficientService.fileOne(form.get(0).getEmpId(),form.get(0).getPositionId());
         return R.success();
     }
 
@@ -59,12 +64,16 @@ public class EmpRewardController {
     @PostMapping("/delete")
     private R delete(@RequestBody EmpReward one){
         EmpRewardService.removeById(one);
+
+        EmployeeCoefficientService.fileOne(one.getEmpId(),one.getPositionId());
         return R.success();
     }
 
     @PostMapping("/updateOne")
     private R updateOne(@RequestBody EmpReward one){
         EmpRewardService.updateById(one);
+
+        EmployeeCoefficientService.fileOne(one.getEmpId(),one.getPositionId());
         return R.success();
     }
 

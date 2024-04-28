@@ -178,8 +178,19 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 rewardTotal.updateAndGet(total -> total.add(x.getReward()));
             });
         }
-
         EmpWage wage=new EmpWage();
+        wage=EmpWageService.lambdaQuery().eq(EmpWage::getEmpId,empId)
+                .eq(EmpWage::getPositionId,positionId)
+                .eq(EmpWage::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+        if(wage==null){
+            wage=new EmpWage();
+        }
+
         wage.setEmpId(empId);
         wage.setPositionId(positionId);
         if(!scoreTotal.get().equals(new BigDecimal(0))){
