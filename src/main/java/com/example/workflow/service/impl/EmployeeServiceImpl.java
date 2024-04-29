@@ -1,6 +1,5 @@
 package com.example.workflow.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -11,6 +10,7 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.bean.PageBean;
 import com.example.workflow.common.R;
 import com.example.workflow.dto.EmployeeFormDto;
+import com.example.workflow.entity.Dept;
 import com.example.workflow.entity.DeptHierarchy;
 import com.example.workflow.entity.EmpCoefficient;
 import com.example.workflow.entity.Employee;
@@ -22,6 +22,7 @@ import com.example.workflow.entity.RoleBtn;
 import com.example.workflow.mapper.EmployeeMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.pojo.DeptIdAndNape;
+import com.example.workflow.pojo.EmployeeExcel;
 import com.example.workflow.pojo.PostIdAndName;
 import com.example.workflow.pojo.PostIdPercent;
 import com.example.workflow.service.ButtonService;
@@ -33,6 +34,7 @@ import com.example.workflow.service.PositionService;
 import com.example.workflow.service.RegionCoefficientService;
 import com.example.workflow.service.RoleBtnService;
 import com.example.workflow.service.RoleService;
+import com.example.workflow.utils.DateTimeUtils;
 import com.example.workflow.utils.Find;
 import com.example.workflow.vo.EmployeeVo;
 import com.example.workflow.vo.RouterAndButtonVo;
@@ -44,10 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -88,6 +87,64 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
     private  final ButtonService buttonService;
 
     private final RoleService roleService;
+
+    @Override
+    public Collection<EmployeeExcel> getEmployeeExcels() {
+        ArrayList<EmployeeExcel> employeeExcels = new ArrayList<>();
+        //查询全部员工信息
+        List<Employee> employees = list();
+        if (!CollectionUtils.isEmpty(employees)) {
+            for (Employee employee : employees) {
+                EmployeeExcel employeeExcel = new EmployeeExcel();
+                BeanUtils.copyProperties(employee, employeeExcel);
+                Long employeeId = employee.getId();
+                //查询职务名
+                Long roleId = employee.getRoleId();
+                Role role = roleService.getById(roleId);
+                if (Objects.nonNull(role)) {
+                    employeeExcel.setRoleName(role.getRoleName());
+                }
+                //查询岗位名，岗位类型
+                List<EmployeePosition> employeePositionList = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, employeeId).list();
+                if (!CollectionUtils.isEmpty(employeePositionList)) {
+                    EmployeePosition employeePosition = employeePositionList.get(0);
+                    Long positionId = employeePosition.getPositionId();
+                    Position position = positionService.getById(positionId);
+                    if (Objects.nonNull(position)) {
+                        String positionName = position.getPosition();
+                        String typeName = position.getTypeName();
+                        employeeExcel.setPosition(positionName);
+                        employeeExcel.setTypeName(typeName);
+                        //查询部门名
+                        Long deptId = position.getDeptId();
+                        Dept dept = deptService.getById(deptId);
+                        if (Objects.nonNull(dept)) {
+                            String deptName = dept.getDeptName();
+                            employeeExcel.setDeptName(deptName);
+                        }
+                    }
+
+
+                }
+                //查询岗位绩效
+                LocalDateTime[] times = DateTimeUtils.getTheStartAndEndTimeOfMonth();
+                EmpCoefficient empCoefficient = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, employeeId).between(EmpCoefficient::getCreateTime, times[0], times[1]).one();
+                if (Objects.nonNull(empCoefficient)) {
+                    BigDecimal positionCoefficient = empCoefficient.getPositionCoefficient();
+                    employeeExcel.setPositionCoefficient(positionCoefficient);
+                    // 地域名
+                    Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
+                    RegionCoefficient regionCoefficient = regionCoefficientService.getById(regionCoefficientId);
+                    if (Objects.nonNull(regionCoefficient)) {
+                        String region = regionCoefficient.getRegion();
+                        employeeExcel.setRegion(region);
+                    }
+                }
+                employeeExcels.add(employeeExcel);
+            }
+        }
+        return  employeeExcels;
+    }
 
     /**
      * 通过名字获取员工信息 可以获得不完整信息
@@ -276,13 +333,13 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 postIdAndName.setPosition(positionMap.get(positionId));
                 postIdAndNames.add(postIdAndName);
             });
-            LocalDateTime[] time = getTheStartAndEndTimeOfMonth();
+            LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
             //根据员工id 去 员工绩效表 查询岗位绩效， 地区id
             EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]).one();
             if (empCoefficient != null) {
                 BigDecimal positionCoefficient = empCoefficient.getPositionCoefficient();
                 Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
-                BeanUtil.copyProperties(employee, employeeVo);
+                BeanUtils.copyProperties(employee, employeeVo);
                 employeeVo.setPostIdPercent(postIdPercents);
                 //设置岗位id和岗位名称集合
                 employeeVo.setPosts(postIdAndNames);
@@ -322,12 +379,12 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 }
             });
             //根据员工id 去员工绩效表查询岗位绩效
-            LocalDateTime[] time = getTheStartAndEndTimeOfMonth();
+            LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
             EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]).one();
             if (empCoefficient != null) {
                 BigDecimal grade = empCoefficient.getPositionCoefficient();
                 //只有查到全部数据才设置返回值
-                BeanUtil.copyProperties(employee, employeeVo);
+                BeanUtils.copyProperties(employee, employeeVo);
                 employeeVo.setGrade(grade);
                 employeeVo.setPostName(postNames);
                 employeeVo.setDeptNames(deptNames);
@@ -376,7 +433,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
         //员工id集合
         List<Long> employeeIds = employees.stream().filter(Objects::nonNull).map(Employee::getId).collect(Collectors.toList());
-        LocalDateTime[] time = getTheStartAndEndTimeOfMonth();
+        LocalDateTime[] time =DateTimeUtils.getTheStartAndEndTimeOfMonth();
         //全部员工绩效记录 只能获取本月的员工绩效
         List<EmpCoefficient> allEmpCoefficients = empCoefficientService.lambdaQuery().in(EmpCoefficient::getEmpId, employeeIds).between(EmpCoefficient::getUpdateTime, time[0], time[1]).list();
         if(CollectionUtils.isEmpty(allEmpCoefficients)) {
@@ -500,21 +557,6 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         return R.success(pageBean);
     }
 
-    /** 返回本月的最开始的时间和结束时间
-     * [0]  为月初时间  [1] 为月末时间*/
-    private LocalDateTime[]  getTheStartAndEndTimeOfMonth() {
-        // 获取当前日期
-        LocalDate currentDate = LocalDate.now();
-        // 获取本月的第一天（即月初）
-        LocalDate firstDayOfMonth = currentDate.with(TemporalAdjusters.firstDayOfMonth());
-        // 将月初日期与凌晨0点（即一天的开始）组合成LocalDateTime
-        LocalDateTime startOfMonth = LocalDateTime.of(firstDayOfMonth, LocalTime.MIDNIGHT);
-        // 获取本月的最后一天（即月末）
-        LocalDate lastDayOfMonth = currentDate.with(TemporalAdjusters.lastDayOfMonth());
-        // 将月末日期与一天的最后一刻（即23:59:59.999...）组合成LocalDateTime
-        LocalDateTime endOfMonth = LocalDateTime.of(lastDayOfMonth, LocalTime.MAX);
-        return new LocalDateTime[]{startOfMonth, endOfMonth};
-    }
 
     /**
      * 添加员工  操作  员工表  员工岗位表  员工绩效表
@@ -678,7 +720,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             employeePosition1.setPosiPercent(percent);
             employeePositionService.save(employeePosition1);
         });
-        LocalDateTime[] time = getTheStartAndEndTimeOfMonth();
+        LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
         //更改员工的地域
         EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]).one();
         if (empCoefficient == null) {
@@ -710,7 +752,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             employeePositionService.remove(wrapper);
             //最后再删除员工绩效表中的信息 只能删除当月的绩效
             LambdaQueryWrapper<EmpCoefficient> wrapper1 = new LambdaQueryWrapper<>();
-            LocalDateTime[] time = getTheStartAndEndTimeOfMonth();
+            LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
             //获取员工绩效表的更新时间    员工表与员工绩效表的关系  一对一
             wrapper1.eq(EmpCoefficient::getEmpId, id)
                     .between(EmpCoefficient::getUpdateTime, time[0] , time[1]);
