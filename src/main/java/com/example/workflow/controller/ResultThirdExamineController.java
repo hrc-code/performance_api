@@ -193,13 +193,15 @@ public class ResultThirdExamineController {
         if(!list3.isEmpty())
             state.setKpiState(1);
 
+        LocalDateTime lastBeginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
+        LocalDateTime latsEndTime = LocalDateTime.of(today.withDayOfMonth(1).minusDays(1), LocalTime.MAX);
         LambdaQueryWrapper<EmpOkrView> queryWrapper4=new LambdaQueryWrapper<>();
         queryWrapper4.eq(EmpOkrView::getLiaEmpId,obj.getString("empId"))
                 .eq(EmpOkrView::getPositionId,obj.getString("positionId"))
-                .apply(StringUtils.checkValNotNull(beginTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                .apply(StringUtils.checkValNotNull(endTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+                .apply(StringUtils.checkValNotNull(lastBeginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", lastBeginTime)
+                .apply(StringUtils.checkValNotNull(latsEndTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", latsEndTime);
         List<EmpOkrView> list4= EmpOkrViewMapper.selectList(queryWrapper4);
         if(!list4.isEmpty())
             state.setOkrState(1);

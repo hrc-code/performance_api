@@ -775,6 +775,13 @@ public class TaskViewController {
 
     @PostMapping("/secondTaskCount")
     private R<Map<String, Integer>> getSecondCount(@RequestBody JSONObject obj){
+        LambdaQueryWrapper<TaskView> Wrapper1=new LambdaQueryWrapper<>();
+        Wrapper1.eq(TaskView::getAssignee,obj.getString("assessorId"))
+                .eq(TaskView::getName,"third")
+                .eq(TaskView::getState,"ACTIVE");
+        List<TaskView> task1=TaskViewMapper.selectList(Wrapper1);
+        Integer count1 = task1.size();
+
         LambdaQueryWrapper<TaskView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(TaskView::getAssignee,obj.getString("assessorId"))
                 .eq(TaskView::getName,"second")
@@ -812,45 +819,64 @@ public class TaskViewController {
                 completeList.add(key);
             }
         }
-        Integer count1 = completeList.size();
+        Integer count2 = completeList.size();
 
-        LambdaQueryWrapper<TaskView> Wrapper2=new LambdaQueryWrapper<>();
-        Wrapper2.eq(TaskView::getAssignee,obj.getString("assessorId"))
+        LambdaQueryWrapper<TaskView> Wrapper3=new LambdaQueryWrapper<>();
+        Wrapper3.eq(TaskView::getAssignee,obj.getString("assessorId"))
                 .eq(TaskView::getState,"ACTIVE")
                 .and(qw -> qw.eq(TaskView::getName, "score")
                         .or().eq(TaskView::getName, "okr"));
-        List<TaskView> task2=TaskViewMapper.selectList(Wrapper2);
-        List<TaskView> taskList2 = task2.stream()
+        List<TaskView> task3=TaskViewMapper.selectList(Wrapper3);
+        List<TaskView> taskList3 = task3.stream()
                 .collect(Collectors.toMap(taskView -> Arrays.asList(taskView.getEmpName(), taskView.getProcInstId())
                         , Function.identity(), (oldValue, newValue) -> oldValue))
                 .values()
                 .stream()
                 .distinct()
                 .collect(Collectors.toList());
-        Integer count2 = taskList2.size();
+        Integer count3 = taskList3.size();
 
-        LambdaQueryWrapper<TaskView> Wrapper3=new LambdaQueryWrapper<>();
-        Wrapper3.eq(TaskView::getAssignee,obj.getString("assessorId"))
+        LambdaQueryWrapper<TaskView> Wrapper4=new LambdaQueryWrapper<>();
+        Wrapper4.eq(TaskView::getAssignee,obj.getString("assessorId"))
                 .and(qw -> qw.eq(TaskView::getName, "back_score")
                         .or().eq(TaskView::getName, "back_okr"))
                 .eq(TaskView::getState,"ACTIVE");
-        List<TaskView> task3=TaskViewMapper.selectList(Wrapper3);
-        List<BackWait> backWaitList3=new ArrayList<>();
-        task3.forEach(x->{
-            LambdaQueryWrapper<BackWait> queryWrapper3=new LambdaQueryWrapper<>();
-            queryWrapper3.eq(BackWait::getEmpId,x.getStartUserId())
+        List<TaskView> task4=TaskViewMapper.selectList(Wrapper4);
+        List<BackWait> backWaitList4=new ArrayList<>();
+        task4.forEach(x->{
+            LambdaQueryWrapper<BackWait> queryWrapper4=new LambdaQueryWrapper<>();
+            queryWrapper4.eq(BackWait::getEmpId,x.getStartUserId())
                     .eq(BackWait::getProcessDefineId,x.getProcInstId());
-            backWaitList3.add(BackWaitMapper.selectOne(queryWrapper3));
+            backWaitList4.add(BackWaitMapper.selectOne(queryWrapper4));
         });
-        Integer count3 = backWaitList3.size();
+        Integer count4 = backWaitList4.size();
 
-        Integer count4=okr(obj)+piece(obj)+score(obj)+kpi(obj);
+        Integer count5=okr(obj)+piece(obj)+score(obj)+kpi(obj);
+
+        LambdaQueryWrapper<TaskView> Wrapper6=new LambdaQueryWrapper<>();
+        Wrapper6.eq(TaskView::getAssignee,obj.getString("assessorId"))
+                .and(qw -> qw.eq(TaskView::getName, "back_third_piece")
+                        .or().eq(TaskView::getName, "back_third_kpi")
+                        .or().eq(TaskView::getName, "back_third_okr")
+                        .or().eq(TaskView::getName, "back_third_score"))
+                .eq(TaskView::getState,"ACTIVE");
+        List<TaskView> task6=TaskViewMapper.selectList(Wrapper6);
+        List<BackWait> backWaitList6=new ArrayList<>();
+        task6.forEach(x->{
+            LambdaQueryWrapper<BackWait> queryWrapper6=new LambdaQueryWrapper<>();
+            queryWrapper6.eq(BackWait::getEmpId,x.getStartUserId())
+                    .eq(BackWait::getProcessDefineId,x.getProcInstId());
+            backWaitList6.add(BackWaitMapper.selectOne(queryWrapper6));
+        });
+        Integer count6=backWaitList6.size();
 
         Map<String, Integer> resultMap = new HashMap<>();
         resultMap.put("count1", count1);
         resultMap.put("count2", count2);
         resultMap.put("count3", count3);
         resultMap.put("count4", count4);
+        resultMap.put("count5", count5);
+        resultMap.put("count6", count6);
 
         return R.success(resultMap);
     }

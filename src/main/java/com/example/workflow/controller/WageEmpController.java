@@ -4,20 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.BackWait;
-import com.example.workflow.entity.EmpKpiView;
-import com.example.workflow.entity.EmpPieceView;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.OkrKey;
-import com.example.workflow.entity.OkrRule;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.PositionAssessor;
-import com.example.workflow.entity.PositionKpi;
-import com.example.workflow.entity.PositionPiece;
-import com.example.workflow.entity.PositionScore;
-import com.example.workflow.entity.ScoreAssessors;
-import com.example.workflow.entity.TaskState;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.EmpKpiViewMapper;
 import com.example.workflow.mapper.EmpPieceViewMapper;
 import com.example.workflow.mapper.TaskViewMapper;
@@ -180,12 +167,15 @@ public class WageEmpController {
         else
             map.put("kpiAppoint", "true");
 
+        LocalDateTime lastBeginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
+        LocalDateTime latsEndTime = LocalDateTime.of(today.withDayOfMonth(1).minusDays(1), LocalTime.MAX);
         List<OkrKey> keyList=OkrKeyService.lambdaQuery()
                 .eq(OkrKey::getLiaEmpId,obj.getString("empId"))
-                .apply(StringUtils.checkValNotNull(beginTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                .apply(StringUtils.checkValNotNull(endTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .eq(OkrKey::getPositionId,obj.getString("positionId"))
+                .apply(StringUtils.checkValNotNull(lastBeginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", lastBeginTime)
+                .apply(StringUtils.checkValNotNull(latsEndTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", latsEndTime)
                 .list();
         List<String> assessorList2=new ArrayList<>();
         keyList.forEach(x->{
@@ -216,10 +206,14 @@ public class WageEmpController {
         if(position.getType()==5){
             map.put("fourthAssessor",assessor.getFourthAssessorId().toString());
             map.put("fourthTimer",assessor.getFourthTimer());
+            map.put("thirdAssessor",assessor.getThirdAssessorId().toString());
+            map.put("thirdTimer",assessor.getThirdTimer());
         }
         else if(position.getType()==4){
             map.put("thirdAssessor",assessor.getThirdAssessorId().toString());
             map.put("thirdTimer",assessor.getThirdTimer());
+            map.put("secondAssessor",assessor.getSecondAssessorId().toString());
+            map.put("secondTimer",assessor.getSecondTimer());
         }
         else if(position.getType()==3){
             map.put("secondAssessor",assessor.getSecondAssessorId().toString());
@@ -298,12 +292,15 @@ public class WageEmpController {
             else
                 map.put("kpiAppoint", "true");
 
+            LocalDateTime lastBeginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
+            LocalDateTime latsEndTime = LocalDateTime.of(today.withDayOfMonth(1).minusDays(1), LocalTime.MAX);
             List<OkrKey> keyList=OkrKeyService.lambdaQuery()
                     .eq(OkrKey::getLiaEmpId,x.getEmpId())
-                    .apply(StringUtils.checkValNotNull(beginTime),
-                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                    .apply(StringUtils.checkValNotNull(endTime),
-                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .eq(OkrKey::getPositionId,x.getPositionId())
+                    .apply(StringUtils.checkValNotNull(lastBeginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", lastBeginTime)
+                    .apply(StringUtils.checkValNotNull(latsEndTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", latsEndTime)
                     .list();
             List<String> assessorList2=new ArrayList<>();
             keyList.forEach(y->{

@@ -1,12 +1,16 @@
 package com.example.workflow.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
+import com.example.workflow.entity.EmpWage;
 import com.example.workflow.listener.EmployeeExcelReadListener;
 import com.example.workflow.listener.EmployeeRewardExcelReadListener;
 import com.example.workflow.pojo.EmployeeExcel;
 import com.example.workflow.pojo.EmployeeRewardExcel;
 import com.example.workflow.service.EmpRewardService;
+import com.example.workflow.service.EmpWageService;
+import com.example.workflow.service.EmployeeCoefficientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,18 +22,42 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth/excel")
 public class ExcelController {
+
     @Autowired
     private EmpRewardService empRewardService;
+    @Autowired
+    private EmpWageService EmpWageService;
+    @Autowired
+    private EmployeeCoefficientService EmployeeCoefficientService;
+
+    LocalDate today = LocalDate.now();
+    LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+    LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
     /**
      * 导入员工reward excel*/
    @PostMapping("/employeeReward/upload")
     public R importEmployeeReward(MultipartFile file) throws IOException {
        EasyExcel.read(file.getInputStream(), EmployeeRewardExcel.class, new EmployeeRewardExcelReadListener()).sheet().doRead();
+
+       List<EmpWage> list= EmpWageService.lambdaQuery()
+               .eq(EmpWage::getState,1)
+               .apply(StringUtils.checkValNotNull(beginTime),
+                       "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+               .apply(StringUtils.checkValNotNull(endTime),
+                       "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                       .list();
+       list.forEach(x->{
+           EmployeeCoefficientService.fileOne(x.getEmpId(),x.getPositionId());
+       });
        return R.success();
    }
    /** 将EmployeeReward导出为 Excel*/

@@ -3,6 +3,7 @@ package com.example.workflow.controller;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
@@ -175,6 +176,7 @@ public class EmpCoefficientController {
 
     @PostMapping("/fileAll")
     private R fileAll(@RequestBody JSONObject form){
+        System.out.println(form);
         JSONArray formArray = form.getJSONArray("Form");
 
         for (int i = 0; i < formArray.size(); i++) {
@@ -196,6 +198,14 @@ public class EmpCoefficientController {
                     .eq(TaskView::getAssignee,form.getString("assessorId"));
             TaskView task= TaskViewMapper.selectOne(queryWrapper7);
             taskService.complete(task.getId());
+
+            UpdateWrapper<EmployeePosition> updateWrapper =new UpdateWrapper<>();
+            updateWrapper
+                    .set("process_definition_id","")
+                    .eq("emp_id",empId)
+                    .eq("position_id",positionId)
+                    .eq("state",1);
+            EmployeePositionService.update(updateWrapper);
         }
 
         return R.success();

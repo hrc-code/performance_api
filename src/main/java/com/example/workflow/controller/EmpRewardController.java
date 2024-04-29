@@ -63,6 +63,7 @@ public class EmpRewardController {
 
     @PostMapping("/delete")
     private R delete(@RequestBody EmpReward one){
+        System.out.println(one);
         EmpRewardService.removeById(one);
 
         EmployeeCoefficientService.fileOne(one.getEmpId(),one.getPositionId());

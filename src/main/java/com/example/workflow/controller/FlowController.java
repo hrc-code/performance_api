@@ -161,11 +161,14 @@ public class FlowController {
             Wrapper.eq(TaskView::getStartUserId,x.getEmpId())
                     .eq(TaskView::getProcInstId,x.getProcessDefinitionId())
                     .eq(TaskView::getState,"ACTIVE");
-            TaskView task=TaskViewMapper.selectOne(Wrapper);
+            List<TaskView> taskViewList=TaskViewMapper.selectList(Wrapper);
 
-            if(task!=null){
-                runtimeService.suspendProcessInstanceById(task.getProcInstId());
-            }
+            taskViewList.forEach(y->{
+                if(y!=null){
+                    runtimeService.suspendProcessInstanceById(y.getProcInstId());
+                }
+            });
+
         });
 
         UpdateWrapper<Position> updateWrapper =new UpdateWrapper<>();

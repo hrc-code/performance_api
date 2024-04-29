@@ -58,14 +58,15 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
 
     @Override
     public void fileOne(Long empId,Long positionId){
-        LambdaQueryWrapper<CoefficientView> queryWrapper4=new LambdaQueryWrapper<>();
-        queryWrapper4.eq(CoefficientView::getEmpId,empId)
+
+        CoefficientView coefficientView=CoefficientViewService.lambdaQuery()
+                .eq(CoefficientView::getEmpId,empId)
                 .eq(CoefficientView::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
-        CoefficientView coefficientView= CoefficientViewMapper.selectOne(queryWrapper4);
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
 
         LambdaQueryWrapper<EmpScoreView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(EmpScoreView::getPositionId,positionId)
@@ -155,10 +156,20 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
         if(!okrList.isEmpty()){
             okrList.forEach(x->{
                 if(x.getCorrectedValue()==null){
-                    okrTotal.updateAndGet(total -> total.add(x.getScore()));
+                    BigDecimal currentScore =x.getScore()
+                            .multiply(new BigDecimal(x.getKeyWeight()))
+                            .divide(new BigDecimal(100),2)
+                            .multiply(new BigDecimal(x.getTotalScore()))
+                            .divide(new BigDecimal(100),2);
+                    okrTotal.updateAndGet(total -> total.add(currentScore));
                 }
                 else {
-                    okrTotal.updateAndGet(total -> total.add(x.getCorrectedValue()));
+                    BigDecimal currentScore =x.getCorrectedValue()
+                            .multiply(new BigDecimal(x.getKeyWeight()))
+                            .divide(new BigDecimal(100),2)
+                            .multiply(new BigDecimal(x.getTotalScore()))
+                            .divide(new BigDecimal(100),2);
+                    okrTotal.updateAndGet(total -> total.add(currentScore));
                 }
             });
         }
@@ -178,6 +189,13 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 rewardTotal.updateAndGet(total -> total.add(x.getReward()));
             });
         }
+
+        LambdaQueryWrapper<EmployeePosition> queryWrapper5=new LambdaQueryWrapper<>();
+        queryWrapper5.eq(EmployeePosition::getEmpId,empId)
+                .eq(EmployeePosition::getPositionId,positionId)
+                .eq(EmployeePosition::getState,1);
+        EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
+
         EmpWage wage=new EmpWage();
         wage=EmpWageService.lambdaQuery().eq(EmpWage::getEmpId,empId)
                 .eq(EmpWage::getPositionId,positionId)
@@ -189,50 +207,98 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 .one();
         if(wage==null){
             wage=new EmpWage();
-        }
 
-        wage.setEmpId(empId);
-        wage.setPositionId(positionId);
-        if(!scoreTotal.get().equals(new BigDecimal(0))){
-            wage.setScoreWage(scoreTotal.get()
-                    .multiply(coefficientView.getPerformanceWage())
-                    .divide(new BigDecimal(100),2)
-                    .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
-                    .multiply(coefficientView.getPositionCoefficient()));
-        }
-        else{
-            wage.setScoreWage(scoreTotal.get());
-        }
-        if(!okrTotal.equals(new BigDecimal(0))){
-            wage.setOkrWage(okrTotal.get()
-                    .multiply(coefficientView.getPerformanceWage())
-                    .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
-                    .divide(new BigDecimal(100),2)
-                    .multiply(coefficientView.getPositionCoefficient()));;
-        }
-        else{
-            wage.setOkrWage(okrTotal.get());
-        }
-        wage.setKpiWage(kpiTotal.get());
-        wage.setPieceWage(pieceTotal.get());
-        wage.setRewardWage(rewardTotal.get());
+            wage.setEmpId(empId);
+            wage.setPositionId(positionId);
+            if(!scoreTotal.get().equals(new BigDecimal(0))){
+                wage.setScoreWage(scoreTotal.get()
+                        .multiply(coefficientView.getPerformanceWage())
+                        .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
+                        .divide(new BigDecimal(100),2)
+                        .multiply(coefficientView.getPositionCoefficient())
+                        .multiply(EmployeePosition.getPosiPercent())
+                        .divide(new BigDecimal(100),2));
+            }
+            else{
+                wage.setScoreWage(scoreTotal.get());
+            }
+            if(!okrTotal.get().equals(new BigDecimal(0))){
+                System.out.println(okrTotal.get());
+                wage.setOkrWage(okrTotal.get()
+                        .multiply(coefficientView.getPerformanceWage())
+                        .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
+                        .divide(new BigDecimal(100),2)
+                        .multiply(coefficientView.getPositionCoefficient())
+                        .multiply(EmployeePosition.getPosiPercent())
+                        .divide(new BigDecimal(100),2));
+            }
+            else{
+                wage.setOkrWage(okrTotal.get());
+            }
+            wage.setKpiWage(kpiTotal.get());
+            wage.setPieceWage(pieceTotal.get());
+            wage.setRewardWage(rewardTotal.get());
 
-        LambdaQueryWrapper<EmployeePosition> queryWrapper5=new LambdaQueryWrapper<>();
-        queryWrapper5.eq(EmployeePosition::getEmpId,empId)
-                .eq(EmployeePosition::getPositionId,positionId)
-                .eq(EmployeePosition::getState,1);
-        EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
-
-        BigDecimal result = (wage.getOkrWage()
-                .add(wage.getScoreWage())
-                .add(wage.getKpiWage())
-                .add(wage.getPieceWage())
-                .add(wage.getRewardWage())
+        BigDecimal test=wage.getScoreWage().add(coefficientView.getWage()
                 .multiply(EmployeePosition.getPosiPercent())
-                .divide(new BigDecimal(100),2))
-                .add(coefficientView.getWage());
-        wage.setTotal(result);
+                .divide(new BigDecimal(100),2));
+        System.out.println(test);
 
-        EmpWageService.save(wage);
+            BigDecimal result = wage.getOkrWage()
+                    .add(wage.getScoreWage())
+                    .add(wage.getKpiWage())
+                    .add(wage.getPieceWage())
+                    .add(wage.getRewardWage())
+                    .add(coefficientView.getWage()
+                            .multiply(EmployeePosition.getPosiPercent())
+                            .divide(new BigDecimal(100),2));
+            wage.setTotal(result);
+
+            EmpWageService.save(wage);
+        }
+        else{
+                if(!scoreTotal.get().equals(new BigDecimal(0))){
+                    wage.setScoreWage(scoreTotal.get()
+                            .multiply(coefficientView.getPerformanceWage())
+                            .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
+                            .divide(new BigDecimal(100),2)
+                            .multiply(coefficientView.getPositionCoefficient())
+                            .multiply(EmployeePosition.getPosiPercent())
+                            .divide(new BigDecimal(100),2));
+                }
+                else{
+                    wage.setScoreWage(scoreTotal.get());
+                }
+                if(!okrTotal.get().equals(new BigDecimal(0))){
+                    System.out.println(okrTotal.get());
+                    wage.setOkrWage(okrTotal.get()
+                            .multiply(coefficientView.getPerformanceWage())
+                            .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
+                            .divide(new BigDecimal(100),2)
+                            .multiply(coefficientView.getPositionCoefficient())
+                            .multiply(EmployeePosition.getPosiPercent())
+                            .divide(new BigDecimal(100),2));
+                }
+                else{
+                    wage.setOkrWage(okrTotal.get());
+                }
+                wage.setKpiWage(kpiTotal.get());
+                wage.setPieceWage(pieceTotal.get());
+                wage.setRewardWage(rewardTotal.get());
+
+                BigDecimal result = wage.getOkrWage()
+                        .add(wage.getScoreWage())
+                        .add(wage.getKpiWage())
+                        .add(wage.getPieceWage())
+                        .add(wage.getRewardWage())
+                        .add(coefficientView.getWage()
+                                .multiply(EmployeePosition.getPosiPercent())
+                                .divide(new BigDecimal(100),2));
+                wage.setTotal(result);
+
+                EmpWageService.updateById(wage);
+
+            }
+
     }
 }
