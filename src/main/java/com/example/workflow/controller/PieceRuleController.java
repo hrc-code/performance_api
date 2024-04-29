@@ -116,6 +116,18 @@ public class PieceRuleController {
         else if(one.getTargetNum()==null)
             return R.error("条目一单价不得为空");
 
+        PieceRule pieceRule=PieceRuleService.lambdaQuery()
+                .eq(PieceRule::getName,one.getName())
+                .eq(PieceRule::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+        if(pieceRule!=null){
+            R.error("该计件条目已存在，请勿重复添加");
+        }
+
         PieceRuleMapper.insert(one);
 
         return R.success();

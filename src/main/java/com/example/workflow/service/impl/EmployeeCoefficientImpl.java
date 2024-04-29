@@ -51,6 +51,12 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
     private EmpOkrViewMapper EmpOkrViewMapper;
     @Autowired
     private EmpRewardViewMapper EmpRewardViewMapper;
+    @Autowired
+            private EmpScoreService EmpScoreService;
+    @Autowired
+    private EmpPieceService EmpPieceService;
+    @Autowired
+            private EmpKpiService EmpKpiService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -77,6 +83,10 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         List<EmpScoreView> scoreList= EmpScoreViewMapper.selectList(queryWrapper);
+        /*scoreList.forEach(x->{
+            EmpScore empScore=EmpScoreService.changeState(x);
+            EmpScoreService.updateById(empScore);
+        });*/
 
         AtomicReference<BigDecimal> scoreTotal = new AtomicReference<>(new BigDecimal(0));
         if(!scoreList.isEmpty()&&scoreList != null){
@@ -109,6 +119,10 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         List<EmpPieceView> pieceList= EmpPieceViewMapper.selectList(queryWrapper2);
+        pieceList.forEach(x->{
+            EmpPiece empPiece=EmpPieceService.changeState(x);
+            EmpPieceService.updateById(empPiece);
+        });
 
         AtomicReference<BigDecimal> pieceTotal = new AtomicReference<>(new BigDecimal(0));
         if(!pieceList.isEmpty()){
@@ -130,6 +144,10 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         List<EmpKpiView> kpiList= EmpKpiViewMapper.selectList(queryWrapper3);
+        kpiList.forEach(x->{
+            EmpKpi empKpi=EmpKpiService.changeState(x);
+            EmpKpiService.updateById(empKpi);
+        });
 
         AtomicReference<BigDecimal> kpiTotal = new AtomicReference<>(new BigDecimal(0));
         if(!kpiList.isEmpty()){
@@ -223,7 +241,6 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
                 wage.setScoreWage(scoreTotal.get());
             }
             if(!okrTotal.get().equals(new BigDecimal(0))){
-                System.out.println(okrTotal.get());
                 wage.setOkrWage(okrTotal.get()
                         .multiply(coefficientView.getPerformanceWage())
                         .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
@@ -238,11 +255,6 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
             wage.setKpiWage(kpiTotal.get());
             wage.setPieceWage(pieceTotal.get());
             wage.setRewardWage(rewardTotal.get());
-
-        BigDecimal test=wage.getScoreWage().add(coefficientView.getWage()
-                .multiply(EmployeePosition.getPosiPercent())
-                .divide(new BigDecimal(100),2));
-        System.out.println(test);
 
             BigDecimal result = wage.getOkrWage()
                     .add(wage.getScoreWage())

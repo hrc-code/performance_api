@@ -116,6 +116,18 @@ public class ScoreRuleController {
         if(one.getTarget()==null)
             R.error("条目名称不得为空");
 
+        ScoreRule scoreRule=ScoreRuleService.lambdaQuery()
+                        .eq(ScoreRule::getTarget,one.getTarget())
+                .eq(ScoreRule::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .one();
+        if(scoreRule!=null){
+            R.error("该评分条目已存在，请勿重复添加");
+        }
+
         ScoreRuleMapper.insert(one);
 
         return R.success();
@@ -162,8 +174,8 @@ public class ScoreRuleController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;;
-
         List<PositionScore> positionScores=PositionScoreService.list(queryWrapper);
+
         if(positionScores!=null&&!positionScores.isEmpty()){
             return R.error("评分条目已存在，不可重复添加");
         }

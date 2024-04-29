@@ -43,7 +43,6 @@ public class EmpPieceController {
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
-
     @GetMapping("/page")
     public R<Page> page(@RequestParam("page") String page, @RequestParam("page_size") String pageSize){
 
@@ -58,7 +57,6 @@ public class EmpPieceController {
         return R.success(pageInfo);
     }
 
-
     @GetMapping("/nowPage")
     public R<Page> nowPage(@RequestParam("page") String page
             , @RequestParam("page_size") String pageSize){
@@ -66,7 +64,7 @@ public class EmpPieceController {
         Page<EmpPieceView> pageInfo=new Page<EmpPieceView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpPieceView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByAsc(EmpPieceView::getEmpId)
-                .eq(EmpPieceView::getState,1)
+                .ne(EmpPieceView::getState,0)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -88,7 +86,7 @@ public class EmpPieceController {
         queryWrapper.like(EmpPieceView::getEmpId,empId)
                 .like(EmpPieceView::getEmpName,empName)
                 .orderByAsc(EmpPieceView::getEmpId)
-                .eq(EmpPieceView::getState,1)
+                .ne(EmpPieceView::getState,0)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -108,7 +106,7 @@ public class EmpPieceController {
         Page<EmpPieceView> pageInfo=new Page<EmpPieceView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpPieceView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByAsc(EmpPieceView::getEmpId)
-                .eq(EmpPieceView::getState,1)
+                .ne(EmpPieceView::getState,0)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
         EmpPieceViewService.page(pageInfo,queryWrapper);
@@ -133,7 +131,7 @@ public class EmpPieceController {
 
             queryWrapper.like(EmpPieceView::getEmpId,empId)
                     .like(EmpPieceView::getEmpName,empName)
-                    .eq(EmpPieceView::getState,1)
+                    .ne(EmpPieceView::getState,0)
                     .orderByAsc(EmpPieceView::getEmpId)
                     .apply(StringUtils.checkValNotNull(beginDay),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime);
@@ -145,7 +143,7 @@ public class EmpPieceController {
             queryWrapper.like(EmpPieceView::getEmpId,empId)
                     .like(EmpPieceView::getEmpName,empName)
                     .orderByAsc(EmpPieceView::getEmpId)
-                    .eq(EmpPieceView::getState,1)
+                    .ne(EmpPieceView::getState,0)
                     .apply(StringUtils.checkValNotNull(beginDay),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginDay)
                     .apply(StringUtils.checkValNotNull(endDay),

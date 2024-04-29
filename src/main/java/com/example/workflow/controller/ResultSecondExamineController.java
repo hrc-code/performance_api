@@ -168,15 +168,13 @@ public class ResultSecondExamineController {
         if(!list3.isEmpty())
             state.setKpiState(1);
 
-        LocalDateTime lastBeginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
-        LocalDateTime latsEndTime = LocalDateTime.of(today.withDayOfMonth(1).minusDays(1), LocalTime.MAX);
         LambdaQueryWrapper<EmpOkrView> queryWrapper4=new LambdaQueryWrapper<>();
         queryWrapper4.eq(EmpOkrView::getPositionId,obj.getString("positionId"))
                 .orderByAsc(EmpOkrView::getLiaEmpId)
-                .apply(StringUtils.checkValNotNull(lastBeginTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", lastBeginTime)
-                .apply(StringUtils.checkValNotNull(latsEndTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", latsEndTime);
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         List<EmpOkrView> list4= EmpOkrViewMapper.selectList(queryWrapper4);
         if(!list4.isEmpty())
             state.setOkrState(1);
@@ -225,10 +223,10 @@ public class ResultSecondExamineController {
                 .eq(Employee::getRoleId,roleId)
                 .one().getId();
 
-        if(!result.getOkrExamine().equals(new Short("2"))
-                &&!result.getKpiExamine().equals(new Short("2"))
-                &&!result.getPieceExamine().equals(new Short("2"))
-                &&!result.getScoreExamine().equals(new Short("2"))){
+        if(!result.getOkrExamine().equals(Short.parseShort("2"))
+                &&!result.getKpiExamine().equals(Short.parseShort("2"))
+                &&!result.getPieceExamine().equals(Short.parseShort("2"))
+                &&!result.getScoreExamine().equals(Short.parseShort("2"))){
             empList.forEach(x->{
                 LambdaQueryWrapper<TaskView> queryWrapper1=new LambdaQueryWrapper<>();
                 queryWrapper1.eq(TaskView::getAssignee,form.getString("assessorId"))
@@ -247,7 +245,7 @@ public class ResultSecondExamineController {
                         .eq(Position::getId,form.getString("positionId"))
                         .eq(Position::getState,1)
                         .one();
-                position.setAuditStatus(new Short("3"));
+                position.setAuditStatus(Short.parseShort("3"));
                 PositionService.updateById(position);
             });
         }
@@ -265,7 +263,7 @@ public class ResultSecondExamineController {
 
                 Integer positionType=Integer.valueOf(form.getString("positionType"));
 
-                if(result.getOkrExamine().equals(new Short("2"))){
+                if(result.getOkrExamine().equals(Short.parseShort("2"))){
                     removeOkr(form,x);
                     if(positionType.equals(5)){
                         ResultSecondExamineService.reOkrSecondFifth(form,x);
@@ -274,7 +272,7 @@ public class ResultSecondExamineController {
                         ResultSecondExamineService.reOkrSecondFourth(form,x);
                     }
                 }
-                if(result.getKpiExamine().equals(new Short("2"))){
+                if(result.getKpiExamine().equals(Short.parseShort("2"))){
                     if(positionType.equals(5)){
                         ResultSecondExamineService.reKpiSecondFifth(form);
                     }
@@ -285,7 +283,7 @@ public class ResultSecondExamineController {
                         ResultSecondExamineService.reKpiSecondThird(form);
                     }
                 }
-                if(result.getPieceExamine().equals(new Short("2"))){
+                if(result.getPieceExamine().equals(Short.parseShort("2"))){
                     if(positionType.equals(5)){
                         ResultSecondExamineService.rePieceSecondFifth(form);
                     }
@@ -296,7 +294,7 @@ public class ResultSecondExamineController {
                         ResultSecondExamineService.rePieceSecondThird(form);
                     }
                 }
-                if(result.getScoreExamine().equals(new Short("2"))){
+                if(result.getScoreExamine().equals(Short.parseShort("2"))){
                     removeScore(form,x);
                     if(positionType.equals(5)){
                         ResultSecondExamineService.reScoreSecondFifth(form);
@@ -533,7 +531,7 @@ public class ResultSecondExamineController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
-        examine.setScoreExamine(new Short("1"));
+        examine.setScoreExamine(Short.parseShort("1"));
         ResultSecondExamineService.updateById(examine);
 
         List<BackWait> backWaitList=BackWaitService.lambdaQuery()
@@ -556,10 +554,10 @@ public class ResultSecondExamineController {
             taskService.complete(x.getId());
         });
 
-        if(!examine.getOkrExamine().equals(new Short("2"))
-                &&!examine.getKpiExamine().equals(new Short("2"))
-                &&!examine.getPieceExamine().equals(new Short("2"))
-                &&!examine.getScoreExamine().equals(new Short("2"))){
+        if(!examine.getOkrExamine().equals(Short.parseShort("2"))
+                &&!examine.getKpiExamine().equals(Short.parseShort("2"))
+                &&!examine.getPieceExamine().equals(Short.parseShort("2"))
+                &&!examine.getScoreExamine().equals(Short.parseShort("2"))){
             updateFlow(form);
         }
 
@@ -576,7 +574,7 @@ public class ResultSecondExamineController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
-        examine.setPieceExamine(new Short("1"));
+        examine.setPieceExamine(Short.parseShort("1"));
         ResultSecondExamineService.updateById(examine);
 
         List<BackWait> backWaitList=BackWaitService.lambdaQuery()
@@ -599,10 +597,10 @@ public class ResultSecondExamineController {
             taskService.complete(x.getId());
         });
 
-        if(!examine.getOkrExamine().equals(new Short("2"))
-                &&!examine.getKpiExamine().equals(new Short("2"))
-                &&!examine.getPieceExamine().equals(new Short("2"))
-                &&!examine.getScoreExamine().equals(new Short("2"))){
+        if(!examine.getOkrExamine().equals(Short.parseShort("2"))
+                &&!examine.getKpiExamine().equals(Short.parseShort("2"))
+                &&!examine.getPieceExamine().equals(Short.parseShort("2"))
+                &&!examine.getScoreExamine().equals(Short.parseShort("2"))){
             updateFlow(form);
         }
 
@@ -620,7 +618,7 @@ public class ResultSecondExamineController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
 
-        examine.setKpiExamine(new Short("1"));
+        examine.setKpiExamine(Short.parseShort("1"));
         ResultSecondExamineService.updateById(examine);
 
         List<BackWait> backWaitList=BackWaitService.lambdaQuery()
@@ -643,10 +641,10 @@ public class ResultSecondExamineController {
             taskService.complete(x.getId());
         });
 
-        if(!examine.getOkrExamine().equals(new Short("2"))
-                &&!examine.getKpiExamine().equals(new Short("2"))
-                &&!examine.getPieceExamine().equals(new Short("2"))
-                &&!examine.getScoreExamine().equals(new Short("2"))){
+        if(!examine.getOkrExamine().equals(Short.parseShort("2"))
+                &&!examine.getKpiExamine().equals(Short.parseShort("2"))
+                &&!examine.getPieceExamine().equals(Short.parseShort("2"))
+                &&!examine.getScoreExamine().equals(Short.parseShort("2"))){
             updateFlow(form);
         }
 
@@ -664,7 +662,7 @@ public class ResultSecondExamineController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
 
-        examine.setOkrExamine(new Short("1"));
+        examine.setOkrExamine(Short.parseShort("1"));
         ResultSecondExamineService.updateById(examine);
 
         List<BackWait> backWaitList=BackWaitService.lambdaQuery()
@@ -687,10 +685,10 @@ public class ResultSecondExamineController {
             taskService.complete(x.getId());
         });
 
-        if(!examine.getOkrExamine().equals(new Short("2"))
-                &&!examine.getKpiExamine().equals(new Short("2"))
-                &&!examine.getPieceExamine().equals(new Short("2"))
-                &&!examine.getScoreExamine().equals(new Short("2"))){
+        if(!examine.getOkrExamine().equals(Short.parseShort("2"))
+                &&!examine.getKpiExamine().equals(Short.parseShort("2"))
+                &&!examine.getPieceExamine().equals(Short.parseShort("2"))
+                &&!examine.getScoreExamine().equals(Short.parseShort("2"))){
             updateFlow(form);
         }
 

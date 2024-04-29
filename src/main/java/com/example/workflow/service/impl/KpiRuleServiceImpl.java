@@ -76,6 +76,7 @@ public class KpiRuleServiceImpl extends ServiceImpl<KpiRuleMapper, KpiRule> impl
     @Override
     public KpiRule splitForm(KpiRuleForm form){
         KpiRule one=new KpiRule();
+            one.setId(form.getId());
             one.setName(form.getName());
             one.setTarget1(form.getTarget1());
             one.setTarget2(form.getTarget2());

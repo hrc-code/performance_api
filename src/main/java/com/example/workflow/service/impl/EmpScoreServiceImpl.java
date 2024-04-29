@@ -3,16 +3,10 @@ package com.example.workflow.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.EmpScore;
-import com.example.workflow.entity.EmpScoreView;
-import com.example.workflow.entity.EmpWage;
-import com.example.workflow.entity.EmployeePosition;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.EmpScoreMapper;
 import com.example.workflow.mapper.EmpScoreViewMapper;
-import com.example.workflow.service.EmpScoreService;
-import com.example.workflow.service.EmpScoreViewService;
-import com.example.workflow.service.EmpWageService;
-import com.example.workflow.service.EmployeePositionService;
+import com.example.workflow.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +31,8 @@ public class EmpScoreServiceImpl extends ServiceImpl<EmpScoreMapper, EmpScore> i
     private EmpWageService EmpWageService;
     @Autowired
     private EmployeePositionService EmployeePositionService;
+    @Autowired
+    private CoefficientViewService CoefficientViewService;
 
     @Override
     public void reChange(Long empId, Long empScoreId){
@@ -46,10 +42,16 @@ public class EmpScoreServiceImpl extends ServiceImpl<EmpScoreMapper, EmpScore> i
 
         Long positionId=empScoreView.getPositionId();
 
+        LambdaQueryWrapper<EmployeePosition> queryWrapper5=new LambdaQueryWrapper<>();
+        queryWrapper5.eq(EmployeePosition::getEmpId,empId)
+                .eq(EmployeePosition::getPositionId,positionId)
+                .eq(EmployeePosition::getState,1);
+        EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
+
         LambdaQueryWrapper<EmpScoreView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(EmpScoreView::getPositionId,positionId)
                 .eq(EmpScoreView::getEmpId,empId)
-                .eq(EmpScoreView::getState,1)
+                .ne(EmpScoreView::getState,0)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -57,7 +59,6 @@ public class EmpScoreServiceImpl extends ServiceImpl<EmpScoreMapper, EmpScore> i
         List<EmpScoreView> scoreList= EmpScoreViewMapper.selectList(queryWrapper);
 
         AtomicReference<BigDecimal> scoreTotal = new AtomicReference<>(new BigDecimal(0));
-
         if(!scoreList.isEmpty()&&scoreList != null){
             scoreList.forEach(x->{
                 if(x.getCorrectedValue()==null){
@@ -88,21 +89,46 @@ public class EmpScoreServiceImpl extends ServiceImpl<EmpScoreMapper, EmpScore> i
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
-        empWage.setScoreWage(scoreTotal.get());
 
-        LambdaQueryWrapper<EmployeePosition> queryWrapper5=new LambdaQueryWrapper<>();
-        queryWrapper5.eq(EmployeePosition::getEmpId,empId)
-                .eq(EmployeePosition::getPositionId,positionId)
-                .eq(EmployeePosition::getState,1);
-        EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
+        CoefficientView coefficientView=CoefficientViewService.lambdaQuery()
+                .eq(CoefficientView::getEmpId,empId)
+                .eq(CoefficientView::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+
+        empWage.setScoreWage(scoreTotal.get()
+                .multiply(coefficientView.getPerformanceWage())
+                .multiply(new BigDecimal(coefficientView.getRegionCoefficient()))
+                .divide(new BigDecimal(100),2)
+                .multiply(coefficientView.getPositionCoefficient())
+                .multiply(EmployeePosition.getPosiPercent())
+                .divide(new BigDecimal(100),2));
 
         BigDecimal result = empWage.getOkrWage()
+                .add(empWage.getScoreWage())
                 .add(empWage.getKpiWage())
                 .add(empWage.getPieceWage())
                 .add(empWage.getRewardWage())
-                .add(empWage.getScoreWage())
-                .multiply(EmployeePosition.getPosiPercent());
+                .add(coefficientView.getWage()
+                        .multiply(EmployeePosition.getPosiPercent())
+                        .divide(new BigDecimal(100),2));
         empWage.setTotal(result);
         EmpWageService.updateById(empWage);
+    }
+
+    @Override
+    public EmpScore changeState (EmpScoreView empScoreView){
+        EmpScore empScore=new EmpScore();
+        empScore.setId(empScoreView.getEmpScoreId());
+        empScore.setScoreAssessorsId(empScoreView.getScoreAssessorsId());
+        empScore.setEmpId(empScoreView.getEmpId());
+        empScore.setScore(empScoreView.getScore());
+        empScore.setCorrectedValue(empScoreView.getCorrectedValue());
+        empScore.setState(Short.parseShort("2"));
+
+        return empScore;
     }
 }

@@ -3,17 +3,10 @@ package com.example.workflow.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.EmpKpi;
-import com.example.workflow.entity.EmpKpiView;
-import com.example.workflow.entity.EmpWage;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.KpiPercent;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.EmpKpiMapper;
 import com.example.workflow.mapper.EmpKpiViewMapper;
-import com.example.workflow.service.EmpKpiService;
-import com.example.workflow.service.EmpKpiViewService;
-import com.example.workflow.service.EmpWageService;
-import com.example.workflow.service.EmployeePositionService;
+import com.example.workflow.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +28,8 @@ public class EmpKpiServiceImpl extends ServiceImpl<EmpKpiMapper, EmpKpi> impleme
             private EmpWageService EmpWageService;
     @Autowired
             private EmployeePositionService EmployeePositionService;
+    @Autowired
+            private CoefficientViewService CoefficientViewService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -103,6 +98,15 @@ public class EmpKpiServiceImpl extends ServiceImpl<EmpKpiMapper, EmpKpi> impleme
 
         Long positionId=empKpiView.getPositionId();
 
+        CoefficientView coefficientView=CoefficientViewService.lambdaQuery()
+                .eq(CoefficientView::getEmpId,empId)
+                .eq(CoefficientView::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+
         LambdaQueryWrapper<EmpKpiView> queryWrapper3=new LambdaQueryWrapper<>();
         queryWrapper3.eq(EmpKpiView::getPositionId,positionId)
                 .eq(EmpKpiView::getEmpId,empId)
@@ -125,6 +129,12 @@ public class EmpKpiServiceImpl extends ServiceImpl<EmpKpiMapper, EmpKpi> impleme
             });
         }
 
+        LambdaQueryWrapper<EmployeePosition> queryWrapper5=new LambdaQueryWrapper<>();
+        queryWrapper5.eq(EmployeePosition::getEmpId,empId)
+                .eq(EmployeePosition::getPositionId,positionId)
+                .eq(EmployeePosition::getState,1);
+        EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
+
         EmpWage empWage= EmpWageService.lambdaQuery()
                 .eq(EmpWage::getEmpId,empId)
                 .eq(EmpWage::getPositionId,positionId)
@@ -136,20 +146,30 @@ public class EmpKpiServiceImpl extends ServiceImpl<EmpKpiMapper, EmpKpi> impleme
                 .one();
         empWage.setKpiWage(kpiTotal.get());
 
-        LambdaQueryWrapper<EmployeePosition> queryWrapper5=new LambdaQueryWrapper<>();
-        queryWrapper5.eq(EmployeePosition::getEmpId,empId)
-                .eq(EmployeePosition::getPositionId,positionId)
-                .eq(EmployeePosition::getState,1);
-        EmployeePosition EmployeePosition= EmployeePositionService.getOne(queryWrapper5);
-
         BigDecimal result = empWage.getOkrWage()
+                .add(empWage.getScoreWage())
                 .add(empWage.getKpiWage())
                 .add(empWage.getPieceWage())
                 .add(empWage.getRewardWage())
-                .add(empWage.getScoreWage())
-                .multiply(EmployeePosition.getPosiPercent());
+                .add(coefficientView.getWage()
+                        .multiply(EmployeePosition.getPosiPercent())
+                        .divide(new BigDecimal(100),2));
         empWage.setTotal(result);
         EmpWageService.updateById(empWage);
+    }
+
+    @Override
+    public EmpKpi changeState(EmpKpiView empKpiView){
+        EmpKpi empKpi=new EmpKpi();
+        empKpi.setId(empKpiView.getEmpKpiId());
+        empKpi.setEmpId(empKpiView.getEmpId());
+        empKpi.setKpiId(empKpiView.getKpiId());
+        empKpi.setInTarget1(empKpiView.getInTarget1());
+        empKpi.setInTarget2(empKpiView.getInTarget2());
+        empKpi.setResult(empKpiView.getResult());
+        empKpi.setCorrectedValue(empKpiView.getCorrectedValue());
+        empKpi.setState(Short.parseShort("2"));
+        return empKpi;
     }
 
     /*@Override

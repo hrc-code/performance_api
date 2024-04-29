@@ -93,6 +93,8 @@ public class KpiRuleController {
         KpiRule kpiRule=KpiRuleService.splitForm(form);
         KpiRuleMapper.updateById(kpiRule);
 
+        System.out.println(kpiRule);
+
         LambdaQueryWrapper<KpiPercent> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(KpiPercent::getKpiId,kpiRule.getId())
                 .eq(KpiPercent::getState,1)
@@ -145,6 +147,18 @@ public class KpiRuleController {
             return R.error("条目二不得为空");
         else if(form.getPercentList()==null)
             return R.error("规则不得为空");
+
+        KpiRule test=KpiRuleService.lambdaQuery()
+                .eq(KpiRule::getName,form.getName())
+                .eq(KpiRule::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+        if(test!=null){
+            R.error("该提成条目已存在，请勿重复添加");
+        }
 
         KpiRule kpiRule=KpiRuleService.splitForm(form);
         KpiRuleMapper.insert(kpiRule);
