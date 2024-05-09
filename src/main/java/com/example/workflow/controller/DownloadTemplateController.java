@@ -78,6 +78,20 @@ public class DownloadTemplateController {
         return R.success("员工上月特殊绩效导入表");
     }
 
+    @PostMapping("/empKpi")
+    public R<String> empKpi(HttpServletResponse response) throws Exception {
+        download(response,"excel/empKpi.xlsx");
+
+        return R.success("员工上月提成绩效导入表");
+    }
+
+    @PostMapping("/empPiece")
+    public R<String> empPiece(HttpServletResponse response) throws Exception {
+        download(response,"excel/empPiece.xlsx");
+
+        return R.success("员工上月计件绩效导入表");
+    }
+
     public void download(HttpServletResponse response,String excel) throws Exception{
 
         response.setContentType("application/vnd.ms-excel;charset=utf-8");

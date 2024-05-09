@@ -308,7 +308,6 @@ public class ResultSecondExamineController {
         return R.success();
     }
 
-
     @PostMapping("/getSecondBackOkrTask")
     private R<List<PositionView>> getSecondBackOkrTask(@RequestBody JSONObject obj){
         List<TaskView> task= TaskViewService.lambdaQuery()
@@ -360,7 +359,6 @@ public class ResultSecondExamineController {
         });
         return R.success(positionViewList);
     }
-
 
     @PostMapping("/getSecondBackPieceTask")
     private R<List<PositionView>> getSecondBackPieceTask(@RequestBody JSONObject obj){
@@ -414,7 +412,6 @@ public class ResultSecondExamineController {
         return R.success(positionViewList);
     }
 
-
     @PostMapping("/getSecondBackScoreTask")
     private R<List<PositionView>> getSecondBackScoreTask(@RequestBody JSONObject obj){
         List<TaskView> task= TaskViewService.lambdaQuery()
@@ -466,7 +463,6 @@ public class ResultSecondExamineController {
         });
         return R.success(positionViewList);
     }
-
 
     @PostMapping("/getSecondBackKpiTask")
     private R<List<PositionView>> getSecondBackKpiTask(@RequestBody JSONObject obj){
@@ -724,6 +720,12 @@ public class ResultSecondExamineController {
                 map.put("wage_emp",empId.toString());
                 taskService.complete(task.getId(),map);
             });
+
+        Position position=PositionService.lambdaQuery()
+                .eq(Position::getId,form.getString("positionId"))
+                .eq(Position::getState,1)
+                .one();
+        position.setAuditStatus(Short.parseShort("3"));
     }
 
     private void removeScore(JSONObject form,EmployeePosition one){

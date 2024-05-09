@@ -3,6 +3,8 @@ package com.example.workflow.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class TaskView {
 
@@ -12,6 +14,7 @@ public class TaskView {
     private String name;
     @TableField(value = "ASSIGNEE_")
     private String assignee;
+    private String assessorName;
     @TableField(value = "SUSPENSION_STATE_")
     private Integer suspensionState;
     @TableField(value = "START_USER_ID_")
@@ -21,4 +24,5 @@ public class TaskView {
     private String state;
     @TableField(value = "id")
     private String id;
+    private LocalDateTime createTime;
 }

@@ -6,7 +6,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class EmpPieceExcel {
+public class EmpKpiExcel {
     @ExcelProperty("序号")
     private Integer order;
     @ExcelProperty("工号")
@@ -17,10 +17,12 @@ public class EmpPieceExcel {
     private String positionName;
     @ExcelProperty("所属部门")
     private String dept;
-    @ExcelProperty("计件条目")
-    private String pieceName;
-    @ExcelProperty("数量")
-    private Integer quantity;
-    @ExcelProperty("质量（100%）")
-    private BigDecimal quality;
+    @ExcelProperty("提成模版（1或2）")
+    private Integer type;
+    @ExcelProperty("提成条目")
+    private String kpiName;
+    @ExcelProperty("条目一数值")
+    private BigDecimal inTarget1;
+    @ExcelProperty("条目二数值")
+    private BigDecimal inTarget2;
 }
