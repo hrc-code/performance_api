@@ -1,5 +1,6 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -7,7 +8,11 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.listener.EmpKpiExcelReadListener;
+import com.example.workflow.listener.EmpPieceExcelReadListener;
 import com.example.workflow.mapper.KpiPercentMapper;
+import com.example.workflow.pojo.EmpKpiExcel;
+import com.example.workflow.pojo.EmpPieceExcel;
 import com.example.workflow.service.EmpKpiService;
 import com.example.workflow.service.EmpKpiViewService;
 import com.example.workflow.service.KpiPercentService;
@@ -23,7 +28,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -77,6 +84,7 @@ public class EmpKpiController {
                 KieSession kSession = helper.build().newKieSession();
 
                 if(x.getEmpId()==null)
+                    //!
                     R.error("员工姓名不得为空");
                 else if(x.getInTarget1()==null)
                     R.error("kpi条目一不得为空");
@@ -350,7 +358,9 @@ public class EmpKpiController {
         return R.success(pageInfo);
     }
 
-    public void updateFlow(Long empId){
-
+    @PostMapping("/upload")
+    public R uploadExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), EmpKpiExcel.class, new EmpKpiExcelReadListener()).sheet().doRead();
+        return R.success();
     }
 }

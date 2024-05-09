@@ -77,7 +77,7 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
         LambdaQueryWrapper<EmpScoreView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(EmpScoreView::getPositionId,positionId)
                 .eq(EmpScoreView::getEmpId,empId)
-                .eq(EmpScoreView::getState,1)
+                .ne(EmpScoreView::getState,0)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -113,7 +113,7 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
         LambdaQueryWrapper<EmpPieceView> queryWrapper2=new LambdaQueryWrapper<>();
         queryWrapper2.eq(EmpPieceView::getPositionId,positionId)
                 .eq(EmpPieceView::getEmpId,empId)
-                .eq(EmpPieceView::getState,1)
+                .ne(EmpPieceView::getState,0)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -138,7 +138,7 @@ public class EmployeeCoefficientImpl extends ServiceImpl<EmployeeCoefficientMapp
         LambdaQueryWrapper<EmpKpiView> queryWrapper3=new LambdaQueryWrapper<>();
         queryWrapper3.eq(EmpKpiView::getPositionId,positionId)
                 .eq(EmpKpiView::getEmpId,empId)
-                .eq(EmpKpiView::getState,1)
+                .ne(EmpKpiView::getState,0)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),

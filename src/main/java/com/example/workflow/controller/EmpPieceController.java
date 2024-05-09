@@ -1,5 +1,6 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -7,7 +8,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.EmpPiece;
 import com.example.workflow.entity.EmpPieceView;
+import com.example.workflow.listener.EmpPieceExcelReadListener;
+import com.example.workflow.listener.KpiExcelReadListener;
 import com.example.workflow.mapper.EmpPieceMapper;
+import com.example.workflow.pojo.EmpPieceExcel;
+import com.example.workflow.pojo.KpiExcel;
 import com.example.workflow.service.EmpPieceService;
 import com.example.workflow.service.EmpPieceViewService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -153,7 +160,6 @@ public class EmpPieceController {
 
         return R.success(pageInfo);
     }
-
 
     @PostMapping("/list")
     private R<List<EmpPieceView>> list(@RequestBody JSONObject obj){
@@ -315,5 +321,11 @@ public class EmpPieceController {
         EmpPieceViewService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);
+    }
+
+    @PostMapping("/upload")
+    public R uploadExcel(MultipartFile file) throws IOException {
+        EasyExcel.read(file.getInputStream(), EmpPieceExcel.class, new EmpPieceExcelReadListener()).sheet().doRead();
+        return R.success();
     }
 }
