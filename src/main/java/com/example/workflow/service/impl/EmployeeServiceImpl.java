@@ -399,19 +399,21 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
     /** 查询员工全部信息  操作  员工表  部门表  岗位表  地域绩效表*/
 
     @Override
-    public R page(EmployeeFormDto employeeFormDto, Page<Employee> page) {
+    public R page(EmployeeFormDto employeeFormDto) {
 
         String num = employeeFormDto.getNum();
         String name = employeeFormDto.getName();
         Long deptId = employeeFormDto.getDeptId();
         Long roleId = employeeFormDto.getRoleId();
-        LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like( num != null, Employee::getNum, num)
+
+        //获取全部满足条件的员工
+        List<Employee> employees = Db.lambdaQuery(Employee.class)
+                .like( num != null, Employee::getNum, num)
                 .like(name != null, Employee::getName, name)
                 .eq(roleId != null, Employee::getRoleId, roleId)
-                .eq(Employee::getState, 1);
-        //获取全部满足条件的员工
-        List<Employee> employees = page(page, wrapper).getRecords();
+                .eq(Employee::getState, 1)
+                .list();
+
         if (CollectionUtils.isEmpty(employees)) {
             return R.error("没有员工");
         }
@@ -553,8 +555,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 }
             }
         });
-        PageBean pageBean = new PageBean(employeeVos.size(), employeeVos);
-        return R.success(pageBean);
+        return R.success(employeeVos);
     }
 
 

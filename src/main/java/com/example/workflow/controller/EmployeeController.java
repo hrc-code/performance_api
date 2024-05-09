@@ -151,8 +151,7 @@ public class EmployeeController {
         employeeFormDto.setDeptId(deptId);
         employeeFormDto.setRoleId(roleId);
 
-        Page<Employee> employeePage = new Page<>(pageNum, pageSize);
-       return employeeService.page(employeeFormDto,employeePage);
+       return employeeService.page(employeeFormDto);
     }
 
     /**

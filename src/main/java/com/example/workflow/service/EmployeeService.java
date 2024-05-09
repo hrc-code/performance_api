@@ -25,7 +25,7 @@ public interface EmployeeService extends IService<Employee> {
     R getInfoById(Long id);
 
     R infoById(Long id);
-    R page(EmployeeFormDto employeeFormDto, Page<Employee> page);
+    R page(EmployeeFormDto employeeFormDto);
     R addEmployee(EmployeeFormDto employee);
 
     R getEmployeeById(List<Long> ids);
