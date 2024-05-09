@@ -501,7 +501,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
         List<DeptHierarchy> deptHierarchies = Db.lambdaQuery(DeptHierarchy.class).eq(DeptHierarchy::getParentId, parentId).list();
         if (!CollectionUtils.isEmpty(deptHierarchies)) {
             for (DeptHierarchy deptHierarchy : deptHierarchies) {
-                Long childrenId = deptHierarchy.getId();
+                Long childrenId = deptHierarchy.getChildId();
                 deptIdSet.add(childrenId);
                 getChildrenDeptIdSet(childrenId, deptIdSet);
             }
