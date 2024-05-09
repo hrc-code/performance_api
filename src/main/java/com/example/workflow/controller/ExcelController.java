@@ -14,7 +14,6 @@ import com.example.workflow.service.EmpWageService;
 import com.example.workflow.service.EmployeeCoefficientService;
 import com.example.workflow.service.EmployeeService;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -94,8 +93,8 @@ public class ExcelController {
 
     /**
      * 导出员工信息*/
-    @GetMapping("/employee/download/{deptId}")
-    public void downloadEmployeeExcel(@PathVariable Long deptId, HttpServletResponse response)   {
+    @GetMapping("/employee/download")
+    public void downloadEmployeeExcel(Long deptId, HttpServletResponse response)   {
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
