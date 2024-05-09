@@ -42,6 +42,7 @@ public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper,
             RegionCoefficient last= RegionCoefficientService.lambdaQuery()
                     .eq(RegionCoefficient::getId,x.getRegionCoefficientId())
                             .one();
+
             RegionCoefficient regionCoefficient=RegionCoefficientService.lambdaQuery()
                             .eq(RegionCoefficient::getRegion,last.getRegion())
                     .apply(StringUtils.checkValNotNull(beginTime),
@@ -49,6 +50,7 @@ public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper,
                     .apply(StringUtils.checkValNotNull(endTime),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                             .one();
+
             x.setRegionCoefficientId(regionCoefficient.getId());
             EmpCoefficientService.save(x);
         });

@@ -77,6 +77,8 @@ public class EmpCoefficientController {
             private EmpRewardViewMapper EmpRewardViewMapper;
     @Autowired
             private EmployeeCoefficientService EmployeeCoefficientService;
+    @Autowired
+            private RegionCoefficientService RegionCoefficientService;
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
@@ -106,6 +108,15 @@ public class EmpCoefficientController {
                 .list();
         if(!list.isEmpty())
             return R.error("本月员工系数已复制，请勿重复操作");
+
+        List<RegionCoefficient> regionCoefficientList=RegionCoefficientService.lambdaQuery()
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+        if(regionCoefficientList.isEmpty())
+            return R.error("未进行本月地域系数配置，请前往“地域系数”进行配置或复制上一个月");
 
         EmpCoefficientService.monthCopy();
 
