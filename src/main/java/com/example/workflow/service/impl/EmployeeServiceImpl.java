@@ -764,16 +764,8 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         // 更新员工基本信息
         Employee employee = new Employee();
         BeanUtils.copyProperties(employeeFormDto, employee);
-        boolean employeeUpdated = updateById(employee);
-        if (!employeeUpdated) {
-            throw new Exception("员工信息更新失败");
-        }
-        List<PostIdPercent> postIdPercentList = employeeFormDto.getPostIdPercent();
-        if (CollectionUtils.isEmpty(postIdPercentList)) {
-            throw new Exception("员工信息更新失败");
-        }
-        // key 为 postId  value 为  percent
-        Map<Long, BigDecimal> map = postIdPercentList.stream().filter(Objects::nonNull).collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
+
+        updateById(employee);
 
         // 先将所有empId相等的数据都删除
         QueryWrapper<EmployeePosition> queryWrapper = new QueryWrapper<>();
@@ -782,20 +774,36 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         employeePositionMapper.delete(queryWrapper);
 
         // 表示是新增岗位
-        map.forEach((postId, percent) -> {
+        List<PostIdPercent> postIdPercentList = employeeFormDto.getPostIdPercent();
+        for (PostIdPercent postIdPercent : postIdPercentList) {
+            BigDecimal percent = postIdPercent.getPercent();
+            Long postId = postIdPercent.getPostId();
             EmployeePosition employeePosition1 = new EmployeePosition();
             employeePosition1.setEmpId(id);
             employeePosition1.setPositionId(postId);
             employeePosition1.setPosiPercent(percent);
             employeePositionService.save(employeePosition1);
-        });
+        }
+
         LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
         // 更改员工的地域
+        //先查询是否有，没有之间添加
+        List<EmpCoefficient> empCoefficientList = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getCreateTime, time[0], time[1]).list();
         Long regionId = employeeFormDto.getRegionId();
         BigDecimal grade = employeeFormDto.getGrade();
-        empCoefficientService.lambdaUpdate().set(Objects.nonNull(regionId), EmpCoefficient::getRegionCoefficientId, regionId)
-                .set(Objects.nonNull(grade), EmpCoefficient::getPositionCoefficient, grade).between(EmpCoefficient::getCreateTime, time[0], time[1])
-                .eq(EmpCoefficient::getEmpId, id).update();
+        if (!CollectionUtils.isEmpty(empCoefficientList)) {
+            empCoefficientService.lambdaUpdate().set(Objects.nonNull(regionId), EmpCoefficient::getRegionCoefficientId, regionId)
+                    .set(Objects.nonNull(grade), EmpCoefficient::getPositionCoefficient, grade).between(EmpCoefficient::getCreateTime, time[0], time[1])
+                    .eq(EmpCoefficient::getEmpId, id).update();
+        } else {
+            EmpCoefficient empCoefficient = new EmpCoefficient();
+            empCoefficient.setEmpId(id);
+            empCoefficient.setRegionCoefficientId(regionId);
+            empCoefficient.setPositionCoefficient(grade);
+            empCoefficientService.save(empCoefficient);
+        }
+
+
         return R.success("员工信息更新成功");
     }
 
