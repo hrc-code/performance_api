@@ -1,6 +1,5 @@
 package com.example.workflow.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
 import com.example.workflow.dto.EmployeeFormDto;
@@ -29,10 +28,18 @@ import java.util.Objects;
 public class EmployeeController {
     private final EmployeeService employeeService;
 
+    /** 通过部门id查询员工信息*/
+    @GetMapping("/infoByDeptId")
+    public R<List<EmployeeVo>> getInfoByDeptId(@RequestParam Long deptId) {
+        List<EmployeeVo> employeeVos = employeeService.getEmployeeVoListByDeptId(deptId);
+        return R.success(employeeVos);
+    }
+
     /** 根据员工姓名获取信息， 信息可以不全*/
-    @GetMapping("/infoByName/{name}")
-    public R<EmployeeVo> getByName(@PathVariable String name) {
-        return employeeService.getByName(name);
+    @GetMapping("/infoList")
+    public R<List<EmployeeVo>> getByName(String name, String num) {
+        List<EmployeeVo> list = employeeService.getList(name, num);
+        return R.success(list);
     }
 
     /*
@@ -138,6 +145,7 @@ public class EmployeeController {
 
     /**
      * 查询全部员工信息*/
+    @Deprecated
     @GetMapping("/list")
     public R page(
             String num,String name,Long deptId,Long roleId
