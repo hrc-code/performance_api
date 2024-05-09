@@ -59,15 +59,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
-* @author hrc
-* @description 针对表【employee(员工)】的数据库操作Service实现
-* @createDate 2024-03-27 23:29:44
-*/
+ * @author hrc
+ * @description 针对表【employee(员工)】的数据库操作Service实现
+ * @createDate 2024-03-27 23:29:44
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
-    implements EmployeeService {
+        implements EmployeeService {
 
     private final EmployeePositionService employeePositionService;
 
@@ -79,51 +79,53 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
     private final RegionCoefficientService regionCoefficientService;
 
-    private final EmpCoefficientService empCoefficientService ;
+    private final EmpCoefficientService empCoefficientService;
 
-    private  final RoleBtnService roleBtnService;
+    private final RoleBtnService roleBtnService;
 
-    private  final ButtonService buttonService;
+    private final ButtonService buttonService;
 
     private final RoleService roleService;
 
-    /** 根据部门id获取 该部门下以及后代部门的的全部员工*/
+    /**
+     * 根据部门id获取 该部门下以及后代部门的的全部员工
+     */
     @Override
     public Collection<EmployeeExcel> getEmployeeExcels(Long deptId2) {
         List<Employee> employees;
         ArrayList<EmployeeExcel> employeeExcels = new ArrayList<>();
 
         Dept dept1 = deptService.getById(deptId2);
-        //去部门表判断部门id是否存在，不存在就返回全部数据
+        // 去部门表判断部门id是否存在，不存在就返回全部数据
         if (Objects.isNull(dept1)) {
-               employees = list();
+            employees = list();
         } else {
             // 根据部门id获取 该部门下以及后代部门的的全部员工
             employees = getEmployeeListByDeptId(deptId2);
         }
-        //查询员工的其他信息
+        // 查询员工的其他信息
         if (!CollectionUtils.isEmpty(employees)) {
             for (Employee employee : employees) {
                 EmployeeExcel employeeExcel = new EmployeeExcel();
                 BeanUtils.copyProperties(employee, employeeExcel);
                 Long employeeId = employee.getId();
-                //查询职务名
+                // 查询职务名
                 Long roleId = employee.getRoleId();
                 Role role = roleService.getById(roleId);
                 if (Objects.nonNull(role)) {
                     employeeExcel.setRoleName(role.getRoleName());
                 }
-                //向返回对象设置岗位和部门信息
+                // 向返回对象设置岗位和部门信息
                 setPositionAndDeptToEmployeeExcel(employeeId, employeeExcel);
-                //向返回对象设置地域和岗位绩效
+                // 向返回对象设置地域和岗位绩效
                 setRegionAndPositionCoefficientToEmployeeExcel(employeeId, employeeExcel);
                 employeeExcels.add(employeeExcel);
             }
         }
-        return  employeeExcels;
+        return employeeExcels;
     }
 
-    //向返回对象设置地域和岗位绩效
+    // 向返回对象设置地域和岗位绩效
     private void setRegionAndPositionCoefficientToEmployeeExcel(Long employeeId, EmployeeExcel employeeExcel) {
         LocalDateTime[] times = DateTimeUtils.getTheStartAndEndTimeOfMonth();
         EmpCoefficient empCoefficient = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, employeeId).between(EmpCoefficient::getCreateTime, times[0], times[1]).one();
@@ -140,7 +142,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         }
     }
 
-    //向返回对象设置岗位和部门信息
+    // 向返回对象设置岗位和部门信息
     private void setPositionAndDeptToEmployeeExcel(Long employeeId, EmployeeExcel employeeExcel) {
         List<EmployeePosition> employeePositionList = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, employeeId).list();
         if (!CollectionUtils.isEmpty(employeePositionList)) {
@@ -152,7 +154,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 String typeName = position.getTypeName();
                 employeeExcel.setPosition(positionName);
                 employeeExcel.setTypeName(typeName);
-                //查询部门名
+                // 查询部门名
                 Long deptId = position.getDeptId();
                 Dept dept = deptService.getById(deptId);
                 if (Objects.nonNull(dept)) {
@@ -163,18 +165,20 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         }
     }
 
-    /** 注意：当这个部门不存在，部门没有岗位时会查询全部数据
-     * 根据部门id获取 该部门下以及后代部门的的全部员工*/
+    /**
+     * 注意：当这个部门不存在，部门没有岗位时会查询全部数据
+     * 根据部门id获取 该部门下以及后代部门的的全部员工
+     */
     private List<Employee> getEmployeeListByDeptId(Long deptId) {
         List<Employee> employees;
-        //查询这个部门的全部子部门id
+        // 查询这个部门的全部子部门id
         Set<Long> childeDeptIdSet = deptService.getChildeDeptIdSet(deptId);
         childeDeptIdSet.add(deptId);
         List<Position> positionList = positionService.lambdaQuery().in(Position::getDeptId, childeDeptIdSet).list();
         Set<Long> positionIdSet = positionList.stream().map(Position::getId).collect(Collectors.toSet());
-        List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().in(!CollectionUtils.isEmpty(positionIdSet),EmployeePosition::getPositionId, positionIdSet).list();
+        List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().in(!CollectionUtils.isEmpty(positionIdSet), EmployeePosition::getPositionId, positionIdSet).list();
         Set<Long> empIdSet = employeePositions.stream().map(EmployeePosition::getEmpId).collect(Collectors.toSet());
-        employees = lambdaQuery().in(!CollectionUtils.isEmpty(empIdSet),Employee::getId, empIdSet).list();
+        employees = lambdaQuery().in(!CollectionUtils.isEmpty(empIdSet), Employee::getId, empIdSet).list();
         return employees;
     }
 
@@ -183,12 +187,12 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
      */
 
     @Override
-    public  List<EmployeeVo> getList(String name, String num) {
+    public List<EmployeeVo> getList(String name, String num) {
         List<EmployeeVo> employeeVos = new ArrayList<>();
 
-        //获取员工基本信息
+        // 获取员工基本信息
         List<Employee> employees = lambdaQuery().like(Objects.nonNull(name), Employee::getName, name)
-                                                .like(Objects.nonNull(num), Employee::getNum, num).list();
+                .like(Objects.nonNull(num), Employee::getNum, num).list();
         // 为员工添加额外信息
         wrapperToEmployeeVo(employees, employeeVos);
         return employeeVos;
@@ -200,10 +204,10 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             for (Employee employee : employees) {
                 EmployeeVo employeeVo = new EmployeeVo();
                 BeanUtils.copyProperties(employee, employeeVo);
-                //获得职务名
+                // 获得职务名
                 Long roleId = employee.getRoleId();
                 Role role = roleService.getById(roleId);
-                //允许职务名为空
+                // 允许职务名为空
                 String roleName;
                 if (Objects.nonNull(role)) {
                     roleName = role.getRoleName();
@@ -211,24 +215,24 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 }
                 // 为返回结果设置地域
                 Long employeeId = setRegionFoEmployeeVo(employee, employeeVo);
-                //为返回值设置岗位名集合和部门名集合
+                // 为返回值设置岗位名集合和部门名集合
                 setPositionNamesAndDeptNamesForEmployeeVo(employeeId, employeeVo);
                 employeeVos.add(employeeVo);
             }
         }
     }
 
-    //为返回值设置岗位名集合和部门名集合
+    // 为返回值设置岗位名集合和部门名集合
     private void setPositionNamesAndDeptNamesForEmployeeVo(Long employeeId, EmployeeVo employeeVo) {
-        //获取岗位名
+        // 获取岗位名
         LambdaQueryWrapper<EmployeePosition> wrapper2 = new LambdaQueryWrapper<>();
         wrapper2.eq(EmployeePosition::getEmpId, employeeId);
         List<EmployeePosition> employeePositionList = employeePositionService.list(wrapper2);
-        //允许岗位名为空
-        ArrayList<String> positionNames ;
-        Collection<String> deptNames ;
+        // 允许岗位名为空
+        ArrayList<String> positionNames;
+        Collection<String> deptNames;
         if (CollectionUtil.isNotEmpty(employeePositionList)) {
-            //position_id 设置为 not null,所以集合不会为空
+            // position_id 设置为 not null,所以集合不会为空
             Set<Long> positionIdList = employeePositionList.stream().filter(Objects::nonNull).map(EmployeePosition::getPositionId).collect(Collectors.toSet());
             List<Position> positions = positionService.listByIds(positionIdList);
             if (CollectionUtil.isNotEmpty(positions)) {
@@ -245,7 +249,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
     // 为返回结果设置地域
     private Long setRegionFoEmployeeVo(Employee employee, EmployeeVo employeeVo) {
-        //获取地域
+        // 获取地域
         Long employeeId = employee.getId();
         LocalDateTime[] times = DateTimeUtils.getTheStartAndEndTimeOfMonth();
 
@@ -253,8 +257,8 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         wrapper.between(EmpCoefficient::getCreateTime, times[0], times[1])
                 .eq(EmpCoefficient::getEmpId, employeeId);
         EmpCoefficient empCoefficient = empCoefficientService.getOne(wrapper);
-        //允许地域为空
-        String region ;
+        // 允许地域为空
+        String region;
         if (Objects.nonNull(empCoefficient)) {
             Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
             RegionCoefficient regionCoefficient = regionCoefficientService.getById(regionCoefficientId);
@@ -274,37 +278,37 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
     public R allByCeoId(Long ceoId) {
         ArrayList<EmployeeVo> employeeVos = new ArrayList<>();
         HashSet<Long> idSet = new HashSet<>();
-        //首先根据ceoId去员工岗位表查询全部岗位id
+        // 首先根据ceoId去员工岗位表查询全部岗位id
         List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, ceoId).list();
         if (!CollectionUtils.isEmpty(employeePositions)) {
             employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
                 Long positionId = employeePosition.getPositionId();
-                //在根据岗位id去岗位表查询type < 4 的部门id
+                // 在根据岗位id去岗位表查询type < 4 的部门id
                 Position position = Db.getById(positionId, Position.class);
                 if (position != null) {
                     Short type = position.getType();
-                    //不包括此ceo不当其他部门的ceo
+                    // 不包括此ceo不当其他部门的ceo
                     if (type < 4) {
                         Long deptId = position.getDeptId();
                         //  根据部门id查询该部门下的全部员工 同部门
-                         idSet.addAll(getEmployeeIds(deptId));
-                        //部门级别以下  根据部门id 去 部门继承表中查询全部子部门id
+                        idSet.addAll(getEmployeeIds(deptId));
+                        // 部门级别以下  根据部门id 去 部门继承表中查询全部子部门id
                         HashSet<Long> ids = new HashSet<>();
                         getDeptIds(ids, deptId);
                         if (!CollectionUtils.isEmpty(ids)) {
-                             ids.stream().filter(Objects::nonNull).forEach(id -> {
-                                 Set<Long> employeeIds = getEmployeeIds(id);
-                                 if (!CollectionUtils.isEmpty(employeeIds)) {
-                                     idSet.addAll(employeeIds);
-                                 }
-                             });
+                            ids.stream().filter(Objects::nonNull).forEach(id -> {
+                                Set<Long> employeeIds = getEmployeeIds(id);
+                                if (!CollectionUtils.isEmpty(employeeIds)) {
+                                    idSet.addAll(employeeIds);
+                                }
+                            });
                         }
                     }
                 }
             });
         }
-        //最后根据员工id去 员工表 查询 员工name
-        //不包括ceo自己
+        // 最后根据员工id去 员工表 查询 员工name
+        // 不包括ceo自己
         idSet.remove(ceoId);
         idSet.stream().filter(Objects::nonNull).forEach(id -> {
             Employee employee = getById(id);
@@ -318,12 +322,15 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         });
         return R.success(employeeVos);
     }
-    /**  获取该部门级别 以下的全部部门id  用递归法*/
+
+    /**
+     * 获取该部门级别 以下的全部部门id  用递归法
+     */
     private void getDeptIds(Set<Long> ids, Long deptId) {
-        //当根据部门id去部门表差不到数据时结束递归
+        // 当根据部门id去部门表差不到数据时结束递归
         List<DeptHierarchy> deptHierarchies = Db.lambdaQuery(DeptHierarchy.class).eq(DeptHierarchy::getParentId, deptId).list();
         if (CollectionUtils.isEmpty(deptHierarchies)) {
-            return ;
+            return;
         }
         deptHierarchies.stream().filter(Objects::nonNull).forEach(deptHierarchy -> {
             Long childId = deptHierarchy.getChildId();
@@ -332,42 +339,46 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         });
     }
 
-    //根据部门id查询该部门下的全部员工
+    // 根据部门id查询该部门下的全部员工
     private Set<Long> getEmployeeIds(Long deptId) {
         HashSet<Long> idSet = new HashSet<>();
         // 根据部门id去岗位表查询全部岗位
         List<Position> positions = positionService.lambdaQuery().eq(Position::getDeptId, deptId).list();
-        //根据岗位id去员工岗位表查询该岗位全部员工id，并且加入set中
+        // 根据岗位id去员工岗位表查询该岗位全部员工id，并且加入set中
         positions.stream().filter(Objects::nonNull).forEach(position -> {
             Long positionId = position.getId();
             List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().eq(EmployeePosition::getPositionId, positionId).list();
             if (employeePositions != null) {
-                 employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
-                     Long empId = employeePosition.getEmpId();
-                     idSet.add(empId);
-                 });
+                employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
+                    Long empId = employeePosition.getEmpId();
+                    idSet.add(empId);
+                });
             }
         });
         return idSet;
     }
 
-    /** 操作 员工表  员工岗位表  员工绩效表
+    /**
+     * 操作 员工表  员工岗位表  员工绩效表
      * 获取要修改员工的个人信息
-     * id  员工id*/
+     * id  员工id
+     */
     @Override
     public R getInfoById(Long id) {
         EmployeeVo employeeVo = new EmployeeVo();
         Employee employee = getById(id);
+        BeanUtils.copyProperties(employee, employeeVo);
+
         ArrayList<PostIdPercent> postIdPercents = new ArrayList<>();
         ArrayList<PostIdAndName> postIdAndNames = new ArrayList<>();
-        //根据员工id 去 员工岗位表 查询全部的岗位id percent
+        // 根据员工id 去 员工岗位表 查询全部的岗位id percent
         List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, id).list();
-        //查询整个岗位列表
+        // 查询整个岗位列表
         List<Position> positions = positionService.list();
-        HashMap<Long,String> positionMap = new HashMap<>();
+        HashMap<Long, String> positionMap = new HashMap<>();
 
-        //哈希表降低查询岗位名称的时间复杂度
-        for(Position position : positions) positionMap.put(position.getId(),position.getPosition());
+        // 哈希表降低查询岗位名称的时间复杂度
+        for (Position position : positions) positionMap.put(position.getId(), position.getPosition());
 
         if (employeePositions != null) {
             employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
@@ -377,63 +388,63 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 postIdPercent.setPercent(posiPercent);
                 postIdPercent.setPostId(positionId);
                 postIdPercents.add(postIdPercent);
-                //将该员工所属的岗位id和岗位名称添加到postIdAndNames集合中
+                // 将该员工所属的岗位id和岗位名称添加到postIdAndNames集合中
                 PostIdAndName postIdAndName = new PostIdAndName();
                 postIdAndName.setId(positionId);
                 postIdAndName.setPosition(positionMap.get(positionId));
                 postIdAndNames.add(postIdAndName);
             });
+            employeeVo.setPosts(postIdAndNames);
+            employeeVo.setPostIdPercent(postIdPercents);
+
+
             LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
-            //根据员工id 去 员工绩效表 查询岗位绩效， 地区id
+            // 根据员工id 去 员工绩效表 查询岗位绩效， 地区id
             EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]).one();
             if (empCoefficient != null) {
                 BigDecimal positionCoefficient = empCoefficient.getPositionCoefficient();
                 Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
-                BeanUtils.copyProperties(employee, employeeVo);
-                employeeVo.setPostIdPercent(postIdPercents);
-                //设置岗位id和岗位名称集合
-                employeeVo.setPosts(postIdAndNames);
+                // 设置岗位id和岗位名称集合
                 employeeVo.setRegionId(regionCoefficientId);
                 employeeVo.setGrade(positionCoefficient);
-                return R.success(employeeVo);
-            } else {
-                return R.error("员工没有本月的绩效,请添加该员工的绩效");
             }
         }
-        return R.error("员工数据有缺失");
+        return R.success(employeeVo);
     }
 
-    /** 操作  员工表  员工绩效表  部门表  岗位表  员工岗位表
-     * 根据员工id 获取信息*/
+    /**
+     * 操作  员工表  员工绩效表  部门表  岗位表  员工岗位表
+     * 根据员工id 获取信息
+     */
     @Override
     public R infoById(Long id) {
         EmployeeVo employeeVo = new EmployeeVo();
         Employee employee = getById(id);
         ArrayList<String> deptNames = new ArrayList<>();
         ArrayList<String> postNames = new ArrayList<>();
-        //根据员工id 去 员工岗位表 查询这名员工的全部岗位
+        // 根据员工id 去 员工岗位表 查询这名员工的全部岗位
         List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, id).list();
         if (employeePositions != null) {
             employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
-                //根据岗位id 去 岗位表 查寻 部门id 岗位名
+                // 根据岗位id 去 岗位表 查寻 部门id 岗位名
                 Long positionId = employeePosition.getPositionId();
                 Position position = positionService.getById(positionId);
                 if (position != null) {
                     Long deptId = position.getDeptId();
                     String positionName = position.getPosition();
-                    //根据部门id 调用 getDeptName() 获取 树形部门名
+                    // 根据部门id 调用 getDeptName() 获取 树形部门名
                     String deptName = deptService.getDeptName(deptId);
-                    //收集部门名， 岗位名
-                     deptNames.add(deptName);
-                     postNames.add(positionName);
+                    // 收集部门名， 岗位名
+                    deptNames.add(deptName);
+                    postNames.add(positionName);
                 }
             });
-            //根据员工id 去员工绩效表查询岗位绩效
+            // 根据员工id 去员工绩效表查询岗位绩效
             LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
             EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]).one();
             if (empCoefficient != null) {
                 BigDecimal grade = empCoefficient.getPositionCoefficient();
-                //只有查到全部数据才设置返回值
+                // 只有查到全部数据才设置返回值
                 BeanUtils.copyProperties(employee, employeeVo);
                 employeeVo.setGrade(grade);
                 employeeVo.setPostName(postNames);
@@ -446,7 +457,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         return R.error("该名员工数据不足");
     }
 
-    /** 查询员工全部信息  操作  员工表  部门表  岗位表  地域绩效表*/
+    /**
+     * 查询员工全部信息  操作  员工表  部门表  岗位表  地域绩效表
+     */
 
     @Override
     @Deprecated
@@ -457,9 +470,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         Long deptId = employeeFormDto.getDeptId();
         Long roleId = employeeFormDto.getRoleId();
 
-        //获取全部满足条件的员工
+        // 获取全部满足条件的员工
         List<Employee> employees = Db.lambdaQuery(Employee.class)
-                .like( num != null, Employee::getNum, num)
+                .like(num != null, Employee::getNum, num)
                 .like(name != null, Employee::getName, name)
                 .eq(roleId != null, Employee::getRoleId, roleId)
                 .eq(Employee::getState, 1)
@@ -468,74 +481,74 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         if (!CollectionUtils.isEmpty(employees)) {
             return R.error("没有员工");
         }
-        //根据员工id分组后的全部员工
+        // 根据员工id分组后的全部员工
         Map<Long, List<Employee>> employeeMap = employees.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(Employee::getId));
         if (CollectionUtils.isEmpty(employeeMap)) {
             return R.error("没有员工");
         }
         List<DeptHierarchy> deptHierarchys = Db.lambdaQuery(DeptHierarchy.class).list();
 
-        Map<Long,Long> deptHierarchyMap = new HashMap<>();
+        Map<Long, Long> deptHierarchyMap = new HashMap<>();
 
         for (DeptHierarchy deptHierarchy : deptHierarchys) {
-            deptHierarchyMap.put(deptHierarchy.getChildId(),deptHierarchy.getParentId());
+            deptHierarchyMap.put(deptHierarchy.getChildId(), deptHierarchy.getParentId());
         }
 
-        //返回结果集
+        // 返回结果集
         ArrayList<EmployeeVo> employeeVos = new ArrayList<>();
 
-        //员工id集合
+        // 员工id集合
         List<Long> employeeIds = employees.stream().filter(Objects::nonNull).map(Employee::getId).collect(Collectors.toList());
-        LocalDateTime[] time =DateTimeUtils.getTheStartAndEndTimeOfMonth();
-        //全部员工绩效记录 只能获取本月的员工绩效
+        LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
+        // 全部员工绩效记录 只能获取本月的员工绩效
         List<EmpCoefficient> allEmpCoefficients = empCoefficientService.lambdaQuery().in(EmpCoefficient::getEmpId, employeeIds).between(EmpCoefficient::getUpdateTime, time[0], time[1]).list();
-        if(CollectionUtils.isEmpty(allEmpCoefficients)) {
+        if (CollectionUtils.isEmpty(allEmpCoefficients)) {
             return R.error("员工本月没有绩效");
 
         }
-        //全部地域id
+        // 全部地域id
         Set<Long> regionCoefficientIdSet = allEmpCoefficients.stream().filter(Objects::nonNull).map(EmpCoefficient::getRegionCoefficientId).collect(Collectors.toSet());
         List<RegionCoefficient> allRegionCoefficient = regionCoefficientService.lambdaQuery().in(RegionCoefficient::getId, regionCoefficientIdSet).list();
         if (CollectionUtils.isEmpty(allRegionCoefficient)) {
             return R.error("没有地域绩效数据");
         }
-        //根据地域id分组后的地域绩效记录
+        // 根据地域id分组后的地域绩效记录
         Map<Long, List<RegionCoefficient>> regionCoefficientMap = allRegionCoefficient.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(RegionCoefficient::getId));
-        //根据员工id分组后的员工绩效  只有一条
+        // 根据员工id分组后的员工绩效  只有一条
         Map<Long, List<EmpCoefficient>> empCoefficientMap = allEmpCoefficients.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(EmpCoefficient::getEmpId));
-        //全部员工岗位记录
+        // 全部员工岗位记录
         List<EmployeePosition> allEmployeePositions = employeePositionService.lambdaQuery().in(EmployeePosition::getEmpId, employeeIds).list();
         if (CollectionUtil.isEmpty(allEmployeePositions)) {
             return R.error("员工没有岗位");
         }
-        //全部的岗位id
+        // 全部的岗位id
         Set<Long> positionIdSet = allEmployeePositions.stream().filter(Objects::nonNull).map(EmployeePosition::getPositionId).collect(Collectors.toSet());
-        //全部岗位
+        // 全部岗位
         List<Position> positions = positionService.lambdaQuery().in(Position::getId, positionIdSet).list();
-        //全部部门id
-        Set<Long> deptIdSet= positions.stream().filter(Objects::nonNull).map(Position::getDeptId).collect(Collectors.toSet());
-        if (CollectionUtils.isEmpty(deptIdSet))  {
+        // 全部部门id
+        Set<Long> deptIdSet = positions.stream().filter(Objects::nonNull).map(Position::getDeptId).collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(deptIdSet)) {
             return R.error("岗位没有部门");
         }
-        //全部部门名
+        // 全部部门名
         List<Long> deptIdList = deptIdSet.stream().filter(Objects::nonNull).collect(Collectors.toList());
         Map<Long, String> deptNameMap = deptService.getDeptNameMap(deptIdList);
         HashMap<Long, String> deptIdNameMap = new HashMap<>();
         deptIdSet.stream().filter(Objects::nonNull).forEach(deptIdOne -> {
-            //再根据部门id调用deptService的getDeptName()获得部门name
-            String deptName =  deptNameMap.get(deptIdOne);
+            // 再根据部门id调用deptService的getDeptName()获得部门name
+            String deptName = deptNameMap.get(deptIdOne);
             deptIdNameMap.put(deptIdOne, deptName);
         });
 
-        //查询所有权限（角色）列表
+        // 查询所有权限（角色）列表
         List<Role> roles = Db.lambdaQuery(Role.class).list();
-        //将角色转换为map，提高检索时的效率
-        Map<Long,String> roleMap = new HashMap<>();
-        for (Role role : roles) roleMap.put(role.getId(),role.getRoleName());
+        // 将角色转换为map，提高检索时的效率
+        Map<Long, String> roleMap = new HashMap<>();
+        for (Role role : roles) roleMap.put(role.getId(), role.getRoleName());
 
-        //根据岗位id分组之后的岗位
+        // 根据岗位id分组之后的岗位
         Map<Long, List<Position>> positionMap = positions.stream().collect(Collectors.groupingBy(Position::getId));
-        //根据员工id分组后的全部岗位
+        // 根据员工id分组后的全部岗位
         Map<Long, List<EmployeePosition>> employeeIdAndEmployeePositionMap = allEmployeePositions.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(EmployeePosition::getEmpId));
         employeeIdAndEmployeePositionMap.forEach((employeeId, employeePositions) -> {
             ArrayList<Long> positionIds = new ArrayList<>();
@@ -543,23 +556,23 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             ArrayList<Long> deptIds = new ArrayList<>();
             ArrayList<String> deptNames = new ArrayList<>();
 
-            //是否匹配deptId
+            // 是否匹配deptId
             AtomicReference<Boolean> hasDeptIdFlag = new AtomicReference<>(false);
 
             if (employeePositions != null) {
                 employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
-                    //在根据岗位id去岗位表查询岗位名，部门id
+                    // 在根据岗位id去岗位表查询岗位名，部门id
                     Long positionId = employeePosition.getPositionId();
                     List<Position> positionList = positionMap.get(positionId);
                     if (!CollectionUtils.isEmpty(positionList)) {
-                        //一个岗位id对应一个岗位，所以只会循环一次
+                        // 一个岗位id对应一个岗位，所以只会循环一次
                         positionList.stream().filter(Objects::nonNull).forEach(position -> {
                             String postName = position.getPosition();
-                            Long  deptId1 = position.getDeptId();
-                            //再根据部门id调用deptService的getDeptName()获得部门name
-                            String deptName =  deptIdNameMap.get(deptId1);
+                            Long deptId1 = position.getDeptId();
+                            // 再根据部门id调用deptService的getDeptName()获得部门name
+                            String deptName = deptIdNameMap.get(deptId1);
 
-                            if (Find.findPathDeptId(deptHierarchyMap,deptId,deptId1)) hasDeptIdFlag.set(true);
+                            if (Find.findPathDeptId(deptHierarchyMap, deptId, deptId1)) hasDeptIdFlag.set(true);
                             positionIds.add(positionId);
                             postNames.add(postName);
                             deptIds.add(deptId1);
@@ -569,38 +582,38 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 });
             }
 
-            //1. dept_Id 为空    2.查出来的员工部门id != dept_id   3. 相等  再次根据部门id筛选符合条件的员工
-            //不相等就将这名员工过滤，不符合条件 就是不做处理
+            // 1. dept_Id 为空    2.查出来的员工部门id != dept_id   3. 相等  再次根据部门id筛选符合条件的员工
+            // 不相等就将这名员工过滤，不符合条件 就是不做处理
             if (deptId == null || hasDeptIdFlag.get()) {
-                //只会循环一次  一个员工只有一条员工绩效记录
+                // 只会循环一次  一个员工只有一条员工绩效记录
                 List<EmpCoefficient> empCoefficients = empCoefficientMap.get(employeeId);
                 if (!CollectionUtils.isEmpty(empCoefficients)) {
                     empCoefficients.stream().filter(Objects::nonNull).forEach(empCoefficient -> {
-                        //根据员工id去员工绩效表查询地域绩效id
+                        // 根据员工id去员工绩效表查询地域绩效id
                         Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
-                        //根据地域绩效id去地域绩效表查询地域名，地域id
+                        // 根据地域绩效id去地域绩效表查询地域名，地域id
                         List<RegionCoefficient> regionCoefficients = regionCoefficientMap.get(regionCoefficientId);
                         if (!CollectionUtils.isEmpty(regionCoefficients)) {
                             // 只循环一次--地域绩效id对应一条数据
                             regionCoefficients.stream().filter(Objects::nonNull).forEach(regionCoefficient -> {
-                                        List<Employee> employeeList = employeeMap.get(employeeId);
-                                        Long id = regionCoefficient.getId();
-                                        String region = regionCoefficient.getRegion();
-                                        EmployeeVo employeeVo = new EmployeeVo();
-                                        //循环一次， 一个员工id对应一名员工
-                                        employeeList.stream().filter(Objects::nonNull).forEach(employee -> {
-                                            BeanUtils.copyProperties(employee, employeeVo);
-                                            //将权限名称设置进去
-                                            employeeVo.setRoleName(roleMap.get(employee.getRoleId()));
-                                        });
-                                        employeeVo.setDeptIds(deptIds);
-                                        employeeVo.setDeptNames(deptNames);
-                                        employeeVo.setPostId(positionIds);
-                                        employeeVo.setPostName(postNames);
-                                        employeeVo.setRegionId(id);
-                                        employeeVo.setRegionName(region);
-                                        employeeVos.add(employeeVo);
-                                    });
+                                List<Employee> employeeList = employeeMap.get(employeeId);
+                                Long id = regionCoefficient.getId();
+                                String region = regionCoefficient.getRegion();
+                                EmployeeVo employeeVo = new EmployeeVo();
+                                // 循环一次， 一个员工id对应一名员工
+                                employeeList.stream().filter(Objects::nonNull).forEach(employee -> {
+                                    BeanUtils.copyProperties(employee, employeeVo);
+                                    // 将权限名称设置进去
+                                    employeeVo.setRoleName(roleMap.get(employee.getRoleId()));
+                                });
+                                employeeVo.setDeptIds(deptIds);
+                                employeeVo.setDeptNames(deptNames);
+                                employeeVo.setPostId(positionIds);
+                                employeeVo.setPostName(postNames);
+                                employeeVo.setRegionId(id);
+                                employeeVo.setRegionName(region);
+                                employeeVos.add(employeeVo);
+                            });
                         }
                     });
                 }
@@ -640,14 +653,14 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             employeePosition.setPositionId(postId);
             employeePosition.setPosiPercent(map.get(postId));
 
-            Short type=Db.lambdaQuery(Position.class)
+            Short type = Db.lambdaQuery(Position.class)
                     .eq(Position::getId, postId)
                     .one().getType();
-            if(type==5)
+            if (type == 5)
                 employeePosition.setProcessKey("Process_1gzouwy");
-            else if(type==4)
+            else if (type == 4)
                 employeePosition.setProcessKey("Process_1whe0gq");
-            else if(type==3)
+            else if (type == 3)
                 employeePosition.setProcessKey("Process_01p7ac7");
             employeePositionService.save(employeePosition);
         });
@@ -663,31 +676,33 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         return R.success();
     }
 
-    /** 查询员工  擦作 员工表  员工岗位表 部门表  岗位表 地域绩效表
-     * id 员工id*/
+    /**
+     * 查询员工  擦作 员工表  员工岗位表 部门表  岗位表 地域绩效表
+     * id 员工id
+     */
     @Override
     public R getEmployeeById(List<Long> ids) {
-        List<EmployeeVo>  result = new ArrayList<>();
+        List<EmployeeVo> result = new ArrayList<>();
 
         for (Long id : ids) {
             Employee employee = getById(id);
             if (employee == null) {
                 return R.error("员工号错误");
             }
-            //员工与岗位为多对多关系
+            // 员工与岗位为多对多关系
             List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, employee.getId()).list();
             EmployeeVo employeeVo = new EmployeeVo();
             List<Long> postIds = new ArrayList<>();
             ArrayList<String> postNames = new ArrayList<>();
-            //员工基本属性
+            // 员工基本属性
             BeanUtils.copyProperties(employee, employeeVo);
             // 全部部门ids 全部部门名称
             ArrayList<DeptIdAndNape> deptIdAndNapes = new ArrayList<>();
-            //遍历员工的全部岗位
+            // 遍历员工的全部岗位
             List<PostIdPercent> postIdPercentList = employeePositions.stream().map(employeePosition -> {
                 PostIdPercent postIdPercent = new PostIdPercent();
                 Long positionId = employeePosition.getPositionId();
-                //查询岗位表
+                // 查询岗位表
                 Position position = positionService.getById(positionId);
                 postNames.add(position.getPosition());
                 postIds.add(positionId);
@@ -696,7 +711,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
                 ArrayList<Long> deptIds = new ArrayList<>();
                 StringJoiner deptNames = new StringJoiner(",");
-                //获取全部部门ids 全部部门名称
+                // 获取全部部门ids 全部部门名称
                 deptService.getAllSuperiorDept(positionId).getData().forEach(deptId -> {
                     deptIds.add(deptId);
                     if (deptId != null) {
@@ -709,24 +724,24 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 deptIdAndNape.setDeptName(deptNames.toString());
                 deptIdAndNapes.add(deptIdAndNape);
 
-                //根据岗位id去岗位表查询部门id
+                // 根据岗位id去岗位表查询部门id
                 Long deptId = positionService.getById(positionId).getDeptId();
-                //最后根据部门id去部门表查询部门名称
+                // 最后根据部门id去部门表查询部门名称
                 employeeVo.setDeptName(deptService.getDeptName(deptId));
                 return postIdPercent;
             }).collect(Collectors.toList());
 
 
-            //设置部门ids 部门名
+            // 设置部门ids 部门名
             employeeVo.setDeptIdAndNapeList(deptIdAndNapes);
-            //岗位绩效
+            // 岗位绩效
             employeeVo.setPostIdPercent(postIdPercentList);
-            //岗位id
+            // 岗位id
             employeeVo.setPostId(postIds);
-            //岗位名称
+            // 岗位名称
             employeeVo.setPostName(postNames);
 
-            //地域名称
+            // 地域名称
             Long regionCoefficientId = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, id).one().getRegionCoefficientId();
             RegionCoefficient regionCoefficient = regionCoefficientService.getById(regionCoefficientId);
             employeeVo.setRegionName(regionCoefficient.getRegion());
@@ -739,23 +754,25 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
     }
 
 
-    /** 更新员工  操作  员工表  员工岗位表  员工绩效表*/
+    /**
+     * 更新员工  操作  员工表  员工岗位表  员工绩效表
+     */
     @Transactional
     @Override
-    public R updateEmployee(EmployeeFormDto employeeFormDto) throws Exception{
+    public R updateEmployee(EmployeeFormDto employeeFormDto) throws Exception {
         Long id = employeeFormDto.getId();
-        //更新员工基本信息
+        // 更新员工基本信息
         Employee employee = new Employee();
         BeanUtils.copyProperties(employeeFormDto, employee);
-        boolean  employeeUpdated = updateById(employee);
+        boolean employeeUpdated = updateById(employee);
         if (!employeeUpdated) {
-          throw new Exception("员工信息更新失败");
+            throw new Exception("员工信息更新失败");
         }
         List<PostIdPercent> postIdPercentList = employeeFormDto.getPostIdPercent();
         if (CollectionUtils.isEmpty(postIdPercentList)) {
             throw new Exception("员工信息更新失败");
         }
-        //key 为 postId  value 为  percent
+        // key 为 postId  value 为  percent
         Map<Long, BigDecimal> map = postIdPercentList.stream().filter(Objects::nonNull).collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
 
         // 先将所有empId相等的数据都删除
@@ -764,7 +781,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
         employeePositionMapper.delete(queryWrapper);
 
-        //表示是新增岗位
+        // 表示是新增岗位
         map.forEach((postId, percent) -> {
             EmployeePosition employeePosition1 = new EmployeePosition();
             employeePosition1.setEmpId(id);
@@ -773,41 +790,39 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             employeePositionService.save(employeePosition1);
         });
         LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
-        //更改员工的地域
-        EmpCoefficient empCoefficient = Db.lambdaQuery(EmpCoefficient.class).eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]).one();
-        if (empCoefficient == null) {
-            throw new Exception("员工绩效信息为空");
-        }
-        empCoefficient.setRegionCoefficientId(employeeFormDto.getRegionId());
-        empCoefficient.setPositionCoefficient(employeeFormDto.getGrade());
-        LambdaQueryWrapper<EmpCoefficient> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(EmpCoefficient::getEmpId, id);
-        empCoefficientService.update(empCoefficient, wrapper);
+        // 更改员工的地域
+        Long regionId = employeeFormDto.getRegionId();
+        BigDecimal grade = employeeFormDto.getGrade();
+        empCoefficientService.lambdaUpdate().set(Objects.nonNull(regionId), EmpCoefficient::getRegionCoefficientId, regionId)
+                .set(Objects.nonNull(grade), EmpCoefficient::getPositionCoefficient, grade).between(EmpCoefficient::getCreateTime, time[0], time[1])
+                .eq(EmpCoefficient::getEmpId, id).update();
         return R.success("员工信息更新成功");
     }
 
-    /** 删除员工信息  操作  员工表  员工岗位表  员工绩效表
-     * ids 员工id*/
+    /**
+     * 删除员工信息  操作  员工表  员工岗位表  员工绩效表
+     * ids 员工id
+     */
 
     @Override
     @Transactional
     public R deleteEmployeeById(List<Long> ids) {
 
         ids.forEach(id -> {
-            //首先删除员工表中的信息 不能实际删除，将state 设为 0 视为 删除
+            // 首先删除员工表中的信息 不能实际删除，将state 设为 0 视为 删除
             LambdaUpdateWrapper<Employee> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.set(Employee::getState, 0).eq(Employee::getId, id);
             update(updateWrapper);
-            //然后删除员工岗位表的信息
+            // 然后删除员工岗位表的信息
             LambdaQueryWrapper<EmployeePosition> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(EmployeePosition::getEmpId, id);
             employeePositionService.remove(wrapper);
-            //最后再删除员工绩效表中的信息 只能删除当月的绩效
+            // 最后再删除员工绩效表中的信息 只能删除当月的绩效
             LambdaQueryWrapper<EmpCoefficient> wrapper1 = new LambdaQueryWrapper<>();
             LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
-            //获取员工绩效表的更新时间    员工表与员工绩效表的关系  一对一
+            // 获取员工绩效表的更新时间    员工表与员工绩效表的关系  一对一
             wrapper1.eq(EmpCoefficient::getEmpId, id)
-                    .between(EmpCoefficient::getUpdateTime, time[0] , time[1]);
+                    .between(EmpCoefficient::getUpdateTime, time[0], time[1]);
             empCoefficientService.remove(wrapper1);
         });
         return R.success("删除成功");
@@ -832,19 +847,20 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
     /**
      * 传进来一个员工id,   操作  员工表  角色按钮表  按钮表  角色路由表   路由表
-     * return   返回这个id的路由信息和按钮权限 */
+     * return   返回这个id的路由信息和按钮权限
+     */
     @Override
     public R router(Long id) {
         RouterAndButtonVo routerAndButtonVo = new RouterAndButtonVo();
-        //首先根据员工id去员工表查询角色id
-        Employee employee =  getById(id);
+        // 首先根据员工id去员工表查询角色id
+        Employee employee = getById(id);
         if (employee == null) {
             return R.error("没有这位员工");
         }
         Long roleId = employee.getRoleId();
-        //然后根据角色id去角色按钮表查询按钮id集合
+        // 然后根据角色id去角色按钮表查询按钮id集合
         List<Long> idList = roleBtnService.lambdaQuery().eq(RoleBtn::getRoleId, roleId).list().stream().map(RoleBtn::getBtnId).collect(Collectors.toList());
-        //再根据按钮id去按钮表查询所有的按钮权限
+        // 再根据按钮id去按钮表查询所有的按钮权限
         ArrayList<String> buttonCode = new ArrayList<>();
         idList.forEach(buttonId -> {
             String name = buttonService.getById(buttonId).getName();
@@ -857,7 +873,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
     @Override
     public List<EmployeeVo> getEmployeeVoListByDeptId(Long deptId) {
         ArrayList<EmployeeVo> employeeVos = new ArrayList<>();
-        //获取员工基本信息
+        // 获取员工基本信息
         List<Employee> employeeList = getEmployeeListByDeptId(deptId);
 
         wrapperToEmployeeVo(employeeList, employeeVos);
