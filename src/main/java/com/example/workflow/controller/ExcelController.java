@@ -27,6 +27,7 @@ import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -100,7 +101,10 @@ public class ExcelController {
         response.setCharacterEncoding("utf-8");
         String fileName;
         try {
-            fileName = URLEncoder.encode("employee", "UTF-8").replaceAll("\\+", "%20");
+            LocalDateTime localDateTime = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+            String time = localDateTime.format(formatter);
+            fileName = URLEncoder.encode("员工基础信息" + time, "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             EasyExcel.write(response.getOutputStream(), EmployeeExcel.class).sheet("模板").doWrite(employeeService.getEmployeeExcels(deptId));
         } catch (IOException e) {
