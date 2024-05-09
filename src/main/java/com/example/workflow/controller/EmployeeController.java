@@ -30,7 +30,7 @@ public class EmployeeController {
 
     /** 通过部门id查询员工信息*/
     @GetMapping("/infoByDeptId")
-    public R<List<EmployeeVo>> getInfoByDeptId(@RequestParam Long deptId) {
+    public R<List<EmployeeVo>> getInfoByDeptId(Long deptId) {
         List<EmployeeVo> employeeVos = employeeService.getEmployeeVoListByDeptId(deptId);
         return R.success(employeeVos);
     }
