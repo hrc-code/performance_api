@@ -100,7 +100,7 @@ public class ExcelController {
         response.setCharacterEncoding("utf-8");
         String fileName;
         try {
-            fileName = URLEncoder.encode("employee", "UTF-8").replaceAll("\\+", "%20");
+            fileName = URLEncoder.encode("员工基础信息" + LocalDateTime.now(), "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             EasyExcel.write(response.getOutputStream(), EmployeeExcel.class).sheet("模板").doWrite(employeeService.getEmployeeExcels(deptId));
         } catch (IOException e) {
