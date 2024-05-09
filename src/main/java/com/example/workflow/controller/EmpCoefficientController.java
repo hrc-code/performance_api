@@ -115,6 +115,7 @@ public class EmpCoefficientController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .list();
+        System.out.println(regionCoefficientList.isEmpty());
         if(regionCoefficientList.isEmpty())
             return R.error("未进行本月地域系数配置，请前往“地域系数”进行配置或复制上一个月");
 

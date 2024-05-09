@@ -43,12 +43,14 @@ public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper,
                     .eq(RegionCoefficient::getId,x.getRegionCoefficientId())
                             .one();
 
+            LocalDateTime begin = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
+            LocalDateTime end = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
             RegionCoefficient regionCoefficient=RegionCoefficientService.lambdaQuery()
                             .eq(RegionCoefficient::getRegion,last.getRegion())
-                    .apply(StringUtils.checkValNotNull(beginTime),
-                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                    .apply(StringUtils.checkValNotNull(endTime),
-                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .apply(StringUtils.checkValNotNull(begin),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", begin)
+                    .apply(StringUtils.checkValNotNull(end),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", end)
                             .one();
 
             x.setRegionCoefficientId(regionCoefficient.getId());
