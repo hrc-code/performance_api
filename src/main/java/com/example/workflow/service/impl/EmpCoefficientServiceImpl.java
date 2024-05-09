@@ -3,8 +3,10 @@ package com.example.workflow.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.workflow.entity.EmpCoefficient;
+import com.example.workflow.entity.RegionCoefficient;
 import com.example.workflow.mapper.EmpCoefficientMapper;
 import com.example.workflow.service.EmpCoefficientService;
+import com.example.workflow.service.RegionCoefficientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import java.util.List;
 public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper, EmpCoefficient> implements EmpCoefficientService {
     @Autowired
     private EmpCoefficientService EmpCoefficientService;
+    @Autowired
+    private RegionCoefficientService RegionCoefficientService;
     @Override
     public void monthCopy(){
 
@@ -34,6 +38,18 @@ public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper,
 
         list.forEach(x->{
             x.setId(null);
+
+            RegionCoefficient last= RegionCoefficientService.lambdaQuery()
+                    .eq(RegionCoefficient::getId,x.getRegionCoefficientId())
+                            .one();
+            RegionCoefficient regionCoefficient=RegionCoefficientService.lambdaQuery()
+                            .eq(RegionCoefficient::getRegion,last.getRegion())
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                            .one();
+            x.setRegionCoefficientId(regionCoefficient.getId());
             EmpCoefficientService.save(x);
         });
     }
