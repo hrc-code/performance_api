@@ -88,11 +88,21 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
     private final RoleService roleService;
 
+    /** 根据部门id获取 该部门下以及后代部门的的全部员工*/
     @Override
-    public Collection<EmployeeExcel> getEmployeeExcels() {
+    public Collection<EmployeeExcel> getEmployeeExcels(Long deptId2) {
+        List<Employee> employees;
         ArrayList<EmployeeExcel> employeeExcels = new ArrayList<>();
-        //查询全部员工信息
-        List<Employee> employees = list();
+
+        Dept dept1 = deptService.getById(deptId2);
+        //去部门表判断部门id是否存在，不存在就返回全部数据
+        if (Objects.isNull(dept1)) {
+               employees = list();
+        } else {
+            // 根据部门id获取 该部门下以及后代部门的的全部员工
+            employees = getEmployeeListByDeptId(deptId2);
+        }
+        //查询员工的其他信息
         if (!CollectionUtils.isEmpty(employees)) {
             for (Employee employee : employees) {
                 EmployeeExcel employeeExcel = new EmployeeExcel();
@@ -104,46 +114,67 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
                 if (Objects.nonNull(role)) {
                     employeeExcel.setRoleName(role.getRoleName());
                 }
-                //查询岗位名，岗位类型
-                List<EmployeePosition> employeePositionList = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, employeeId).list();
-                if (!CollectionUtils.isEmpty(employeePositionList)) {
-                    EmployeePosition employeePosition = employeePositionList.get(0);
-                    Long positionId = employeePosition.getPositionId();
-                    Position position = positionService.getById(positionId);
-                    if (Objects.nonNull(position)) {
-                        String positionName = position.getPosition();
-                        String typeName = position.getTypeName();
-                        employeeExcel.setPosition(positionName);
-                        employeeExcel.setTypeName(typeName);
-                        //查询部门名
-                        Long deptId = position.getDeptId();
-                        Dept dept = deptService.getById(deptId);
-                        if (Objects.nonNull(dept)) {
-                            String deptName = dept.getDeptName();
-                            employeeExcel.setDeptName(deptName);
-                        }
-                    }
-
-
-                }
-                //查询岗位绩效
-                LocalDateTime[] times = DateTimeUtils.getTheStartAndEndTimeOfMonth();
-                EmpCoefficient empCoefficient = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, employeeId).between(EmpCoefficient::getCreateTime, times[0], times[1]).one();
-                if (Objects.nonNull(empCoefficient)) {
-                    BigDecimal positionCoefficient = empCoefficient.getPositionCoefficient();
-                    employeeExcel.setPositionCoefficient(positionCoefficient);
-                    // 地域名
-                    Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
-                    RegionCoefficient regionCoefficient = regionCoefficientService.getById(regionCoefficientId);
-                    if (Objects.nonNull(regionCoefficient)) {
-                        String region = regionCoefficient.getRegion();
-                        employeeExcel.setRegion(region);
-                    }
-                }
+                //向返回对象设置岗位和部门信息
+                setPositionAndDeptToEmployeeExcel(employeeId, employeeExcel);
+                //向返回对象设置地域和岗位绩效
+                setRegionAndPositionCoefficientToEmployeeExcel(employeeId, employeeExcel);
                 employeeExcels.add(employeeExcel);
             }
         }
         return  employeeExcels;
+    }
+
+    //向返回对象设置地域和岗位绩效
+    private void setRegionAndPositionCoefficientToEmployeeExcel(Long employeeId, EmployeeExcel employeeExcel) {
+        LocalDateTime[] times = DateTimeUtils.getTheStartAndEndTimeOfMonth();
+        EmpCoefficient empCoefficient = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, employeeId).between(EmpCoefficient::getCreateTime, times[0], times[1]).one();
+        if (Objects.nonNull(empCoefficient)) {
+            BigDecimal positionCoefficient = empCoefficient.getPositionCoefficient();
+            employeeExcel.setPositionCoefficient(positionCoefficient);
+            // 地域名
+            Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
+            RegionCoefficient regionCoefficient = regionCoefficientService.getById(regionCoefficientId);
+            if (Objects.nonNull(regionCoefficient)) {
+                String region = regionCoefficient.getRegion();
+                employeeExcel.setRegion(region);
+            }
+        }
+    }
+
+    //向返回对象设置岗位和部门信息
+    private void setPositionAndDeptToEmployeeExcel(Long employeeId, EmployeeExcel employeeExcel) {
+        List<EmployeePosition> employeePositionList = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, employeeId).list();
+        if (!CollectionUtils.isEmpty(employeePositionList)) {
+            EmployeePosition employeePosition = employeePositionList.get(0);
+            Long positionId = employeePosition.getPositionId();
+            Position position = positionService.getById(positionId);
+            if (Objects.nonNull(position)) {
+                String positionName = position.getPosition();
+                String typeName = position.getTypeName();
+                employeeExcel.setPosition(positionName);
+                employeeExcel.setTypeName(typeName);
+                //查询部门名
+                Long deptId = position.getDeptId();
+                Dept dept = deptService.getById(deptId);
+                if (Objects.nonNull(dept)) {
+                    String deptName = dept.getDeptName();
+                    employeeExcel.setDeptName(deptName);
+                }
+            }
+        }
+    }
+
+    /** 根据部门id获取 该部门下以及后代部门的的全部员工*/
+    private List<Employee> getEmployeeListByDeptId(Long deptId2) {
+        List<Employee> employees;
+        //查询这个部门的全部子部门id
+        Set<Long> childeDeptIdSet = deptService.getChildeDeptIdSet(deptId2);
+        List<Position> positionList = positionService.lambdaQuery().in(Position::getDeptId, childeDeptIdSet).list();
+        Set<Long> positionIdSet = positionList.stream().map(Position::getId).collect(Collectors.toSet());
+        List<EmployeePosition> employeePositions = employeePositionService.lambdaQuery().in(!CollectionUtils.isEmpty(positionIdSet),EmployeePosition::getPositionId, positionIdSet).list();
+        Set<Long> empIdSet = employeePositions.stream().map(EmployeePosition::getEmpId).collect(Collectors.toSet());
+        employees = lambdaQuery().in(!CollectionUtils.isEmpty(empIdSet),Employee::getId, empIdSet).list();
+        return employees;
     }
 
     /**

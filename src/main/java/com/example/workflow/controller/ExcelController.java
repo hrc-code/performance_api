@@ -2,6 +2,7 @@ package com.example.workflow.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.example.workflow.common.CustomException;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.EmpWage;
 import com.example.workflow.listener.EmployeeExcelReadListener;
@@ -13,6 +14,7 @@ import com.example.workflow.service.EmpWageService;
 import com.example.workflow.service.EmployeeCoefficientService;
 import com.example.workflow.service.EmployeeService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -91,21 +93,18 @@ public class ExcelController {
 
     /**
      * 导出员工信息*/
-    @GetMapping("/employee/download")
-    public void downloadEmployeeExcel(HttpServletResponse response)   {
+    @GetMapping("/employee/download/{deptId}")
+    public void downloadEmployeeExcel(@PathVariable Long deptId, HttpServletResponse response)   {
+
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
         String fileName;
         try {
             fileName = URLEncoder.encode("employee", "UTF-8").replaceAll("\\+", "%20");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-        try {
-            EasyExcel.write(response.getOutputStream(), EmployeeExcel.class).sheet("模板").doWrite(employeeService.getEmployeeExcels());
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+            EasyExcel.write(response.getOutputStream(), EmployeeExcel.class).sheet("模板").doWrite(employeeService.getEmployeeExcels(deptId));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CustomException("导出员工信息失败");
         }
     }
 }

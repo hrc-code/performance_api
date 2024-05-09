@@ -8,6 +8,7 @@ import com.example.workflow.vo.DeptVo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
 * @author hrc
@@ -35,4 +36,6 @@ public interface DeptService extends IService<Dept> {
      /**
       * 中捷总公司/深圳分公司/业务一部*/
      String getDeptName(Long id);
+
+    Set<Long> getChildeDeptIdSet(Long parentId);
 }
