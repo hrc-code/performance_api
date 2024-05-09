@@ -290,11 +290,7 @@ public class EmployeePositionController {
         queryWrapper.orderByDesc(EmpPositionView::getEmpId)
                 .like(EmpPositionView::getEmpName,empName)
                 .like(EmpPositionView::getPosition,position)
-                .eq(EmpPositionView::getState,1)
-                .apply(StringUtils.checkValNotNull(beginTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                .apply(StringUtils.checkValNotNull(endTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+                .eq(EmpPositionView::getState,1);
         EmpPositionViewService.page(pageInfo,queryWrapper);
         return R.success(pageInfo);
     }
