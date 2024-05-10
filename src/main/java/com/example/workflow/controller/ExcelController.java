@@ -91,11 +91,11 @@ public class ExcelController {
 
     /** 导入员工基本信息*/
     @PostMapping("/employee/upload")
-    public R<String> importEmployee(MultipartFile file, HttpServletResponse response ) throws IOException {
+    public  void  importEmployee(MultipartFile file, HttpServletResponse response ) throws IOException {
         EasyExcel.read(file.getInputStream(), EmployeeExcel.class, new EmployeeExcelReadListener()).sheet().doRead();
         List<EmployeeExcelMsg> errorEmployeeList = EmployeeExcelUploadContent.getErrorEmployeeList();
         if (CollectionUtils.isEmpty(errorEmployeeList)) {
-            return R.success();
+           return;
         }
         StringBuilder builder = new StringBuilder();
         for (EmployeeExcelMsg employeeExcelMsg : errorEmployeeList) {
@@ -110,7 +110,6 @@ public class ExcelController {
         byte[] bytes = builder.toString().getBytes(StandardCharsets.UTF_8);
         outputStream.write(bytes);
         EmployeeExcelUploadContent.clearErrorEmployeeList();
-        return R.error("有员工信息添加失败,请查看错误日志");
     }
 
     /**
