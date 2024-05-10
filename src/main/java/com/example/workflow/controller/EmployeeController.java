@@ -31,8 +31,9 @@ public class EmployeeController {
 
     /** 停用与恢复员工信息*/
     @DeleteMapping("/state")
-    public void setStateForEmployee(@RequestBody List<EmpIdAndStateId> employeeIdAndStateIdList) {
+    public R setStateForEmployee(@RequestBody List<EmpIdAndStateId> employeeIdAndStateIdList) {
                 employeeService.setStateToEmployee(employeeIdAndStateIdList);
+                return R.success();
     }
 
     /** 通过部门id查询员工信息*/
