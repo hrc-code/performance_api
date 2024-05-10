@@ -4,29 +4,34 @@ import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.CustomException;
 import com.example.workflow.common.R;
+import com.example.workflow.content.excel.EmployeeExcelUploadContent;
 import com.example.workflow.entity.EmpWage;
 import com.example.workflow.listener.EmployeeExcelReadListener;
 import com.example.workflow.listener.EmployeeRewardExcelReadListener;
 import com.example.workflow.pojo.EmployeeExcel;
+import com.example.workflow.pojo.EmployeeExcelMsg;
 import com.example.workflow.pojo.EmployeeRewardExcel;
 import com.example.workflow.service.EmpRewardService;
 import com.example.workflow.service.EmpWageService;
 import com.example.workflow.service.EmployeeCoefficientService;
 import com.example.workflow.service.EmployeeService;
+import com.example.workflow.utils.DateTimeUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -86,9 +91,26 @@ public class ExcelController {
 
     /** 导入员工基本信息*/
     @PostMapping("/employee/upload")
-    public R<String> importEmployee(MultipartFile file) throws IOException {
+    public R<String> importEmployee(MultipartFile file, HttpServletResponse response ) throws IOException {
         EasyExcel.read(file.getInputStream(), EmployeeExcel.class, new EmployeeExcelReadListener()).sheet().doRead();
-        return R.success();
+        List<EmployeeExcelMsg> errorEmployeeList = EmployeeExcelUploadContent.getErrorEmployeeList();
+        if (CollectionUtils.isEmpty(errorEmployeeList)) {
+            return R.success();
+        }
+        StringBuilder builder = new StringBuilder();
+        for (EmployeeExcelMsg employeeExcelMsg : errorEmployeeList) {
+            builder.append(employeeExcelMsg);
+        }
+        String fileName;
+        String time =  DateTimeUtils.now("yyyy-MM-dd-HH-mm-ss");
+        fileName = URLEncoder.encode("导入员工错误日志" + time, "UTF-8").replaceAll("\\+", "%20");
+        response.setContentType("text/plain");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName+".txt");
+        ServletOutputStream outputStream = response.getOutputStream();
+        byte[] bytes = builder.toString().getBytes(StandardCharsets.UTF_8);
+        outputStream.write(bytes);
+        EmployeeExcelUploadContent.clearErrorEmployeeList();
+        return R.error("有员工信息添加失败,请查看错误日志");
     }
 
     /**
@@ -100,9 +122,7 @@ public class ExcelController {
         response.setCharacterEncoding("utf-8");
         String fileName;
         try {
-            LocalDateTime localDateTime = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
-            String time = localDateTime.format(formatter);
+            String time =  DateTimeUtils.now("yyyy-MM-dd-HH-mm-ss");
             fileName = URLEncoder.encode("员工基础信息" + time, "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             EasyExcel.write(response.getOutputStream(), EmployeeExcel.class).sheet("模板").doWrite(employeeService.getEmployeeExcels(deptId, name, num));
