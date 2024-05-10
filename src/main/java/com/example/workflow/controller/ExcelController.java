@@ -104,7 +104,7 @@ public class ExcelController {
         String fileName;
         String time =  DateTimeUtils.now("yyyy-MM-dd-HH-mm-ss");
         fileName = URLEncoder.encode("导入员工错误日志" + time, "UTF-8").replaceAll("\\+", "%20");
-        response.setContentType("text/plain");
+        response.setContentType("application/octet-stream");
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName+".txt");
         ServletOutputStream outputStream = response.getOutputStream();
         byte[] bytes = builder.toString().getBytes(StandardCharsets.UTF_8);
