@@ -92,9 +92,9 @@ public class ExcelController {
     }
 
     /**
-     * 导出员工信息*/
+     * 导出员工信息根据部门id或姓名或工号*/
     @GetMapping("/employee/download")
-    public void downloadEmployeeExcel(Long deptId, HttpServletResponse response)   {
+    public void downloadEmployeeExcel(Long deptId,String name, String num, HttpServletResponse response)   {
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
@@ -105,7 +105,7 @@ public class ExcelController {
             String time = localDateTime.format(formatter);
             fileName = URLEncoder.encode("员工基础信息" + time, "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-            EasyExcel.write(response.getOutputStream(), EmployeeExcel.class).sheet("模板").doWrite(employeeService.getEmployeeExcels(deptId));
+            EasyExcel.write(response.getOutputStream(), EmployeeExcel.class).sheet("模板").doWrite(employeeService.getEmployeeExcels(deptId, name, num));
         } catch (IOException e) {
             throw new CustomException("导出员工信息失败");
         }

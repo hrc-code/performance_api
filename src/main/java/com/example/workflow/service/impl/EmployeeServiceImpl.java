@@ -66,8 +66,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
-        implements EmployeeService {
+public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> implements EmployeeService {
 
     private final EmployeePositionService employeePositionService;
 
@@ -91,18 +90,28 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
      * 根据部门id获取 该部门下以及后代部门的的全部员工
      */
     @Override
-    public Collection<EmployeeExcel> getEmployeeExcels(Long deptId2) {
+    public Collection<EmployeeExcel> getEmployeeExcels(Long deptId, String name, String num) {
         List<Employee> employees;
         ArrayList<EmployeeExcel> employeeExcels = new ArrayList<>();
 
-        Dept dept1 = deptService.getById(deptId2);
         // 去部门表判断部门id是否存在，不存在就返回全部数据
-        if (Objects.isNull(dept1)) {
-            employees = list();
+        if (Objects.nonNull(deptId)) {
+            Dept dept = deptService.getById(deptId);
+            if (Objects.isNull(dept)) {
+                employees = list();
+            } else {
+                // 根据部门id获取 该部门下以及后代部门的的全部员工
+                employees = getEmployeeListByDeptId(deptId);
+            }
         } else {
-            // 根据部门id获取 该部门下以及后代部门的的全部员工
-            employees = getEmployeeListByDeptId(deptId2);
+            employees = lambdaQuery().like(Objects.nonNull(name), Employee::getName, name).like(Objects.nonNull(num), Employee::getNum, num).list();
         }
+
+        return wrapperEmployeeToEmployeeExcel(employees, employeeExcels);
+    }
+
+    //  将员工基本信息和其他信息包装成excel
+    private ArrayList<EmployeeExcel> wrapperEmployeeToEmployeeExcel(List<Employee> employees, ArrayList<EmployeeExcel> employeeExcels) {
         // 查询员工的其他信息
         if (!CollectionUtils.isEmpty(employees)) {
             for (Employee employee : employees) {
@@ -191,8 +200,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         List<EmployeeVo> employeeVos = new ArrayList<>();
 
         // 获取员工基本信息
-        List<Employee> employees = lambdaQuery().like(Objects.nonNull(name), Employee::getName, name)
-                .like(Objects.nonNull(num), Employee::getNum, num).list();
+        List<Employee> employees = lambdaQuery().like(Objects.nonNull(name), Employee::getName, name).like(Objects.nonNull(num), Employee::getNum, num).list();
         // 为员工添加额外信息
         wrapperToEmployeeVo(employees, employeeVos);
         return employeeVos;
@@ -254,8 +262,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         LocalDateTime[] times = DateTimeUtils.getTheStartAndEndTimeOfMonth();
 
         LambdaQueryWrapper<EmpCoefficient> wrapper = new LambdaQueryWrapper<>();
-        wrapper.between(EmpCoefficient::getCreateTime, times[0], times[1])
-                .eq(EmpCoefficient::getEmpId, employeeId);
+        wrapper.between(EmpCoefficient::getCreateTime, times[0], times[1]).eq(EmpCoefficient::getEmpId, employeeId);
         EmpCoefficient empCoefficient = empCoefficientService.getOne(wrapper);
         // 允许地域为空
         String region;
@@ -471,12 +478,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
         Long roleId = employeeFormDto.getRoleId();
 
         // 获取全部满足条件的员工
-        List<Employee> employees = Db.lambdaQuery(Employee.class)
-                .like(num != null, Employee::getNum, num)
-                .like(name != null, Employee::getName, name)
-                .eq(roleId != null, Employee::getRoleId, roleId)
-                .eq(Employee::getState, 1)
-                .list();
+        List<Employee> employees = Db.lambdaQuery(Employee.class).like(num != null, Employee::getNum, num).like(name != null, Employee::getName, name).eq(roleId != null, Employee::getRoleId, roleId).eq(Employee::getState, 1).list();
 
         if (!CollectionUtils.isEmpty(employees)) {
             return R.error("没有员工");
@@ -643,8 +645,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
         List<PostIdPercent> postIdPercentList = employeeFormDto.getPostIdPercent();
         // 岗位所对应的绩效
-        Map<Long, BigDecimal> map = postIdPercentList.stream()
-                .collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
+        Map<Long, BigDecimal> map = postIdPercentList.stream().collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
         map.forEach((postId, percent) -> {
             // 向员工岗位表插入数据
             EmployeePosition employeePosition = new EmployeePosition();
@@ -653,15 +654,10 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             employeePosition.setPositionId(postId);
             employeePosition.setPosiPercent(map.get(postId));
 
-            Short type = Db.lambdaQuery(Position.class)
-                    .eq(Position::getId, postId)
-                    .one().getType();
-            if (type == 5)
-                employeePosition.setProcessKey("Process_1gzouwy");
-            else if (type == 4)
-                employeePosition.setProcessKey("Process_1whe0gq");
-            else if (type == 3)
-                employeePosition.setProcessKey("Process_01p7ac7");
+            Short type = Db.lambdaQuery(Position.class).eq(Position::getId, postId).one().getType();
+            if (type == 5) employeePosition.setProcessKey("Process_1gzouwy");
+            else if (type == 4) employeePosition.setProcessKey("Process_1whe0gq");
+            else if (type == 3) employeePosition.setProcessKey("Process_01p7ac7");
             employeePositionService.save(employeePosition);
         });
 
@@ -787,14 +783,12 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
 
         LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
         // 更改员工的地域
-        //先查询是否有，没有之间添加
+        // 先查询是否有，没有之间添加
         List<EmpCoefficient> empCoefficientList = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getCreateTime, time[0], time[1]).list();
         Long regionId = employeeFormDto.getRegionId();
         BigDecimal grade = employeeFormDto.getGrade();
         if (!CollectionUtils.isEmpty(empCoefficientList)) {
-            empCoefficientService.lambdaUpdate().set(Objects.nonNull(regionId), EmpCoefficient::getRegionCoefficientId, regionId)
-                    .set(Objects.nonNull(grade), EmpCoefficient::getPositionCoefficient, grade).between(EmpCoefficient::getCreateTime, time[0], time[1])
-                    .eq(EmpCoefficient::getEmpId, id).update();
+            empCoefficientService.lambdaUpdate().set(Objects.nonNull(regionId), EmpCoefficient::getRegionCoefficientId, regionId).set(Objects.nonNull(grade), EmpCoefficient::getPositionCoefficient, grade).between(EmpCoefficient::getCreateTime, time[0], time[1]).eq(EmpCoefficient::getEmpId, id).update();
         } else {
             EmpCoefficient empCoefficient = new EmpCoefficient();
             empCoefficient.setEmpId(id);
@@ -829,8 +823,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
             LambdaQueryWrapper<EmpCoefficient> wrapper1 = new LambdaQueryWrapper<>();
             LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
             // 获取员工绩效表的更新时间    员工表与员工绩效表的关系  一对一
-            wrapper1.eq(EmpCoefficient::getEmpId, id)
-                    .between(EmpCoefficient::getUpdateTime, time[0], time[1]);
+            wrapper1.eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]);
             empCoefficientService.remove(wrapper1);
         });
         return R.success("删除成功");
@@ -842,8 +835,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee>
     @Override
     public R lookByLike(EmployeeFormDto employeeFormDto) {
         LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Employee::getNum, employeeFormDto.getNum())
-                .like(Employee::getName, employeeFormDto.getName());
+        wrapper.eq(Employee::getNum, employeeFormDto.getNum()).like(Employee::getName, employeeFormDto.getName());
         Page<Employee> page = new Page<>(employeeFormDto.getPage(), employeeFormDto.getPageSize());
         page(page, wrapper);
         List<Employee> records = page.getRecords();

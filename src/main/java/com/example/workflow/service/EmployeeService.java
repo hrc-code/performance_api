@@ -17,7 +17,8 @@ import java.util.List;
  */
 public interface EmployeeService extends IService<Employee> {
 
-    Collection<EmployeeExcel> getEmployeeExcels(Long deptId2);
+
+    Collection<EmployeeExcel> getEmployeeExcels(Long deptId, String name, String numb);
 
     List<EmployeeVo> getList(String name, String num);
 
