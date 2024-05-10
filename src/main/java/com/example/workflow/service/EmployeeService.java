@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.workflow.common.R;
 import com.example.workflow.dto.EmployeeFormDto;
 import com.example.workflow.entity.Employee;
+import com.example.workflow.pojo.EmpIdAndStateId;
 import com.example.workflow.pojo.EmployeeExcel;
 import com.example.workflow.vo.EmployeeVo;
 
@@ -16,7 +17,7 @@ import java.util.List;
  * @createDate 2024-03-28 10:27:23
  */
 public interface EmployeeService extends IService<Employee> {
-
+    void setStateToEmployee(List<EmpIdAndStateId> empIdAndStateIdList);
 
     Collection<EmployeeExcel> getEmployeeExcels(Long deptId, String name, String numb);
 

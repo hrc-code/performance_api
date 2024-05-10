@@ -21,6 +21,7 @@ import com.example.workflow.entity.RoleBtn;
 import com.example.workflow.mapper.EmployeeMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.pojo.DeptIdAndNape;
+import com.example.workflow.pojo.EmpIdAndStateId;
 import com.example.workflow.pojo.EmployeeExcel;
 import com.example.workflow.pojo.PostIdAndName;
 import com.example.workflow.pojo.PostIdPercent;
@@ -85,6 +86,21 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     private final ButtonService buttonService;
 
     private final RoleService roleService;
+
+    //改变员工账号状态
+    @Override
+    public void setStateToEmployee(List<EmpIdAndStateId> empIdAndStateIdList) {
+        //stateId = 0 停用
+        Set<Long> state0EmpSet = empIdAndStateIdList.stream().filter(empIdAndStateId -> empIdAndStateId.getStateId().equals(Short.valueOf("0"))).map(EmpIdAndStateId::getEmpId).collect(Collectors.toSet());
+        if (!CollectionUtils.isEmpty(state0EmpSet)){
+            lambdaUpdate().set(Employee::getState, 0).in(Employee::getId,state0EmpSet).update();
+        }
+        //stateId = 1 恢复
+        Set<Long> state1EmpSet = empIdAndStateIdList.stream().filter(empIdAndStateId -> empIdAndStateId.getStateId().equals(Short.valueOf("1"))).map(EmpIdAndStateId::getEmpId).collect(Collectors.toSet());
+        if (!CollectionUtils.isEmpty(state1EmpSet)){
+            lambdaUpdate().set(Employee::getState, 1).in(Employee::getId,state1EmpSet).update();
+        }
+    }
 
     /**
      * 根据部门id获取 该部门下以及后代部门的的全部员工

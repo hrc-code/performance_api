@@ -5,6 +5,7 @@ import com.example.workflow.common.R;
 import com.example.workflow.dto.EmployeeFormDto;
 import com.example.workflow.entity.Employee;
 import com.example.workflow.entity.RegionCoefficient;
+import com.example.workflow.pojo.EmpIdAndStateId;
 import com.example.workflow.service.EmployeeService;
 import com.example.workflow.vo.EmployeeVo;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,12 @@ import java.util.Objects;
 @RequestMapping("/auth/employee")
 public class EmployeeController {
     private final EmployeeService employeeService;
+
+    /** 停用与恢复员工信息*/
+    @DeleteMapping("/state")
+    public void setStateForEmployee(@RequestBody List<EmpIdAndStateId> employeeIdAndStateIdList) {
+                employeeService.setStateToEmployee(employeeIdAndStateIdList);
+    }
 
     /** 通过部门id查询员工信息*/
     @GetMapping("/infoByDeptId")
@@ -124,6 +131,7 @@ public class EmployeeController {
 
     /**
      * 删除员工*/
+    @Deprecated
     @DeleteMapping("/delete/{ids}")
     public R deleteEmployeeById(@PathVariable List<Long> ids) {
         if (ids == null) {
