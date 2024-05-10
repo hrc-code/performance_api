@@ -177,7 +177,10 @@ public class EmployeeExcelReadListener implements ReadListener<EmployeeExcel> {
             //校验地域
             validateRegion(needDelNumSet, employeeExcel, employeeExcelMsg, num);
 
-            errorEmployeeExcels.add(employeeExcelMsg);
+            String msg = employeeExcelMsg.getMsg();
+            if (StringUtils.isNotBlank(msg)) {
+                errorEmployeeExcels.add(employeeExcelMsg);
+            }
         });
         EmployeeExcelUploadContent.setErrorEmployeeList(errorEmployeeExcels);
     }
