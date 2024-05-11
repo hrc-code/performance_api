@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
+import com.example.workflow.dto.EmpCoeForm;
 import com.example.workflow.entity.*;
 import com.example.workflow.mapper.CoefficientViewMapper;
 import com.example.workflow.mapper.EmpKpiViewMapper;
@@ -23,6 +24,7 @@ import com.example.workflow.service.*;
 import com.example.workflow.vo.PositionAssessorView;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.TaskService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -222,4 +224,21 @@ public class EmpCoefficientController {
 
         return R.success();
     }
+
+    @PostMapping("/changeAll")
+    private R changeAll(@RequestBody EmpCoeForm empCoeForm){
+        if(empCoeForm.getEmpList().isEmpty())
+            return R.error("员工选择不得为空");
+
+        empCoeForm.getEmpList().forEach(x->{
+            EmpCoefficient empCoefficient=new EmpCoefficient();
+            BeanUtils.copyProperties(x, empCoefficient);
+
+            empCoefficient.setWage(empCoeForm.getBaseWage());
+            EmpCoefficientService.updateById(empCoefficient);
+        });
+
+        return R.success();
+    }
+
 }
