@@ -91,26 +91,22 @@ public class LoginController {
 
         Employee employee = employeeService.getOne(wrapper);
 
-        if(employee != null) {
-            Map<String, String> payload = new HashMap<>();
-            payload.put("id", String.valueOf(employee.getId()));
-            payload.put("username", employee.getNum());
-
-            long timestamp = JWTHelper.generateExpireDate(JWTHelper.EXPIRE_TIME);
-            String token = JWTHelper.createToken(timestamp, payload);
-
-            return R.success(new HashMap() {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    put("token", token);
-                    put("userInfo", employee);
-                    put("timestamp", timestamp);//给这个的目的是让前端每次请求时校验是否过期token，如果还差一分钟就过期就应该马上更新token
-                }
-            });
-        }else {
+        if(employee == null) {
             return  R.error("用户名或密码错误");
+        }else if (employee.getState() == 0){
+           return  R.error("账号已被封禁");
         }
+        Map<String, String> payload = new HashMap<>();
+        payload.put("id", String.valueOf(employee.getId()));
+        payload.put("username", employee.getNum());
+
+        long timestamp = JWTHelper.generateExpireDate(JWTHelper.EXPIRE_TIME);
+        String token = JWTHelper.createToken(timestamp, payload);
+        Map <String, Object> map = new HashMap<>();
+        map.put("token", token);
+        map.put("userInfo", employee);
+        map.put("timestamp", timestamp);//给这个的目的是让前端每次请求时校验是否过期token，如果还差一分钟就过期就应该马上更新token
+        return R.success(map);
     }
 }
 
