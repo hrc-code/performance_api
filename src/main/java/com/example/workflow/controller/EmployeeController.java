@@ -5,10 +5,13 @@ import com.example.workflow.common.R;
 import com.example.workflow.dto.EmployeeFormDto;
 import com.example.workflow.entity.Employee;
 import com.example.workflow.entity.RegionCoefficient;
+import com.example.workflow.entity.TaskView;
 import com.example.workflow.pojo.EmpIdAndStateId;
 import com.example.workflow.service.EmployeeService;
+import com.example.workflow.service.TaskViewService;
 import com.example.workflow.vo.EmployeeVo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +31,8 @@ import java.util.Objects;
 @RequestMapping("/auth/employee")
 public class EmployeeController {
     private final EmployeeService employeeService;
+    @Autowired
+    private TaskViewService TaskViewService;
 
     /** 停用与恢复员工信息*/
     @DeleteMapping("/state")
@@ -135,6 +140,10 @@ public class EmployeeController {
     @Deprecated
     @DeleteMapping("/delete/{ids}")
     public R deleteEmployeeById(@PathVariable List<Long> ids) {
+        List<TaskView> taskViewList= TaskViewService.lambdaQuery().list();
+        if(!taskViewList.isEmpty())
+            return R.error("当前有考核任务正在进行，请完成任务后在进行此操作");
+
         if (ids == null) {
             return R.error("id 不能为空");
         }

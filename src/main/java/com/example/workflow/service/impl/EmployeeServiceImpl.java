@@ -9,15 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
 import com.example.workflow.dto.EmployeeFormDto;
-import com.example.workflow.entity.Dept;
-import com.example.workflow.entity.DeptHierarchy;
-import com.example.workflow.entity.EmpCoefficient;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.RegionCoefficient;
-import com.example.workflow.entity.Role;
-import com.example.workflow.entity.RoleBtn;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.EmployeeMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.pojo.DeptIdAndNape;
@@ -25,15 +17,7 @@ import com.example.workflow.pojo.EmpIdAndStateId;
 import com.example.workflow.pojo.EmployeeExcel;
 import com.example.workflow.pojo.PostIdAndName;
 import com.example.workflow.pojo.PostIdPercent;
-import com.example.workflow.service.ButtonService;
-import com.example.workflow.service.DeptService;
-import com.example.workflow.service.EmpCoefficientService;
-import com.example.workflow.service.EmployeePositionService;
-import com.example.workflow.service.EmployeeService;
-import com.example.workflow.service.PositionService;
-import com.example.workflow.service.RegionCoefficientService;
-import com.example.workflow.service.RoleBtnService;
-import com.example.workflow.service.RoleService;
+import com.example.workflow.service.*;
 import com.example.workflow.utils.DateTimeUtils;
 import com.example.workflow.utils.Find;
 import com.example.workflow.vo.EmployeeVo;
@@ -41,6 +25,7 @@ import com.example.workflow.vo.RouterAndButtonVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -86,6 +71,21 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     private final ButtonService buttonService;
 
     private final RoleService roleService;
+
+    @Autowired
+    private PositionAssessorService PositionAssessorService;
+    @Autowired
+    private ScoreAssessorsService ScoreAssessorsService;
+    @Autowired
+    private EmpKpiService EmpKpiService;
+    @Autowired
+    private EmpPieceService EmpPieceService;
+    @Autowired
+    private EmpRewardService EmpRewardService;
+    @Autowired
+    private EmpScoreService EmpScoreService;
+    @Autowired
+    private EmpOkrService EmpOkrService;
 
     //改变员工账号状态
     @Override
@@ -841,6 +841,48 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
             // 获取员工绩效表的更新时间    员工表与员工绩效表的关系  一对一
             wrapper1.eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]);
             empCoefficientService.remove(wrapper1);
+
+            LambdaUpdateWrapper<PositionAssessor> deleteWapper1=new LambdaUpdateWrapper<>();
+            deleteWapper1.set(PositionAssessor::getFourthAssessorId,null)
+                    .eq(PositionAssessor::getFourthAssessorId,id)
+                    .between(PositionAssessor::getUpdateTime, time[0], time[1]);
+            PositionAssessorService.update(deleteWapper1);
+            LambdaUpdateWrapper<PositionAssessor> deleteWapper2=new LambdaUpdateWrapper<>();
+            deleteWapper2.set(PositionAssessor::getThirdAssessorId,null)
+                    .eq(PositionAssessor::getThirdAssessorId,id)
+                    .between(PositionAssessor::getUpdateTime, time[0], time[1]);
+            PositionAssessorService.update(deleteWapper2);
+            LambdaUpdateWrapper<PositionAssessor> deleteWapper3=new LambdaUpdateWrapper<>();
+            deleteWapper3.set(PositionAssessor::getSecondAssessorId,null)
+                    .eq(PositionAssessor::getSecondAssessorId,id)
+                    .between(PositionAssessor::getUpdateTime, time[0], time[1]);
+            PositionAssessorService.update(deleteWapper3);
+
+            LambdaQueryWrapper<ScoreAssessors> deleteWapper5=new LambdaQueryWrapper<>();
+            deleteWapper5.eq(ScoreAssessors::getAssessorId,id)
+                    .between(ScoreAssessors::getUpdateTime, time[0], time[1]);
+            ScoreAssessorsService.remove(deleteWapper5);
+
+            LambdaQueryWrapper<EmpKpi> deleteWapper6=new LambdaQueryWrapper<>();
+            deleteWapper6.eq(EmpKpi::getEmpId,id)
+                    .between(EmpKpi::getUpdateTime, time[0], time[1]);
+            EmpKpiService.remove(deleteWapper6);
+            LambdaQueryWrapper<EmpPiece> deleteWapper7=new LambdaQueryWrapper<>();
+            deleteWapper7.eq(EmpPiece::getEmpId,id)
+                    .between(EmpPiece::getUpdateTime, time[0], time[1]);
+            EmpPieceService.remove(deleteWapper7);
+            LambdaQueryWrapper<EmpReward> deleteWapper8=new LambdaQueryWrapper<>();
+            deleteWapper8.eq(EmpReward::getEmpId,id)
+                    .between(EmpReward::getUpdateTime, time[0], time[1]);
+            EmpRewardService.remove(deleteWapper8);
+            LambdaQueryWrapper<EmpScore> deleteWapper9=new LambdaQueryWrapper<>();
+            deleteWapper9.eq(EmpScore::getEmpId,id)
+                    .between(EmpScore::getUpdateTime, time[0], time[1]);
+            EmpScoreService.remove(deleteWapper9);
+            LambdaQueryWrapper<EmpOkr> deleteWapper10=new LambdaQueryWrapper<>();
+            deleteWapper10.eq(EmpOkr::getEmpId,id)
+                    .between(EmpOkr::getUpdateTime, time[0], time[1]);
+            EmpOkrService.remove(deleteWapper10);
         });
         return R.success("删除成功");
     }
