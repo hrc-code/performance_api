@@ -10,6 +10,6 @@ public class PositionKpiExcel {
     private String position;
     @ExcelProperty("所属部门")
     private String dept;
-    @ExcelProperty("kpi条目")
+    @ExcelProperty("提成条目")
     private String piece;
 }
