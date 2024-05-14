@@ -97,6 +97,7 @@ public class DownloadTemplateController {
         response.setContentType("application/vnd.ms-excel;charset=utf-8");
         response.setCharacterEncoding("utf-8");
         response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
         InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream(excel);
 
         ServletOutputStream outputStream = response.getOutputStream();
