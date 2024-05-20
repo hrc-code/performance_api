@@ -7,6 +7,7 @@ import com.example.workflow.common.R;
 import com.example.workflow.content.excel.EmployeeExcelUploadContent;
 import com.example.workflow.entity.EmpWage;
 import com.example.workflow.feedback.EmpPieceError;
+import com.example.workflow.feedback.EmpRewardError;
 import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.listener.EmployeeExcelReadListener;
 import com.example.workflow.listener.EmployeeRewardExcelReadListener;
@@ -67,7 +68,7 @@ public class ExcelController {
            response.setCharacterEncoding("utf-8");
            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
 
-           EasyExcel.write(response.getOutputStream(), EmpPieceError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+           EasyExcel.write(response.getOutputStream(), EmpRewardError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
        }
        ErrorExcelWrite.clearErrorCollection();
 
@@ -80,7 +81,7 @@ public class ExcelController {
                        .list();
        list.forEach(x-> EmployeeCoefficientService.fileOne(x.getEmpId(),x.getPositionId()));
    }
-   
+
    /** 将EmployeeReward导出为 Excel*/
    @GetMapping("/employeeReward/download")
     public void downloadEmployeeRewardExcel(HttpServletResponse response)   {

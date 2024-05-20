@@ -125,6 +125,15 @@ public class PositionController {
 
     @PostMapping("/add")
     private R add(@RequestBody PositionForm form){
+        Position check=PositionService.lambdaQuery()
+                .eq(Position::getPosition,form.getPosition())
+                .eq(Position::getDeptId,form.getDeptId())
+                .eq(Position::getState,1)
+                .one();
+        if(check!=null){
+            return R.error("同一个部门里的岗位不能命名重复");
+        }
+
         Position position=PositionService.splitForm(form);
         PositionMapper.insert(position);
 
