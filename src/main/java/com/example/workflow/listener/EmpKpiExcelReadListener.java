@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.EmpKpiError;
+import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.pojo.EmpKpiExcel;
 import com.example.workflow.pojo.EmpPieceExcel;
 import com.example.workflow.service.EmpKpiService;
@@ -15,12 +17,14 @@ import com.example.workflow.utils.Check;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
 import org.kie.internal.utils.KieHelper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -54,44 +58,71 @@ public class EmpKpiExcelReadListener implements ReadListener<EmpKpiExcel> {
     }
 
     private void saveData() {
+        List<EmpKpiError> errorList=new ArrayList<>();
         if (!CollectionUtils.isEmpty(cachedDataList)) {
             cachedDataList.stream().filter(Objects::nonNull).forEach(empKpiExcel -> {
                 String num = empKpiExcel.getNum();
                 Employee employee = Db.lambdaQuery(Employee.class)
                         .eq(Employee::getNum, num).one();
 
+                EmpKpiError error=new EmpKpiError();
+                if(employee==null){
+                    BeanUtils.copyProperties(empKpiExcel, error);
+                    error.setError("员工不存在");
+                    errorList.add(error);
+                    return;
+                }
+
                 Dept dept=Db.lambdaQuery(Dept.class)
                         .eq(Dept::getDeptName,empKpiExcel.getDept())
                         .eq(Dept::getState,1).one();
+                if(dept==null){
+                    BeanUtils.copyProperties(empKpiExcel, error);
+                    error.setError("员工所属部门错误");
+                    errorList.add(error);
+                    return;
+                }
 
                 Position position = Db.lambdaQuery(Position.class)
                         .eq(Position::getPosition, empKpiExcel.getPositionName())
                         .eq(Position::getDeptId,dept.getId()).one();
+                if(position==null){
+                    BeanUtils.copyProperties(empKpiExcel, error);
+                    error.setError("员工不在该岗位");
+                    errorList.add(error);
+                    return;
+                }
 
-                Long kpiId= Db.lambdaQuery(KpiRule.class).eq(KpiRule::getName,empKpiExcel.getKpiName())
+                KpiRule kpi= Db.lambdaQuery(KpiRule.class).eq(KpiRule::getName,empKpiExcel.getKpiName())
                         .apply(StringUtils.checkValNotNull(beginTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                         .apply(StringUtils.checkValNotNull(endTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
-                        .one().getId();
-
+                        .one();
+                if(kpi==null){
+                    BeanUtils.copyProperties(empKpiExcel, error);
+                    error.setError("该提成条目不存在");
+                    errorList.add(error);
+                    return;
+                }
 
                 if (Check.noNull(empKpiExcel.getInTarget1(),
                         empKpiExcel.getInTarget2(),
-                        empKpiExcel.getType(),employee,num,dept,position,kpiId)) {
+                        empKpiExcel.getType(),employee,num,dept,position,kpi.getId())) {
                     EmpKpi empKpi = new EmpKpi();;
                     empKpi.setEmpId(employee.getId());
-                    empKpi.setKpiId(kpiId);
+                    empKpi.setKpiId(kpi.getId());
                     empKpi.setInTarget2(empKpiExcel.getInTarget2());
                     empKpi.setInTarget1(empKpiExcel.getInTarget1());
                     if(empKpiExcel.getType()==1)
-                        empKpi.setResult(one(kpiId,empKpiExcel.getInTarget2(),empKpiExcel.getInTarget1()));
+                        empKpi.setResult(one(kpi.getId(),empKpiExcel.getInTarget2(),empKpiExcel.getInTarget1()));
                     else if(empKpiExcel.getType()==2)
-                        empKpi.setResult(two(kpiId,empKpiExcel.getInTarget2(),empKpiExcel.getInTarget1()));
+                        empKpi.setResult(two(kpi.getId(),empKpiExcel.getInTarget2(),empKpiExcel.getInTarget1()));
                     Db.save(empKpi);
                 }
             });
         }
+        ErrorExcelWrite.setErrorCollection(errorList);
     }
 
     private BigDecimal one(Long kpiRuleId,BigDecimal inTarget1,BigDecimal inTarget2){

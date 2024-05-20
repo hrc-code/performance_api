@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 
 @Data
 public class EmployeeRewardExcel {
+    @ExcelProperty("序号")
+    private Integer serialNum;
     @ExcelProperty("工号")
     private String num;
     @ExcelProperty("员工姓名")

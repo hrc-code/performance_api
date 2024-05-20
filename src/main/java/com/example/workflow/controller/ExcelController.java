@@ -6,6 +6,8 @@ import com.example.workflow.common.CustomException;
 import com.example.workflow.common.R;
 import com.example.workflow.content.excel.EmployeeExcelUploadContent;
 import com.example.workflow.entity.EmpWage;
+import com.example.workflow.feedback.EmpPieceError;
+import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.listener.EmployeeExcelReadListener;
 import com.example.workflow.listener.EmployeeRewardExcelReadListener;
 import com.example.workflow.pojo.EmployeeExcel;
@@ -57,8 +59,17 @@ public class ExcelController {
     /**
      * 导入员工reward excel*/
    @PostMapping("/employeeReward/upload")
-    public R<String> importEmployeeReward(MultipartFile file) throws IOException {
+    public void importEmployeeReward(MultipartFile file, HttpServletResponse response) throws IOException {
        EasyExcel.read(file.getInputStream(), EmployeeRewardExcel.class, new EmployeeRewardExcelReadListener()).sheet().doRead();
+
+       if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+           response.setContentType("application/vnd.ms-excel;charset=utf-8");
+           response.setCharacterEncoding("utf-8");
+           response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+           EasyExcel.write(response.getOutputStream(), EmpPieceError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+       }
+       ErrorExcelWrite.clearErrorCollection();
 
        List<EmpWage> list= EmpWageService.lambdaQuery()
                .eq(EmpWage::getState,1)
@@ -68,8 +79,8 @@ public class ExcelController {
                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                        .list();
        list.forEach(x-> EmployeeCoefficientService.fileOne(x.getEmpId(),x.getPositionId()));
-       return R.success();
    }
+   
    /** 将EmployeeReward导出为 Excel*/
    @GetMapping("/employeeReward/download")
     public void downloadEmployeeRewardExcel(HttpServletResponse response)   {

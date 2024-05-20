@@ -5,14 +5,18 @@ import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.EmpRewardError;
+import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.pojo.EmployeeRewardExcel;
 import com.example.workflow.service.EmployeeCoefficientService;
 import com.example.workflow.utils.Check;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -62,22 +66,53 @@ public class EmployeeRewardExcelReadListener implements ReadListener<EmployeeRew
 
     /** 向数据中保存数据*/
     private void saveData() {
+        List<EmpRewardError> errorList=new ArrayList<>();
         if (!CollectionUtils.isEmpty(cachedDataList)) {
             cachedDataList.stream().filter(Objects::nonNull).forEach(employeeRewardExcel -> {
                 // 通过num员工工号去员工表查询该员工的id
                 String num = employeeRewardExcel.getNum();
                 Employee employee = Db.lambdaQuery(Employee.class).eq(Employee::getNum, num).one();
+                EmpRewardError error=new EmpRewardError();
+                if(employee==null){
+                    BeanUtils.copyProperties(employeeRewardExcel, error);
+                    error.setError("员工不存在");
+                    errorList.add(error);
+                    return;
+                }
+
                 // 去角色表中把 name = 绩效专员 的 id查出来
                 Role role = Db.lambdaQuery(Role.class).eq(Role::getRoleName, "绩效专员").one();
 
-                Dept dept=Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,employeeRewardExcel.getDept()).eq(Dept::getState,1).one();
+                Dept dept=Db.lambdaQuery(Dept.class)
+                        .eq(Dept::getDeptName,employeeRewardExcel.getDept())
+                        .eq(Dept::getState,1).one();
+                if(dept==null){
+                    BeanUtils.copyProperties(employeeRewardExcel, error);
+                    error.setError("员工所属部门错误");
+                    errorList.add(error);
+                    return;
+                }
+
                 // 通过岗位名去岗位表查询对应的岗位id
                 Position position = Db.lambdaQuery(Position.class)
                         .eq(Position::getPosition, employeeRewardExcel.getPositionName())
                         .eq(Position::getDeptId,dept.getId()).one();
+                if(position==null){
+                    BeanUtils.copyProperties(employeeRewardExcel, error);
+                    error.setError("员工不在该岗位");
+                    errorList.add(error);
+                    return;
+                }
+
                 // 通过fileName 去pdf文件表查询 file_id
                 String fileName = employeeRewardExcel.getFileName();
                 PdfFile pdfFile = Db.lambdaQuery(PdfFile.class).eq(PdfFile::getFileName, fileName).one();
+                if(pdfFile==null){
+                    BeanUtils.copyProperties(employeeRewardExcel, error);
+                    error.setError("该文件不存在");
+                    errorList.add(error);
+                    return;
+                }
 
                 if (Check.noNull(employee, role, pdfFile, position)) {
                     EmpReward empReward = new EmpReward();
@@ -92,5 +127,6 @@ public class EmployeeRewardExcelReadListener implements ReadListener<EmployeeRew
                 }
             });
         }
+        ErrorExcelWrite.setErrorCollection(errorList);
     }
 }

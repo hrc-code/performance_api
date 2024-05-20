@@ -8,6 +8,9 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.EmpKpiError;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.PositionScoreError;
 import com.example.workflow.listener.EmpKpiExcelReadListener;
 import com.example.workflow.listener.EmpPieceExcelReadListener;
 import com.example.workflow.mapper.KpiPercentMapper;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -359,8 +363,16 @@ public class EmpKpiController {
     }
 
     @PostMapping("/upload")
-    public R uploadExcel(MultipartFile file) throws IOException {
+    public void uploadExcel(MultipartFile file, HttpServletResponse response) throws IOException {
         EasyExcel.read(file.getInputStream(), EmpKpiExcel.class, new EmpKpiExcelReadListener()).sheet().doRead();
-        return R.success();
+
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), EmpKpiError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
     }
 }

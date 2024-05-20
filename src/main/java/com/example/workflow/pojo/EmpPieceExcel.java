@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 @Data
 public class EmpPieceExcel {
     @ExcelProperty("序号")
-    private Integer order;
+    private Integer serialNum;
     @ExcelProperty("工号")
     private String num;
     @ExcelProperty("员工姓名")
