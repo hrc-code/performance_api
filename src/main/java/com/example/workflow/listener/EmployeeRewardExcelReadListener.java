@@ -106,7 +106,7 @@ public class EmployeeRewardExcelReadListener implements ReadListener<EmployeeRew
 
                 // 通过fileName 去pdf文件表查询 file_id
                 String fileName = employeeRewardExcel.getFileName();
-                PdfFile pdfFile = Db.lambdaQuery(PdfFile.class).eq(PdfFile::getFileName, fileName).one();
+                PdfFile pdfFile = Db.lambdaQuery(PdfFile.class).eq(PdfFile::getFileName, fileName+".pdf").one();
                 if(pdfFile==null){
                     BeanUtils.copyProperties(employeeRewardExcel, error);
                     error.setError("该文件不存在");
