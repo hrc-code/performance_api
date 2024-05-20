@@ -10,6 +10,9 @@ import com.example.workflow.entity.PieceRule;
 import com.example.workflow.entity.PositionPiece;
 import com.example.workflow.entity.PositionPieceView;
 import com.example.workflow.entity.ScoreRule;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.PieceError;
+import com.example.workflow.feedback.ScoreError;
 import com.example.workflow.listener.PieceExcelReadListener;
 import com.example.workflow.listener.PositionPieceExcelReadListener;
 import com.example.workflow.listener.PositionScoreExcelReadListener;
@@ -31,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -303,9 +307,17 @@ public class PieceRuleController {
     }
 
     @PostMapping("/upload")
-    public R uploadExcel(MultipartFile file) throws IOException {
+    public void uploadExcel(MultipartFile file, HttpServletResponse response) throws IOException {
         EasyExcel.read(file.getInputStream(), PieceExcel.class, new PieceExcelReadListener()).sheet().doRead();
-        return R.success();
+
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), PieceError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
     }
 
     @PostMapping("/uploadPosition")

@@ -8,11 +8,14 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.PositionError;
 import com.example.workflow.listener.EmployeeRewardExcelReadListener;
 import com.example.workflow.listener.PositionExcelReadListener;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.mapper.PositionMapper;
 import com.example.workflow.mapper.TaskViewMapper;
+import com.example.workflow.pojo.EmployeeExcel;
 import com.example.workflow.pojo.EmployeeRewardExcel;
 import com.example.workflow.pojo.PositionExcel;
 import com.example.workflow.service.*;
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -297,9 +301,17 @@ public class PositionController {
     }
 
     @PostMapping("/upload")
-    public R uploadExcel(MultipartFile file) throws IOException {
+    public void uploadExcel(MultipartFile file, HttpServletResponse response) throws IOException {
         EasyExcel.read(file.getInputStream(), PositionExcel.class, new PositionExcelReadListener()).sheet().doRead();
-        return R.success();
+
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), PositionError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
     }
 
     @PostMapping("/getTree")

@@ -1,4 +1,4 @@
-package com.example.workflow.pojo;
+package com.example.workflow.feedback;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
@@ -6,7 +6,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class KpiExcel {
+public class KpiError {
     @ExcelProperty("序号")
     private Integer serialNum;
     @ExcelProperty("kpi条目")
@@ -21,4 +21,6 @@ public class KpiExcel {
     private BigDecimal rulePercent;
     @ExcelProperty("结算百分比")
     private BigDecimal resultPercent;
+    @ExcelProperty("错误原因")
+    private String error;
 }

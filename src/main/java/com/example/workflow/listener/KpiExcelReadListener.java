@@ -67,7 +67,6 @@ public class KpiExcelReadListener implements ReadListener<KpiExcel> {
                     kpiPercent.setResultPercent(kpiExcel.getResultPercent());
                     kpiPercent.setRulePercent(kpiPercent.getRulePercent());
                     Db.save(kpiPercent);
-
             });
         }
     }

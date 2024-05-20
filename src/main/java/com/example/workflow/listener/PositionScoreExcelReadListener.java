@@ -6,14 +6,17 @@ import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.PositionScoreError;
 import com.example.workflow.pojo.PositionScoreExcel;
 import com.example.workflow.pojo.ScoreExcel;
 import com.example.workflow.utils.Check;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,30 +48,35 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
 
     private void saveData() {
         if (!CollectionUtils.isEmpty(cachedDataList)) {
+            List<PositionScoreError> errorList=new ArrayList<>();
             cachedDataList.stream().filter(Objects::nonNull).forEach(positionScoreExcel -> {
-                Long scoreId=Db.lambdaQuery(ScoreRule.class).eq(ScoreRule::getTarget,positionScoreExcel.getScore())
+                ScoreRule score=Db.lambdaQuery(ScoreRule.class).eq(ScoreRule::getTarget,positionScoreExcel.getScore())
                         .apply(StringUtils.checkValNotNull(beginTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                         .apply(StringUtils.checkValNotNull(endTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
-                        .one().getId();
+                        .one();
 
-                Long deptId= Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,positionScoreExcel.getDept())
-                        .eq(Dept::getState,1).one().getId();
+                /*PositionScoreError error=new PositionScoreError();
+                if(score!=null){
+                    BeanUtils.copyProperties(positionScoreExcel, error);
+                    error.setError("命名重复");
+                    errorList.add(error);
+                    return;
+                }*/
 
-                Long positionId=Db.lambdaQuery(Position.class).eq(Position::getPosition,positionScoreExcel.getPosition())
-                        .eq(Position::getDeptId,deptId)
-                        .apply(StringUtils.checkValNotNull(beginTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                        .apply(StringUtils.checkValNotNull(endTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
-                        .one().getId();
+                Dept dept= Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,positionScoreExcel.getDept())
+                        .eq(Dept::getState,1).one();
+
+                Position position=Db.lambdaQuery(Position.class).eq(Position::getPosition,positionScoreExcel.getPosition())
+                        .eq(Position::getDeptId,dept.getId())
+                        .one();
 
                 PositionScore positionScore=new PositionScore();
-                if(Check.noNull(scoreId,deptId,positionId)){
+                if(Check.noNull(score.getId(),dept.getId(),position.getId())){
                     positionScore=Db.lambdaQuery(PositionScore.class)
-                            .eq(PositionScore::getPositionId,positionId)
-                            .eq(PositionScore::getScoreId,scoreId)
+                            .eq(PositionScore::getPositionId,position.getId())
+                            .eq(PositionScore::getScoreId,score.getId())
                             .apply(StringUtils.checkValNotNull(beginTime),
                                     "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                             .apply(StringUtils.checkValNotNull(endTime),
@@ -77,8 +85,8 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
 
                     if(positionScore==null){
                         positionScore=new PositionScore();
-                        positionScore.setPositionId(positionId);
-                        positionScore.setScoreId(scoreId);
+                        positionScore.setPositionId(position.getId());
+                        positionScore.setScoreId(score.getId());
                         positionScore.setPercent(positionScoreExcel.getScorePercent());
                         Db.save(positionScore);
                     }

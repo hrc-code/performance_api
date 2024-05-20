@@ -1,12 +1,10 @@
-package com.example.workflow.pojo;
+package com.example.workflow.feedback;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 @Data
-public class PositionExcel {
+public class PositionError {
     @ExcelProperty("序号")
     private Integer serialNum;
     @ExcelProperty("部门名称")
@@ -17,4 +15,6 @@ public class PositionExcel {
     private String type;
     @ExcelProperty("绩效挂钩")
     private String kind;
+    @ExcelProperty("错误原因")
+    private String error;
 }

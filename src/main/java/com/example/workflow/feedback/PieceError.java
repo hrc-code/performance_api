@@ -1,4 +1,4 @@
-package com.example.workflow.pojo;
+package com.example.workflow.feedback;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
@@ -6,7 +6,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class PieceExcel {
+public class PieceError {
     @ExcelProperty("序号")
     private Integer serialNum;
     @ExcelProperty("计件条目")
@@ -19,4 +19,6 @@ public class PieceExcel {
     private BigDecimal targetNum;
     @ExcelProperty("备注")
     private String ins;
+    @ExcelProperty("错误原因")
+    private String error;
 }
