@@ -6,14 +6,18 @@ import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.PositionPieceError;
 import com.example.workflow.pojo.PositionPieceExcel;
 import com.example.workflow.pojo.PositionPieceExcel;
 import com.example.workflow.utils.Check;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -44,67 +48,52 @@ public class PositionPieceExcelReadListener implements ReadListener<PositionPiec
         saveData();
     }
 
-    private String saveData() {
+    private void saveData() {
+        List<PositionPieceError> errorList=new ArrayList<>();
         if (!CollectionUtils.isEmpty(cachedDataList)) {
-            for(PositionPieceExcel positionPieceExcel:cachedDataList){
-                Long pieceId= Db.lambdaQuery(PieceRule.class).eq(PieceRule::getName,positionPieceExcel.getPiece())
+            cachedDataList.stream().filter(Objects::nonNull).forEach(positionPieceExcel -> {
+                PieceRule piece= Db.lambdaQuery(PieceRule.class).eq(PieceRule::getName,positionPieceExcel.getPiece())
                         .apply(StringUtils.checkValNotNull(beginTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                         .apply(StringUtils.checkValNotNull(endTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
-                        .one().getId();
-                if(pieceId==null)
-                    return positionPieceExcel.getNum()+"缺少对应的计件条目";
+                        .one();
 
-                Long deptId= Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,positionPieceExcel.getDept())
-                        .eq(Dept::getState,1).one().getId();
-                if(deptId==null)
-                    return positionPieceExcel.getNum()+"该员工所属部门错误";
+                PositionPieceError error=new PositionPieceError();
+                if(piece==null){
+                    BeanUtils.copyProperties(positionPieceExcel, error);
+                    error.setError("缺少对应的计件条目");
+                    errorList.add(error);
+                    return;
+                }
 
-                Long positionId=Db.lambdaQuery(Position.class).eq(Position::getPosition,positionPieceExcel.getPosition())
-                        .eq(Position::getDeptId,deptId)
-                        .apply(StringUtils.checkValNotNull(beginTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                        .apply(StringUtils.checkValNotNull(endTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
-                        .one().getId();
-                if(positionId==null)
-                    return positionPieceExcel.getNum()+"该员工所属岗位";
+                Dept dept= Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,positionPieceExcel.getDept())
+                        .eq(Dept::getState,1).one();
+                if(dept==null){
+                    BeanUtils.copyProperties(positionPieceExcel, error);
+                    error.setError("该员工所属部门错误");
+                    errorList.add(error);
+                    return;
+                }
+
+                Position position=Db.lambdaQuery(Position.class).eq(Position::getPosition,positionPieceExcel.getPosition())
+                        .eq(Position::getDeptId,dept.getId())
+                        .one();
+                if(position==null){
+                    BeanUtils.copyProperties(positionPieceExcel, error);
+                    error.setError("该员工所属岗位错误");
+                    errorList.add(error);
+                    return;
+                }
 
                 PositionPiece positionPiece=new PositionPiece();
-                if(Check.noNull(pieceId,deptId,positionId)){
-                    positionPiece.setPositionId(positionId);
-                    positionPiece.setPieceId(pieceId);
+                if(Check.noNull(piece.getId(),dept.getId(),position.getId())){
+                    positionPiece.setPositionId(position.getId());
+                    positionPiece.setPieceId(piece.getId());
                     Db.save(positionPiece);
                 }
-            }
-            /*cachedDataList.stream().filter(Objects::nonNull).forEach(positionPieceExcel -> {
-                Long pieceId= Db.lambdaQuery(PieceRule.class).eq(PieceRule::getName,positionPieceExcel.getPiece())
-                        .apply(StringUtils.checkValNotNull(beginTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                        .apply(StringUtils.checkValNotNull(endTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
-                        .one().getId();
-
-                Long deptId= Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,positionPieceExcel.getDept())
-                        .eq(Dept::getState,1).one().getId();
-
-                Long positionId=Db.lambdaQuery(Position.class).eq(Position::getPosition,positionPieceExcel.getPosition())
-                        .eq(Position::getDeptId,deptId)
-                        .apply(StringUtils.checkValNotNull(beginTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                        .apply(StringUtils.checkValNotNull(endTime),
-                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
-                        .one().getId();
-
-                PositionPiece positionPiece=new PositionPiece();
-                if(Check.noNull(pieceId,deptId,positionId)){
-                    positionPiece.setPositionId(positionId);
-                    positionPiece.setPieceId(pieceId);
-                    Db.save(positionPiece);
-                }
-            });*/
+            });
         }
-        return "成功";
+        ErrorExcelWrite.setErrorCollection(errorList);
     }
 }

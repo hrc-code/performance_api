@@ -9,6 +9,7 @@ import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
 import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.feedback.PositionError;
+import com.example.workflow.feedback.PositionScoreError;
 import com.example.workflow.feedback.ScoreError;
 import com.example.workflow.listener.PositionScoreExcelReadListener;
 import com.example.workflow.listener.ScoreExcelReadListener;
@@ -376,8 +377,16 @@ public class ScoreRuleController {
     }
 
     @PostMapping("/uploadPosition")
-    public R uploadPositionExcel(MultipartFile file) throws IOException {
+    public void uploadPositionExcel(MultipartFile file,HttpServletResponse response) throws IOException {
         EasyExcel.read(file.getInputStream(), PositionScoreExcel.class, new PositionScoreExcelReadListener()).sheet().doRead();
-        return R.success();
+
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), PositionScoreError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
     }
 }

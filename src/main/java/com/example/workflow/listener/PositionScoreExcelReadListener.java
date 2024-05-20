@@ -6,6 +6,7 @@ import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.feedback.PositionScoreError;
 import com.example.workflow.pojo.PositionScoreExcel;
 import com.example.workflow.pojo.ScoreExcel;
@@ -47,8 +48,8 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
     }
 
     private void saveData() {
+        List<PositionScoreError> errorList=new ArrayList<>();
         if (!CollectionUtils.isEmpty(cachedDataList)) {
-            List<PositionScoreError> errorList=new ArrayList<>();
             cachedDataList.stream().filter(Objects::nonNull).forEach(positionScoreExcel -> {
                 ScoreRule score=Db.lambdaQuery(ScoreRule.class).eq(ScoreRule::getTarget,positionScoreExcel.getScore())
                         .apply(StringUtils.checkValNotNull(beginTime),
@@ -56,21 +57,41 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
                         .apply(StringUtils.checkValNotNull(endTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                         .one();
-
-                /*PositionScoreError error=new PositionScoreError();
-                if(score!=null){
+                PositionScoreError error=new PositionScoreError();
+                if(score==null){
                     BeanUtils.copyProperties(positionScoreExcel, error);
-                    error.setError("命名重复");
+                    error.setError("评分条目不存在");
                     errorList.add(error);
                     return;
-                }*/
+                }
 
                 Dept dept= Db.lambdaQuery(Dept.class).eq(Dept::getDeptName,positionScoreExcel.getDept())
                         .eq(Dept::getState,1).one();
+                if(dept==null){
+                    BeanUtils.copyProperties(positionScoreExcel, error);
+                    error.setError("部门不存在");
+                    errorList.add(error);
+                    return;
+                }
 
                 Position position=Db.lambdaQuery(Position.class).eq(Position::getPosition,positionScoreExcel.getPosition())
                         .eq(Position::getDeptId,dept.getId())
                         .one();
+                if(position==null){
+                    BeanUtils.copyProperties(positionScoreExcel, error);
+                    error.setError("岗位不存在");
+                    errorList.add(error);
+                    return;
+                }
+
+                Employee assessor=Db.lambdaQuery(Employee.class).eq(Employee::getNum,positionScoreExcel.getNum())
+                        .eq(Employee::getState,1).one();
+                if(assessor==null){
+                    BeanUtils.copyProperties(positionScoreExcel, error);
+                    error.setError("评分人不存在");
+                    errorList.add(error);
+                    return;
+                }
 
                 PositionScore positionScore=new PositionScore();
                 if(Check.noNull(score.getId(),dept.getId(),position.getId())){
@@ -92,18 +113,16 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
                     }
                 }
 
-                Long assessorId=Db.lambdaQuery(Employee.class).eq(Employee::getNum,positionScoreExcel.getNum())
-                        .eq(Employee::getState,1).one().getId();
-
-                if (Check.noNull(assessorId,positionScore.getId())){
+                if (Check.noNull(assessor.getId(),positionScore.getId())){
                     ScoreAssessors scoreAssessors=new ScoreAssessors();
                     scoreAssessors.setPositionScoreId(positionScore.getId());
-                    scoreAssessors.setAssessorId(assessorId);
+                    scoreAssessors.setAssessorId(assessor.getId());
                     scoreAssessors.setPercent(positionScoreExcel.getAssessorPercent());
                     Db.save(scoreAssessors);
                 }
             });
         }
+        ErrorExcelWrite.setErrorCollection(errorList);
     }
 
 }

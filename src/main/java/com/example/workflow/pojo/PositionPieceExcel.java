@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class PositionPieceExcel {
     @ExcelProperty("序号")
-    private String num;
+    private Integer serialNum;
     @ExcelProperty("岗位名称")
     private String position;
     @ExcelProperty("所属部门")

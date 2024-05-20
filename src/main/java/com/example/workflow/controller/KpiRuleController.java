@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.PositionKpiError;
+import com.example.workflow.feedback.PositionPieceError;
 import com.example.workflow.listener.KpiExcelReadListener;
 import com.example.workflow.listener.PieceExcelReadListener;
 import com.example.workflow.listener.PositionKpiExcelReadListener;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -358,9 +362,16 @@ public class KpiRuleController {
     }
 
     @PostMapping("/uploadPosition")
-    public R uploadPositionExcel(MultipartFile file) throws IOException {
+    public void uploadPositionExcel(MultipartFile file, HttpServletResponse response) throws IOException {
         EasyExcel.read(file.getInputStream(), PositionKpiExcel.class, new PositionKpiExcelReadListener()).sheet().doRead();
-        return R.success();
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), PositionKpiError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
     }
 
 }

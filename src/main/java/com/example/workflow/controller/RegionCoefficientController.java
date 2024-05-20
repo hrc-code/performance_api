@@ -8,6 +8,9 @@ import com.example.workflow.common.R;
 import com.example.workflow.entity.EmpCoefficient;
 import com.example.workflow.entity.PieceRule;
 import com.example.workflow.entity.RegionCoefficient;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.PositionKpiError;
+import com.example.workflow.feedback.RegionError;
 import com.example.workflow.listener.PieceExcelReadListener;
 import com.example.workflow.listener.RegionExcelReadListener;
 import com.example.workflow.mapper.EmployeeCoefficientMapper;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -191,8 +195,16 @@ public class RegionCoefficientController {
     }
 
     @PostMapping("/upload")
-    public R uploadExcel(MultipartFile file) throws IOException {
+    public R uploadExcel(MultipartFile file, HttpServletResponse response) throws IOException {
         EasyExcel.read(file.getInputStream(), RegionExcel.class, new RegionExcelReadListener()).sheet().doRead();
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), RegionError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
         return R.success();
     }
 }

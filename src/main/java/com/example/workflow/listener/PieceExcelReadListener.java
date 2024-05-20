@@ -72,6 +72,7 @@ public class PieceExcelReadListener implements ReadListener<PieceExcel> {
                     errorList.add(error);
                     return;
                 }
+
                 else if(PieceExcel.getName().isEmpty()){
                     BeanUtils.copyProperties(PieceExcel, error);
                     error.setError("命名不得为空");

@@ -3,24 +3,24 @@ package com.example.workflow.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.PositionAssessor;
-import com.example.workflow.entity.PositionView;
+import com.example.workflow.entity.*;
+import com.example.workflow.service.EmployeePositionService;
 import com.example.workflow.service.PositionAssessorService;
 import com.example.workflow.service.PositionAssessorViewService;
+import com.example.workflow.service.PositionService;
+import com.example.workflow.vo.EmployeeVo;
 import com.example.workflow.vo.PositionAssessorView;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/assessor")
@@ -29,6 +29,10 @@ public class PositionAssessorController {
     private PositionAssessorService PositionAssessorService;
     @Autowired
     private PositionAssessorViewService PositionAssessorViewService;
+    @Autowired
+            private PositionService PositionService;
+    @Autowired
+            private EmployeePositionService EmployeePositionService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -111,5 +115,33 @@ public class PositionAssessorController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         PositionAssessorViewService.page(pageInfo,queryWrapper);
         return R.success(pageInfo);
+    }
+
+    @GetMapping("/ceo/{id}")
+    private R ceo(@PathVariable Integer id){
+        ArrayList<EmployeeVo> employeeVos = new ArrayList<>();
+        List<Position> positions = PositionService.lambdaQuery()
+                .eq(Position::getState, 1)
+                .eq(Position::getType,id)
+                .list();
+                positions.stream().filter(Objects::nonNull).filter(position -> position.getType() < 5).forEach(position -> {
+                    Long positionId = position.getId();
+                    List<EmployeePosition> employeePositions = EmployeePositionService.lambdaQuery().eq(EmployeePosition::getPositionId, positionId).list();
+                    employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
+                        Long empId = employeePosition.getEmpId();
+                        Employee employee = Db.getById(empId, Employee.class);
+                        if (employee != null) {
+                            String name = employee.getName();
+                            EmployeeVo employeeVo = new EmployeeVo();
+                            employeeVo.setCeoLevel(id);
+                            employeeVo.setName(name);
+                            employeeVo.setId(empId);
+                            employeeVos.add(employeeVo);
+                        }
+                    });
+                });
+
+            return R.success(employeeVos);
+
     }
 }
