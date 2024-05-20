@@ -14,7 +14,7 @@ public class EmpRewardError {
     private String num;
     @ExcelProperty("员工姓名")
     private String employeeName;
-    @ExcelProperty("特定绩效考核依据(文件名）")
+    @ExcelProperty("特定绩效考核依据(文件名.pdf）")
     private String fileName;
     @ExcelProperty("金额")
     private BigDecimal reward;
