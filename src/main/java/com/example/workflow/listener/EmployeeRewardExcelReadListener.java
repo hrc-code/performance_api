@@ -72,6 +72,7 @@ public class EmployeeRewardExcelReadListener implements ReadListener<EmployeeRew
                 // 通过num员工工号去员工表查询该员工的id
                 String num = employeeRewardExcel.getNum();
                 Employee employee = Db.lambdaQuery(Employee.class).eq(Employee::getNum, num).one();
+
                 EmpRewardError error=new EmpRewardError();
                 if(employee==null){
                     BeanUtils.copyProperties(employeeRewardExcel, error);

@@ -5,20 +5,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.BackWait;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.PositionAssessor;
-import com.example.workflow.entity.ResultFourthExamine;
-import com.example.workflow.entity.Role;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.TaskViewMapper;
-import com.example.workflow.service.BackWaitService;
-import com.example.workflow.service.EmployeePositionService;
-import com.example.workflow.service.EmployeeService;
-import com.example.workflow.service.PositionAssessorService;
-import com.example.workflow.service.ResultFourthExamineService;
-import com.example.workflow.service.RoleService;
+import com.example.workflow.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.IdentityService;
 import org.camunda.bpm.engine.RuntimeService;
@@ -33,7 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -60,10 +51,61 @@ public class ResultFourthExamineController {
             private EmployeeService EmployeeService;
     @Autowired
             private BackWaitService BackWaitService;
+    @Autowired
+            private EmpPositionViewService EmpPositionViewService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
+
+    @PostMapping("/completeList")
+    private R<List<EmpPositionView>> completeList(@RequestBody JSONObject obj){
+        List<ResultFourthExamine> resultFourthExamineList=ResultFourthExamineService.lambdaQuery()
+                .eq(ResultFourthExamine::getAssessorId, obj.getString("assessorId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        List<EmpPositionView> list=new ArrayList<>();
+        resultFourthExamineList.forEach(x->{
+            EmpPositionView empPositionView= EmpPositionViewService.lambdaQuery()
+                    .eq(EmpPositionView::getPositionId,x.getPositionId())
+                    .eq(EmpPositionView::getEmpId,x.getEmpId())
+                    .eq(EmpPositionView::getState,1)
+                    .one();
+            list.add(empPositionView);
+        });
+
+        return R.success(list);
+    }
+
+    @PostMapping("/getState")
+    private R<TaskState> getFourthTaskState(@RequestBody JSONObject obj){
+        TaskState state=new TaskState();
+        state.setKpiState(0);
+        state.setPieceState(0);
+        state.setOkrState(0);
+        state.setScoreState(0);
+
+        ResultFourthExamine resultFourthExamine=ResultFourthExamineService.lambdaQuery()
+                .eq(ResultFourthExamine::getAssessorId, obj.getString("assessorId"))
+                .eq(ResultFourthExamine::getPositionId,obj.getString("positionId"))
+                .eq(ResultFourthExamine::getEmpId,obj.getString("empId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+
+            if(resultFourthExamine.getKpiExamine().equals(1))
+                state.setKpiState(1);
+            if(resultFourthExamine.getPieceExamine().equals(1))
+                state.setPieceState(1);
+
+        return R.success(state);
+    }
 
 
     @PostMapping("/addPiece")

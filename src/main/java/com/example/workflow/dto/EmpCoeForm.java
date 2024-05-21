@@ -11,4 +11,6 @@ import java.util.List;
 public class EmpCoeForm {
     private List<CoefficientView> empList;
     private BigDecimal baseWage;
+    private BigDecimal performanceWage;
+    private Integer option;
 }

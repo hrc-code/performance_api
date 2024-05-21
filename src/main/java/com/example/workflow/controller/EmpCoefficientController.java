@@ -230,11 +230,24 @@ public class EmpCoefficientController {
         if(empCoeForm.getEmpList().isEmpty())
             return R.error("员工选择不得为空");
 
+        if(empCoeForm.getOption()==null)
+            return R.error("未选择批量修改内容");
+        else if (empCoeForm.getOption().equals(1)) {
+            if(empCoeForm.getBaseWage()==null)
+                return R.error("基础工资不得为空");
+        }
+        else if(empCoeForm.getOption().equals(4)){
+            if(empCoeForm.getPerformanceWage()==null)
+                return R.error("绩效工资不得为空");
+        }
+
         empCoeForm.getEmpList().forEach(x->{
             EmpCoefficient empCoefficient=new EmpCoefficient();
             BeanUtils.copyProperties(x, empCoefficient);
-
-            empCoefficient.setWage(empCoeForm.getBaseWage());
+            if(empCoeForm.getOption().equals(1))
+                empCoefficient.setWage(empCoeForm.getBaseWage());
+            else if(empCoeForm.getOption().equals(4))
+                empCoefficient.setPerformanceWage(empCoeForm.getPerformanceWage());
             EmpCoefficientService.updateById(empCoefficient);
         });
 
