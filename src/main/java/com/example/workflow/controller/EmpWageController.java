@@ -1,21 +1,28 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
+import com.example.workflow.entity.EmpWage;
 import com.example.workflow.entity.EmpWageView;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.PositionScoreError;
+import com.example.workflow.pojo.EmpWageExcel;
 import com.example.workflow.service.EmpWageViewService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -135,4 +142,29 @@ public class EmpWageController {
         return R.success(pageInfo);
     }
 
+    @PostMapping("/downLoad")
+    private void downLoad(HttpServletResponse response) throws IOException {
+        List<EmpWageView> list=EmpWageViewService.lambdaQuery()
+                .orderByAsc(EmpWageView::getEmpId)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .list();
+
+        List<EmpWageExcel> result=new ArrayList<>();
+        list.forEach(x->{
+            EmpWageExcel one=new EmpWageExcel();
+            BeanUtils.copyProperties(x,one);
+            result.add(one);
+        });
+
+        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        response.setCharacterEncoding("utf-8");
+        response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+        EasyExcel.write(response.getOutputStream(), EmpWageExcel.class)
+                .sheet("错误部分")
+                .doWrite(result);
+    }
 }

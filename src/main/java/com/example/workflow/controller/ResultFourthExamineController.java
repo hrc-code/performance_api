@@ -81,8 +81,8 @@ public class ResultFourthExamineController {
         return R.success(list);
     }
 
-    @PostMapping("/getState")
-    private R<TaskState> getFourthTaskState(@RequestBody JSONObject obj){
+    @PostMapping("/getFinishState")
+    private R<TaskState> getFinishState(@RequestBody JSONObject obj){
         TaskState state=new TaskState();
         state.setKpiState(0);
         state.setPieceState(0);
@@ -99,10 +99,10 @@ public class ResultFourthExamineController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
 
-            if(resultFourthExamine.getKpiExamine().equals(1))
-                state.setKpiState(1);
-            if(resultFourthExamine.getPieceExamine().equals(1))
-                state.setPieceState(1);
+        if(resultFourthExamine.getKpiExamine()==1)
+            state.setKpiState(1);
+        if(resultFourthExamine.getPieceExamine()==1)
+            state.setPieceState(1);
 
         return R.success(state);
     }
