@@ -67,6 +67,22 @@ public class FlowController {
     private TaskViewMapper TaskViewMapper;
     @Autowired
             private EmpPositionViewService EmpPositionViewService;
+    @Autowired
+            private PositionScoreService PositionScoreService;
+    @Autowired
+            private ScoreAssessorsService ScoreAssessorsService;
+    @Autowired
+            private PositionPieceService PositionPieceService;
+    @Autowired
+            private PositionKpiSerivce PositionKpiSerivce;
+    @Autowired
+            private EmpScoreService EmpScoreService;
+    @Autowired
+            private OkrKeyService OkrKeyService;
+    @Autowired
+            private EmpOkrService EmpOkrService;
+    @Autowired
+            private ResultFourthExamineService ResultFourthExamineService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -102,7 +118,7 @@ public class FlowController {
         LambdaQueryWrapper<EmpPositionView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(EmpPositionView::getPositionId,obj.getString("positionId"));
         List<EmpPositionView> empList= EmpPositionViewService.list(queryWrapper);
-        if(empList==null){
+        if(empList.isEmpty()){
             return R.error("没有员工在该岗位");
         }
 
@@ -209,6 +225,48 @@ public class FlowController {
         queryWrapper.eq(EmployeePosition::getPositionId,obj.getString("positionId"));
         List<EmployeePosition> empList=EmployeePositionMapper.selectList(queryWrapper);
 
+        List<PositionScore> positionScores=PositionScoreService.lambdaQuery()
+                .eq(PositionScore::getPositionId,obj.getString("positionId"))
+                .eq(PositionScore::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .list();
+
+        List<ScoreAssessors> delete1=new ArrayList<>();
+        positionScores.forEach(x->{
+            List<ScoreAssessors> scoreAssessorss=ScoreAssessorsService.lambdaQuery()
+                    .eq(ScoreAssessors::getPositionScoreId,x.getId())
+                    .eq(ScoreAssessors::getState,1)
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .list();
+            scoreAssessorss.forEach(y->{
+                delete1.add(y);
+            });
+        });
+
+        List<PositionPiece> delete2=PositionPieceService.lambdaQuery()
+                .eq(PositionPiece::getPositionId,obj.getString("positionId"))
+                .eq(PositionPiece::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        List<PositionKpi> delete3=PositionKpiSerivce.lambdaQuery()
+                .eq(PositionKpi::getPositionId,obj.getString("positionId"))
+                .eq(PositionKpi::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
         empList.forEach(x->{
             LambdaQueryWrapper<TaskView> Wrapper=new LambdaQueryWrapper<>();
             Wrapper.eq(TaskView::getStartUserId,x.getEmpId())
@@ -218,11 +276,93 @@ public class FlowController {
             taskList.forEach(y->{
                 runtimeService.deleteProcessInstance(y.getProcInstId(),"删除原因");
             });
+
+            if(!delete1.isEmpty()){
+                delete1.forEach(y->{
+                    LambdaQueryWrapper<EmpScore> queryWrapper1=new LambdaQueryWrapper<>();
+                    queryWrapper1.eq(EmpScore::getScoreAssessorsId,y.getId())
+                            .eq(EmpScore::getEmpId,x.getEmpId())
+                            .apply(StringUtils.checkValNotNull(beginTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                            .apply(StringUtils.checkValNotNull(endTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+                    EmpScoreService.remove(queryWrapper1);
+                });
+            }
+            if(!delete2.isEmpty()){
+                delete2.forEach(y->{
+                    LambdaQueryWrapper<EmpPiece> queryWrapper1=new LambdaQueryWrapper<>();
+                    queryWrapper1.eq(EmpPiece::getPieceId,y.getPieceId())
+                            .eq(EmpPiece::getEmpId,x.getEmpId())
+                            .apply(StringUtils.checkValNotNull(beginTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                            .apply(StringUtils.checkValNotNull(endTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+                });
+            }
+            if(!delete3.isEmpty()){
+                delete3.forEach(y->{
+                    LambdaQueryWrapper<EmpKpi> queryWrapper1=new LambdaQueryWrapper<>();
+                    queryWrapper1.eq(EmpKpi::getKpiId,y.getKpiId())
+                            .eq(EmpKpi::getEmpId,x.getEmpId())
+                            .apply(StringUtils.checkValNotNull(beginTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                            .apply(StringUtils.checkValNotNull(endTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+                });
+            }
+
+            List<OkrKey> delete4=OkrKeyService.lambdaQuery()
+                    .eq(OkrKey::getPositionId,obj.getString("positionId"))
+                    .eq(OkrKey::getLiaEmpId,x.getEmpId())
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                    .list();
+
+            if(!delete4.isEmpty()){
+                delete4.forEach(y->{
+                    LambdaQueryWrapper<EmpOkr> queryWrapper1=new LambdaQueryWrapper<>();
+                    queryWrapper1.eq(EmpOkr::getEmpId,x.getEmpId())
+                            .eq(EmpOkr::getOkrKeyId,y.getId())
+                            .apply(StringUtils.checkValNotNull(beginTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                            .apply(StringUtils.checkValNotNull(endTime),
+                                    "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+                    EmpOkrService.remove(queryWrapper1);
+                });
+            }
         });
+
+        LambdaQueryWrapper<ResultFourthExamine> queryWrapper1=new LambdaQueryWrapper<>();
+        queryWrapper1.eq(ResultFourthExamine::getPositionId,obj.getString("positionId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        ResultFourthExamineService.remove(queryWrapper1);
+
+        LambdaQueryWrapper<ResultThirdExamine> queryWrapper2=new LambdaQueryWrapper<>();
+        queryWrapper2.eq(ResultThirdExamine::getPositionId,obj.getString("positionId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        ResultThirdExamineService.remove(queryWrapper2);
+
+        LambdaQueryWrapper<ResultSecondExamine> queryWrapper3=new LambdaQueryWrapper<>();
+        queryWrapper3.eq(ResultSecondExamine::getPositionId,obj.getString("positionId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        ResultSecondExamineService.remove(queryWrapper3);
 
         UpdateWrapper<Position> updateWrapper =new UpdateWrapper<>();
         updateWrapper.set("audit_status", '0').eq("id",obj.getString("positionId"));
         PositionService.update(updateWrapper);
+
         return R.success();
     }
 

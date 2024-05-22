@@ -4,25 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.BackWait;
-import com.example.workflow.entity.EmpKpiView;
-import com.example.workflow.entity.EmpOkr;
-import com.example.workflow.entity.EmpOkrView;
-import com.example.workflow.entity.EmpPieceView;
-import com.example.workflow.entity.EmpScore;
-import com.example.workflow.entity.EmpScoreView;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.OkrKey;
-import com.example.workflow.entity.OkrRule;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.PositionScore;
-import com.example.workflow.entity.PositionView;
-import com.example.workflow.entity.ResultSecondExamine;
-import com.example.workflow.entity.Role;
-import com.example.workflow.entity.ScoreAssessors;
-import com.example.workflow.entity.TaskState;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.EmpKpiViewMapper;
 import com.example.workflow.mapper.EmpOkrViewMapper;
 import com.example.workflow.mapper.EmpPieceViewMapper;
@@ -125,6 +107,108 @@ public class ResultSecondExamineController {
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
+
+    @PostMapping("/completeList")
+    private R<List<PositionView>> completeList(@RequestBody JSONObject obj){
+        List<ResultSecondExamine> resultThirdExamineList=ResultSecondExamineService.lambdaQuery()
+                .eq(ResultSecondExamine::getAssessorId, obj.getString("assessorId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        List<PositionView> list=new ArrayList<>();
+        resultThirdExamineList.forEach(x->{
+            PositionView empPositionView= PositionViewService.lambdaQuery()
+                    .eq(PositionView::getId,x.getPositionId())
+                    .eq(PositionView::getState,1)
+                    .one();
+            list.add(empPositionView);
+        });
+
+        return R.success(list);
+    }
+
+    @PostMapping("/getFinishState")
+    private R<Map<String,List<Object>>> getFinishState(@RequestBody JSONObject obj){
+        Map<String, List<Object>> resultMap = new HashMap<>();
+        TaskState state=new TaskState();
+        state.setKpiState(0);
+        state.setPieceState(0);
+        state.setOkrState(0);
+        state.setScoreState(0);
+
+        ResultSecondExamine resultSecondExamine=ResultSecondExamineService.lambdaQuery()
+                .eq(ResultSecondExamine::getAssessorId, obj.getString("assessorId"))
+                .eq(ResultSecondExamine::getPositionId,obj.getString("positionId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .one();
+
+        if(resultSecondExamine.getKpiExamine()==1){
+            state.setKpiState(1);
+
+            LambdaQueryWrapper<EmpKpiView> queryWrapper3=new LambdaQueryWrapper<>();
+            queryWrapper3.eq(EmpKpiView::getPositionId,obj.getString("positionId"))
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+            List<EmpKpiView> list3= EmpKpiViewMapper.selectList(queryWrapper3);
+            List<Object> kpi = new ArrayList<>(list3);
+            resultMap.put("kpi", kpi);
+        }
+
+        if(resultSecondExamine.getPieceExamine()==1){
+            state.setPieceState(1);
+
+            LambdaQueryWrapper<EmpPieceView> queryWrapper2=new LambdaQueryWrapper<>();
+            queryWrapper2.eq(EmpPieceView::getPositionId,obj.getString("positionId"))
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+            List<EmpPieceView> list2= EmpPieceViewMapper.selectList(queryWrapper2);
+            List<Object> piece = new ArrayList<>(list2);
+            resultMap.put("piece", piece);
+        }
+
+        if(resultSecondExamine.getScoreExamine()==1){
+            state.setScoreState(1);
+
+            LambdaQueryWrapper<EmpScoreView> queryWrapper1=new LambdaQueryWrapper<>();
+            queryWrapper1.eq(EmpScoreView::getPositionId,obj.getString("positionId"))
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
+            List<EmpScoreView> list1= EmpScoreViewMapper.selectList(queryWrapper1);
+            List<Object> score = new ArrayList<>(list1);
+            resultMap.put("score", score);
+        }
+
+        if(resultSecondExamine.getOkrExamine()==1){
+            state.setOkrState(1);
+
+            LambdaQueryWrapper<EmpOkrView> queryWrapper4=new LambdaQueryWrapper<>();
+            queryWrapper4.eq(EmpOkrView::getPositionId,obj.getString("positionId"))
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+            List<EmpOkrView> list4= EmpOkrViewMapper.selectList(queryWrapper4);
+            List<Object> okr=new ArrayList<>(list4);
+            resultMap.put("okr",okr);
+        }
+        List<Object> taskState = new ArrayList<>();
+        taskState.add(state);
+        resultMap.put("state", taskState);
+
+        return R.success();
+    }
 
 
     @PostMapping("/list")

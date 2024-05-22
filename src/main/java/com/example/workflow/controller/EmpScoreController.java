@@ -1,5 +1,6 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -7,13 +8,10 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.BackWait;
-import com.example.workflow.entity.EmpScore;
-import com.example.workflow.entity.EmpScoreView;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.PositionAssessor;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.entity.*;
 import com.example.workflow.mapper.TaskViewMapper;
+import com.example.workflow.pojo.EmpScoreExcel;
+import com.example.workflow.pojo.EmpWageExcel;
 import com.example.workflow.service.BackWaitService;
 import com.example.workflow.service.EmpScoreService;
 import com.example.workflow.service.EmpScoreViewService;
@@ -22,6 +20,7 @@ import com.example.workflow.service.PositionAssessorService;
 import com.example.workflow.service.PositionService;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.TaskService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -65,6 +66,31 @@ public class EmpScoreController {
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
+    @PostMapping("/downLoad")
+    private void downLoad(HttpServletResponse response) throws IOException {
+        List<EmpScoreView> list=EmpScoreViewService.lambdaQuery()
+                .orderByAsc(EmpScoreView::getEmpId)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        List<EmpScoreExcel> result=new ArrayList<>();
+        list.forEach(x->{
+            EmpScoreExcel one=new EmpScoreExcel();
+            BeanUtils.copyProperties(x,one);
+            result.add(one);
+        });
+
+        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        response.setCharacterEncoding("utf-8");
+        response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+        EasyExcel.write(response.getOutputStream(), EmpScoreExcel.class)
+                .sheet("导出")
+                .doWrite(result);
+    }
 
     @PostMapping("/add")
     private R add(@RequestBody JSONObject form){
@@ -121,7 +147,6 @@ public class EmpScoreController {
 
         return R.success();
     }
-
 
     @GetMapping("/nowPage")
     public R<Page> nowPage(@RequestParam("page") String page

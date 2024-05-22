@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.EmpPiece;
 import com.example.workflow.entity.EmpPieceView;
+import com.example.workflow.entity.EmpScoreView;
 import com.example.workflow.feedback.EmpKpiError;
 import com.example.workflow.feedback.EmpPieceError;
 import com.example.workflow.feedback.ErrorExcelWrite;
@@ -15,10 +16,13 @@ import com.example.workflow.listener.EmpPieceExcelReadListener;
 import com.example.workflow.listener.KpiExcelReadListener;
 import com.example.workflow.mapper.EmpPieceMapper;
 import com.example.workflow.pojo.EmpPieceExcel;
+import com.example.workflow.pojo.EmpScoreExcel;
 import com.example.workflow.pojo.KpiExcel;
+import com.example.workflow.pojo.ResultEmpPieceExcel;
 import com.example.workflow.service.EmpPieceService;
 import com.example.workflow.service.EmpPieceViewService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,6 +57,32 @@ public class EmpPieceController {
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
+
+    @PostMapping("/downLoad")
+    private void downLoad(HttpServletResponse response) throws IOException {
+        List<EmpPieceView> list=EmpPieceViewService.lambdaQuery()
+                .orderByAsc(EmpPieceView::getEmpId)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        List<ResultEmpPieceExcel> result=new ArrayList<>();
+        list.forEach(x->{
+            ResultEmpPieceExcel one=new ResultEmpPieceExcel();
+            BeanUtils.copyProperties(x,one);
+            result.add(one);
+        });
+
+        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        response.setCharacterEncoding("utf-8");
+        response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+        EasyExcel.write(response.getOutputStream(), ResultEmpPieceExcel.class)
+                .sheet("导出")
+                .doWrite(result);
+    }
 
     @GetMapping("/page")
     public R<Page> page(@RequestParam("page") String page, @RequestParam("page_size") String pageSize){

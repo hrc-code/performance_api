@@ -16,6 +16,8 @@ import com.example.workflow.listener.EmpPieceExcelReadListener;
 import com.example.workflow.mapper.KpiPercentMapper;
 import com.example.workflow.pojo.EmpKpiExcel;
 import com.example.workflow.pojo.EmpPieceExcel;
+import com.example.workflow.pojo.EmpScoreExcel;
+import com.example.workflow.pojo.ResultEmpKpiExcel;
 import com.example.workflow.service.EmpKpiService;
 import com.example.workflow.service.EmpKpiViewService;
 import com.example.workflow.service.KpiPercentService;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
 import org.kie.internal.utils.KieHelper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,6 +42,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -60,6 +64,31 @@ public class EmpKpiController {
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
+    @PostMapping("/downLoad")
+    private void downLoad(HttpServletResponse response) throws IOException {
+        List<EmpKpiView> list=EmpKpiViewService.lambdaQuery()
+                .orderByAsc(EmpKpiView::getEmpId)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        List<ResultEmpKpiExcel> result=new ArrayList<>();
+        list.forEach(x->{
+            ResultEmpKpiExcel one=new ResultEmpKpiExcel();
+            BeanUtils.copyProperties(x,one);
+            result.add(one);
+        });
+
+        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        response.setCharacterEncoding("utf-8");
+        response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+        EasyExcel.write(response.getOutputStream(), ResultEmpKpiExcel.class)
+                .sheet("导出")
+                .doWrite(result);
+    }
 
     @PostMapping("/match")
     private R matchCoefficient(@RequestBody List<EmpKpi> form){
