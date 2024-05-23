@@ -83,6 +83,8 @@ public class FlowController {
             private EmpOkrService EmpOkrService;
     @Autowired
             private ResultFourthExamineService ResultFourthExamineService;
+    @Autowired
+            private EmpWageService EmpWageService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -333,6 +335,15 @@ public class FlowController {
                     EmpOkrService.remove(queryWrapper1);
                 });
             }
+
+            LambdaQueryWrapper<EmpWage> queryWrapper1=new LambdaQueryWrapper<>();
+            queryWrapper1.eq(EmpWage::getEmpId,x.getEmpId())
+                    .eq(EmpWage::getPositionId,obj.getString("positionId"))
+                    .apply(StringUtils.checkValNotNull(beginTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                    .apply(StringUtils.checkValNotNull(endTime),
+                            "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+            EmpWageService.remove(queryWrapper1);
         });
 
         LambdaQueryWrapper<ResultFourthExamine> queryWrapper1=new LambdaQueryWrapper<>();
