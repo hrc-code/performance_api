@@ -185,12 +185,19 @@ public class EmpCoefficientController {
         TaskView task= TaskViewMapper.selectOne(queryWrapper7);
         taskService.complete(task.getId());
 
+        UpdateWrapper<EmployeePosition> updateWrapper =new UpdateWrapper<>();
+        updateWrapper
+                .set("process_definition_id","")
+                .eq("emp_id",empId)
+                .eq("position_id",positionId)
+                .eq("state",1);
+        EmployeePositionService.update(updateWrapper);
+
         return R.success();
     }
 
     @PostMapping("/fileAll")
     private R fileAll(@RequestBody JSONObject form){
-        System.out.println(form);
         JSONArray formArray = form.getJSONArray("Form");
 
         for (int i = 0; i < formArray.size(); i++) {

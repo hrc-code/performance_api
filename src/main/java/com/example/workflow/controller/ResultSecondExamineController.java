@@ -210,7 +210,6 @@ public class ResultSecondExamineController {
         return R.success();
     }
 
-
     @PostMapping("/list")
     private R<Map<String, List<Object>>> list(@RequestBody JSONObject obj) throws JsonProcessingException {
         TaskState state=new TaskState();
@@ -810,6 +809,7 @@ public class ResultSecondExamineController {
                 .eq(Position::getState,1)
                 .one();
         position.setAuditStatus(Short.parseShort("3"));
+        PositionService.updateById(position);
     }
 
     private void removeScore(JSONObject form,EmployeePosition one){
