@@ -58,13 +58,14 @@ public class PieceExcelReadListener implements ReadListener<PieceExcel> {
         if (!CollectionUtils.isEmpty(cachedDataList)) {
             List<PieceError> errorList=new ArrayList<>();
             cachedDataList.stream().filter(Objects::nonNull).forEach(PieceExcel -> {
-                PieceError check= Db.lambdaQuery(PieceError.class)
-                        .eq(PieceError::getName,PieceExcel.getName())
+                PieceRule check= Db.lambdaQuery(PieceRule.class)
+                        .eq(PieceRule::getName,PieceExcel.getName())
                         .apply(StringUtils.checkValNotNull(beginTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                         .apply(StringUtils.checkValNotNull(endTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                         .one();
+
                 PieceError error=new PieceError();
                 if(check!=null){
                     BeanUtils.copyProperties(PieceExcel, error);

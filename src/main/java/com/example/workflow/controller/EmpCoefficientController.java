@@ -1,5 +1,6 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -9,6 +10,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.dto.EmpCoeForm;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.EmpCoefficientError;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.OkrError;
+import com.example.workflow.listener.EmpCoefficientExcelReadListener;
+import com.example.workflow.listener.OkrExcelReadListener;
 import com.example.workflow.mapper.CoefficientViewMapper;
 import com.example.workflow.mapper.EmpKpiViewMapper;
 import com.example.workflow.mapper.EmpOkrViewMapper;
@@ -20,6 +26,8 @@ import com.example.workflow.mapper.ResultOkrViewMapper;
 import com.example.workflow.mapper.ResultPieceEmpViewMapper;
 import com.example.workflow.mapper.ResultScoreEmpViewMapper;
 import com.example.workflow.mapper.TaskViewMapper;
+import com.example.workflow.pojo.EmpCoefficientExcel;
+import com.example.workflow.pojo.OkrExcel;
 import com.example.workflow.service.*;
 import com.example.workflow.vo.PositionAssessorView;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +40,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -259,6 +270,20 @@ public class EmpCoefficientController {
         });
 
         return R.success();
+    }
+
+    @PostMapping("/upload")
+    public void uploadExcel(MultipartFile file, HttpServletResponse response) throws IOException {
+        EasyExcel.read(file.getInputStream(), EmpCoefficientExcel.class, new EmpCoefficientExcelReadListener()).sheet().doRead();
+
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), EmpCoefficientError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
     }
 
 }

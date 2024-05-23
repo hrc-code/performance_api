@@ -58,6 +58,7 @@ public class KpiExcelReadListener implements ReadListener<KpiExcel> {
                         kpiRule.setName(kpiExcel.getName());
                         kpiRule.setTarget1(kpiExcel.getTarget1());
                         kpiRule.setTarget2(kpiExcel.getTarget2());
+                        kpiRule.setType(kpiExcel.getType());
                         Db.save(kpiRule);
                     }
 

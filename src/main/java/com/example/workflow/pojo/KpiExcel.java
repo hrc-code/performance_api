@@ -11,6 +11,8 @@ public class KpiExcel {
     private Integer serialNum;
     @ExcelProperty("kpi条目")
     private String name;
+    @ExcelProperty("模版类型（1或2）")
+    private Integer type;
     @ExcelProperty("条目一名称")
     private String target1;
     @ExcelProperty("条目二名称")

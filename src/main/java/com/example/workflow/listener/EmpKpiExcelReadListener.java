@@ -63,7 +63,9 @@ public class EmpKpiExcelReadListener implements ReadListener<EmpKpiExcel> {
             cachedDataList.stream().filter(Objects::nonNull).forEach(empKpiExcel -> {
                 String num = empKpiExcel.getNum();
                 Employee employee = Db.lambdaQuery(Employee.class)
-                        .eq(Employee::getNum, num).one();
+                        .eq(Employee::getNum, num)
+                        .eq(Employee::getName,empKpiExcel.getEmployeeName())
+                        .one();
 
                 EmpKpiError error=new EmpKpiError();
                 if(employee==null){
@@ -73,22 +75,15 @@ public class EmpKpiExcelReadListener implements ReadListener<EmpKpiExcel> {
                     return;
                 }
 
-                Dept dept=Db.lambdaQuery(Dept.class)
-                        .eq(Dept::getDeptName,empKpiExcel.getDept())
-                        .eq(Dept::getState,1).one();
-                if(dept==null){
+                EmpPositionView emp=Db.lambdaQuery(EmpPositionView.class)
+                        .eq(EmpPositionView::getPosition,empKpiExcel.getPositionName())
+                        .eq(EmpPositionView::getDeptName,empKpiExcel.getDept())
+                        .eq(EmpPositionView::getEmpName,empKpiExcel.getEmployeeName())
+                        .eq(EmpPositionView::getState,1)
+                        .one();
+                if(emp==null){
                     BeanUtils.copyProperties(empKpiExcel, error);
-                    error.setError("员工所属部门错误");
-                    errorList.add(error);
-                    return;
-                }
-
-                Position position = Db.lambdaQuery(Position.class)
-                        .eq(Position::getPosition, empKpiExcel.getPositionName())
-                        .eq(Position::getDeptId,dept.getId()).one();
-                if(position==null){
-                    BeanUtils.copyProperties(empKpiExcel, error);
-                    error.setError("员工不在该岗位");
+                    error.setError("责任人不存在/责任人不在该岗位下/该岗位不在该部门下");
                     errorList.add(error);
                     return;
                 }
@@ -106,9 +101,24 @@ public class EmpKpiExcelReadListener implements ReadListener<EmpKpiExcel> {
                     return;
                 }
 
+                PositionKpi positionKpi=Db.lambdaQuery(PositionKpi.class)
+                        .eq(PositionKpi::getPositionId,emp.getPositionId())
+                        .eq(PositionKpi::getKpiId,kpi.getId())
+                        .apply(StringUtils.checkValNotNull(beginTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                        .apply(StringUtils.checkValNotNull(endTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .one();
+                if(positionKpi==null){
+                    BeanUtils.copyProperties(empKpiExcel, error);
+                    error.setError("该提成条目不在该岗位下");
+                    errorList.add(error);
+                    return;
+                }
+
                 if (Check.noNull(empKpiExcel.getInTarget1(),
                         empKpiExcel.getInTarget2(),
-                        empKpiExcel.getType(),employee,num,dept,position,kpi.getId())) {
+                        empKpiExcel.getType(),employee,num,emp,kpi,positionKpi)) {
                     EmpKpi empKpi = new EmpKpi();;
                     empKpi.setEmpId(employee.getId());
                     empKpi.setKpiId(kpi.getId());

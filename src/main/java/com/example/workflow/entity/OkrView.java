@@ -13,6 +13,7 @@ public class OkrView {
     private String target;
     @JsonSerialize(using= ToStringSerializer.class)
     private Long assessorId;
+    private String assessorName;
     private Double totalScore;
     @JsonSerialize(using= ToStringSerializer.class)
     private Long keyId;

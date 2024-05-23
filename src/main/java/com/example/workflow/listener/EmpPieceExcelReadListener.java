@@ -52,7 +52,9 @@ public class EmpPieceExcelReadListener implements ReadListener<EmpPieceExcel> {
             cachedDataList.stream().filter(Objects::nonNull).forEach(empPieceExcel -> {
                 String num = empPieceExcel.getNum();
                 Employee employee = Db.lambdaQuery(Employee.class)
-                        .eq(Employee::getNum, num).one();
+                        .eq(Employee::getNum, num)
+                        .eq(Employee::getName,empPieceExcel.getEmployeeName())
+                        .one();;
 
                 EmpPieceError error=new EmpPieceError();
                 if(employee==null){
@@ -62,22 +64,15 @@ public class EmpPieceExcelReadListener implements ReadListener<EmpPieceExcel> {
                     return;
                 }
 
-                Dept dept=Db.lambdaQuery(Dept.class)
-                        .eq(Dept::getDeptName,empPieceExcel.getDept())
-                        .eq(Dept::getState,1).one();
-                if(dept==null){
+                EmpPositionView emp=Db.lambdaQuery(EmpPositionView.class)
+                        .eq(EmpPositionView::getPosition,empPieceExcel.getPositionName())
+                        .eq(EmpPositionView::getDeptName,empPieceExcel.getDept())
+                        .eq(EmpPositionView::getEmpName,empPieceExcel.getEmployeeName())
+                        .eq(EmpPositionView::getState,1)
+                        .one();
+                if(emp==null){
                     BeanUtils.copyProperties(empPieceExcel, error);
-                    error.setError("员工所属部门错误");
-                    errorList.add(error);
-                    return;
-                }
-
-                Position position = Db.lambdaQuery(Position.class)
-                        .eq(Position::getPosition, empPieceExcel.getPositionName())
-                        .eq(Position::getDeptId,dept.getId()).one();
-                if(position==null){
-                    BeanUtils.copyProperties(empPieceExcel, error);
-                    error.setError("员工不在该岗位");
+                    error.setError("责任人不存在/责任人不在该岗位下/该岗位不在该部门下");
                     errorList.add(error);
                     return;
                 }
@@ -95,8 +90,23 @@ public class EmpPieceExcelReadListener implements ReadListener<EmpPieceExcel> {
                     return;
                 }
 
+                PositionPiece positionKpi=Db.lambdaQuery(PositionPiece.class)
+                        .eq(PositionPiece::getPositionId,emp.getPositionId())
+                        .eq(PositionPiece::getPieceId,piece.getId())
+                        .apply(StringUtils.checkValNotNull(beginTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                        .apply(StringUtils.checkValNotNull(endTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .one();
+                if(positionKpi==null){
+                    BeanUtils.copyProperties(empPieceExcel, error);
+                    error.setError("该计件条目不在该岗位下");
+                    errorList.add(error);
+                    return;
+                }
+
                 if (Check.noNull(empPieceExcel.getQuality(),
-                        empPieceExcel.getQuantity(),employee,num,dept,position,piece.getId())) {
+                        empPieceExcel.getQuantity(),employee,num,emp,piece,positionKpi)) {
                     EmpPiece empPiece = new EmpPiece();;
                     empPiece.setEmpId(employee.getId());
                     empPiece.setPieceId(piece.getId());

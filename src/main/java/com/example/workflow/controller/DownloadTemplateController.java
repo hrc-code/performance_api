@@ -99,6 +99,20 @@ public class DownloadTemplateController {
         return R.success("地区系数导入表");
     }
 
+    @PostMapping("/okr")
+    public R<String> okr(HttpServletResponse response) throws Exception {
+        download(response,"excel/okr.xlsx");
+
+        return R.success("OKR导入表");
+    }
+
+    @PostMapping("/empCoe")
+    public R<String>empCoe(HttpServletResponse response) throws Exception {
+        download(response,"excel/coefficient.xlsx");
+
+        return R.success("员工系数导入表");
+    }
+
     public void download(HttpServletResponse response,String excel) throws Exception{
 
         response.setContentType("application/vnd.ms-excel;charset=utf-8");

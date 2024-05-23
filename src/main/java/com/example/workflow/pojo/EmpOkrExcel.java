@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 public class EmpOkrExcel {
     @ExcelProperty("姓名")
     private String name;
-    @ExcelProperty("O目标")
+    @ExcelProperty("目标")
     private String target;
     @ExcelProperty("评分人")
     private String assessorName;
-    @ExcelProperty("目标")
+    @ExcelProperty("O分值")
     private Double totalScore;
     @ExcelProperty("子目标")
     private String keyResult;
