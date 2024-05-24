@@ -14,6 +14,7 @@ import com.example.workflow.utils.Check;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -89,6 +90,25 @@ public class PositionScoreExcelReadListener implements ReadListener<PositionScor
                 if(assessor==null){
                     BeanUtils.copyProperties(positionScoreExcel, error);
                     error.setError("评分人不存在");
+                    errorList.add(error);
+                    return;
+                }
+
+                List<PositionScore> total= Db.lambdaQuery(PositionScore.class)
+                        .eq(PositionScore::getPositionId,position.getId())
+                        .apply(StringUtils.checkValNotNull(beginTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                        .apply(StringUtils.checkValNotNull(endTime),
+                                "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                        .list();
+                BigDecimal totalScore=new BigDecimal(0);
+                total.forEach(x->{
+                    totalScore.add(x.getPercent());
+                });
+                totalScore.add(positionScoreExcel.getScorePercent());
+                if(totalScore.compareTo(new BigDecimal(100)) > 0){
+                    BeanUtils.copyProperties(positionScoreExcel, error);
+                    error.setError("评分占比大于100");
                     errorList.add(error);
                     return;
                 }

@@ -164,7 +164,7 @@ public class EmpWageController {
         response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
 
         EasyExcel.write(response.getOutputStream(), EmpWageExcel.class)
-                .sheet("错误部分")
+                .sheet("员工工资")
                 .doWrite(result);
     }
 }
