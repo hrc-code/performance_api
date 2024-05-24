@@ -8,4 +8,5 @@ public class TaskState {
     private Integer pieceState;
     private Integer kpiState;
     private Integer okrState;
+    private Integer totalState;
 }

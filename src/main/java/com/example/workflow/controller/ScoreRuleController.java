@@ -23,6 +23,7 @@ import com.example.workflow.service.PositionScoreService;
 import com.example.workflow.service.ScoreAssessorsService;
 import com.example.workflow.service.ScoreRuleService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -122,7 +124,7 @@ public class ScoreRuleController {
             R.error("条目名称不得为空");
 
         ScoreRule scoreRule=ScoreRuleService.lambdaQuery()
-                        .eq(ScoreRule::getTarget,one.getTarget())
+                .eq(ScoreRule::getTarget,one.getTarget())
                 .eq(ScoreRule::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -178,11 +180,29 @@ public class ScoreRuleController {
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;;
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         List<PositionScore> positionScores=PositionScoreService.list(queryWrapper);
 
         if(positionScores!=null&&!positionScores.isEmpty()){
             return R.error("评分条目已存在，不可重复添加");
+        }
+
+        List<PositionScore> check=PositionScoreService.lambdaQuery()
+                .eq(PositionScore::getPositionId,form.getPositionId())
+                .eq(PositionScore::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        BigDecimal totalScore=new BigDecimal(0);
+        check.forEach(x->{
+            totalScore.add(x.getPercent());
+        });
+        totalScore.add(form.getPercent());
+        if(totalScore.compareTo(new BigDecimal(100)) > 0){
+            return R.error("评分占比总和不可超过100%");
         }
 
         PositionScore Score=ScoreRuleService.splitForm(form);
@@ -251,6 +271,24 @@ public class ScoreRuleController {
 
         if(positionScores.size()>1){
             return R.error("评分条目存在重复，不可修改");
+        }
+
+        List<PositionScore> check=PositionScoreService.lambdaQuery()
+                .eq(PositionScore::getPositionId,form.getPositionId())
+                .eq(PositionScore::getState,1)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        BigDecimal totalScore=new BigDecimal(0);
+        check.forEach(x->{
+            totalScore.add(x.getPercent());
+        });
+        totalScore.add(form.getPercent());
+        if(totalScore.compareTo(new BigDecimal(100)) > 0){
+            return R.error("评分占比总和不可超过100%");
         }
 
         PositionScore positionScore=ScoreRuleService.splitForm(form);

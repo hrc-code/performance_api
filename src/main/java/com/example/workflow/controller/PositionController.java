@@ -112,11 +112,13 @@ public class PositionController {
     @GetMapping("/search")
     public R<Page> searchPage(@RequestParam("page") String page
             , @RequestParam("page_size") String pageSize
-            ,@RequestParam(defaultValue = "") String position){
+            ,@RequestParam(defaultValue = "") String position
+            ,@RequestParam(defaultValue = "") String dept){
         Page<PositionView> pageInfo=new Page<PositionView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<PositionView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(PositionView::getPosition)
                 .like(PositionView::getPosition,position)
+                .like(PositionView::getDeptName,dept)
                 .eq(PositionView::getState,1);
         PositionViewService.page(pageInfo,queryWrapper);
         return R.success(pageInfo);

@@ -262,6 +262,16 @@ public class ResultSecondExamineController {
         if(!list4.isEmpty())
             state.setOkrState(1);
 
+        if(state.getKpiState().equals(0)
+                &&state.getOkrState().equals(0)
+                &&state.getPieceState().equals(0)
+                &&state.getScoreState().equals(0)){
+            state.setTotalState(1);
+        }
+        else {
+            state.setTotalState(0);
+        }
+
         List<Object> score = new ArrayList<>(list1);
         List<Object> piece = new ArrayList<>(list2);
         List<Object> kpi = new ArrayList<>(list3);

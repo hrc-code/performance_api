@@ -128,6 +128,7 @@ public class TaskViewController {
             if(x.getName().equals("piece"))
                 state.setPieceState(1);
         });
+
         return R.success(state);
     }
 

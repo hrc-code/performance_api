@@ -108,6 +108,16 @@ public class WageEmpController {
         if(!list2.isEmpty())
             state.setPieceState(1);
 
+        if(state.getKpiState().equals(0)
+                &&state.getOkrState().equals(0)
+                &&state.getPieceState().equals(0)
+                &&state.getScoreState().equals(0)){
+            state.setTotalState(1);
+        }
+        else {
+            state.setTotalState(0);
+        }
+
         return R.success(state);
     }
 
