@@ -15,9 +15,9 @@ public class ResultEmpPieceExcel {
     private String empName;
     @ExcelProperty("计件条目")
     private String name;
-    @ExcelProperty("数量")
-    private BigDecimal targetNum;
     @ExcelProperty("单价")
+    private BigDecimal targetNum;
+    @ExcelProperty("数量")
     private Integer workOrder;
     @ExcelProperty("质量")
     private BigDecimal quality;
