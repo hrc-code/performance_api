@@ -113,6 +113,13 @@ public class DownloadTemplateController {
         return R.success("员工系数导入表");
     }
 
+    @PostMapping("/empPosition")
+    public R<String> empPosition(HttpServletResponse response) throws Exception {
+        download(response,"excel/empPosition.xlsx");
+
+        return R.success("员工系数导入表");
+    }
+
     public void download(HttpServletResponse response,String excel) throws Exception{
 
         response.setContentType("application/vnd.ms-excel;charset=utf-8");

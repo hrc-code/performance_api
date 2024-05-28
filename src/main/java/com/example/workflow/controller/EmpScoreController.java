@@ -103,9 +103,17 @@ public class EmpScoreController {
             EmpScore one = new EmpScore();
             one.setScoreAssessorsId(Long.valueOf(String.valueOf(formObject.get("scoreAssessorsId"))));
             one.setEmpId(Long.valueOf(String.valueOf(formObject.get("empId"))));
+
             if(formObject.get("score").toString()==null||formObject.get("score").toString().isEmpty()){
                 return R.error("评分不得为空");
             }
+            if(new BigDecimal(formObject.get("score").toString()).compareTo(new BigDecimal(0)) < 0){
+                return R.error("评分不得小于0");
+            }
+            if(new BigDecimal(formObject.get("score").toString()).compareTo(new BigDecimal(120)) > 0){
+                return R.error("评分不得超过120");
+            }
+
             one.setScore(new BigDecimal(formObject.get("score").toString()));
             list.add(one);
         }

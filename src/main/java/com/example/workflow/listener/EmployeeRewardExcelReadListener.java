@@ -89,7 +89,7 @@ public class EmployeeRewardExcelReadListener implements ReadListener<EmployeeRew
                         .eq(Dept::getState,1).one();
                 if(dept==null){
                     BeanUtils.copyProperties(employeeRewardExcel, error);
-                    error.setError("员工所属部门错误");
+                    error.setError("部门不存在");
                     errorList.add(error);
                     return;
                 }
@@ -100,7 +100,18 @@ public class EmployeeRewardExcelReadListener implements ReadListener<EmployeeRew
                         .eq(Position::getDeptId,dept.getId()).one();
                 if(position==null){
                     BeanUtils.copyProperties(employeeRewardExcel, error);
-                    error.setError("员工不在该岗位");
+                    error.setError("该岗位不存在");
+                    errorList.add(error);
+                    return;
+                }
+
+                EmployeePosition employeePosition=Db.lambdaQuery(EmployeePosition.class)
+                        .eq(EmployeePosition::getPositionId, position.getId())
+                        .eq(EmployeePosition::getEmpId,employee.getId())
+                        .one();
+                if(employeePosition==null){
+                    BeanUtils.copyProperties(employeeRewardExcel, error);
+                    error.setError("该员工不在该岗位");
                     errorList.add(error);
                     return;
                 }

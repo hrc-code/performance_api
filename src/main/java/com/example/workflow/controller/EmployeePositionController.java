@@ -1,5 +1,6 @@
 package com.example.workflow.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -8,10 +9,20 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.workflow.common.R;
 import com.example.workflow.entity.*;
+import com.example.workflow.feedback.EmpPositionError;
+import com.example.workflow.feedback.ErrorExcelWrite;
+import com.example.workflow.feedback.ScoreError;
+import com.example.workflow.listener.EmpPositionExcelReadListener;
+import com.example.workflow.listener.ScoreExcelReadListener;
 import com.example.workflow.mapper.EmpPositionViewMapper;
 import com.example.workflow.mapper.TaskViewMapper;
+import com.example.workflow.pojo.EmpPositionExcel;
+import com.example.workflow.pojo.EmpScoreExcel;
+import com.example.workflow.pojo.ResultEmpPositionExcel;
+import com.example.workflow.pojo.ScoreExcel;
 import com.example.workflow.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +30,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,6 +73,45 @@ public class EmployeePositionController {
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
     LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
 
+    @PostMapping("/upload")
+    public void uploadExcel(MultipartFile file, HttpServletResponse response) throws IOException {
+        EasyExcel.read(file.getInputStream(), EmpPositionExcel.class, new EmpPositionExcelReadListener()).sheet().doRead();
+
+        if(!ErrorExcelWrite.getErrorCollection().isEmpty()){
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+            EasyExcel.write(response.getOutputStream(), EmpPositionError.class).sheet("错误部分").doWrite(ErrorExcelWrite.getErrorCollection());
+        }
+        ErrorExcelWrite.clearErrorCollection();
+    }
+
+    @PostMapping("/downLoad")
+    private void downLoad(HttpServletResponse response) throws IOException {
+        List<EmpPositionView> list=EmpPositionViewService.lambdaQuery()
+                .orderByAsc(EmpPositionView::getEmpId)
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        List<ResultEmpPositionExcel> result=new ArrayList<>();
+        list.forEach(x->{
+            ResultEmpPositionExcel one=new ResultEmpPositionExcel();
+            BeanUtils.copyProperties(x,one);
+            result.add(one);
+        });
+
+        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        response.setCharacterEncoding("utf-8");
+        response.setHeader("Content-Disposition", "attachment;filename=import.xlsx");
+
+        EasyExcel.write(response.getOutputStream(), ResultEmpPositionExcel.class)
+                .sheet("导出")
+                .doWrite(result);
+    }
 
     @PostMapping("/list")
     private R<List<TaskInf>> list(@RequestBody JSONObject obj){

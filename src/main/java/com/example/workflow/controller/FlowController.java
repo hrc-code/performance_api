@@ -85,6 +85,8 @@ public class FlowController {
             private ResultFourthExamineService ResultFourthExamineService;
     @Autowired
             private EmpWageService EmpWageService;
+    @Autowired
+            private BackWaitService BackWaitService;
 
     LocalDate today = LocalDate.now();
     LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
@@ -373,6 +375,14 @@ public class FlowController {
         UpdateWrapper<Position> updateWrapper =new UpdateWrapper<>();
         updateWrapper.set("audit_status", '0').eq("id",obj.getString("positionId"));
         PositionService.update(updateWrapper);
+
+        List<BackWait> backWaitList=BackWaitService.lambdaQuery()
+                .eq(BackWait::getPositionId,obj.getString("positionId"))
+                .list();
+        backWaitList.forEach(x->{
+            runtimeService.deleteProcessInstance(x.getProcessDefineId(),"删除原因");
+            BackWaitService.removeById(x);
+        });
 
         return R.success();
     }

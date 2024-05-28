@@ -105,6 +105,12 @@ public class EmpOkrController {
             if(formObject.get("score").toString()==null||formObject.get("score").toString().isEmpty()){
                 return R.error("评分不得为空");
             }
+            if(new BigDecimal(formObject.get("score").toString()).compareTo(new BigDecimal(-20)) < 0){
+                return R.error("评分不得小于-20");
+            }
+            if(new BigDecimal(formObject.get("score").toString()).compareTo(new BigDecimal(20)) > 0){
+                return R.error("评分不得超过20");
+            }
 
             EmpOkr one = new EmpOkr();
             one.setOkrKeyId(Long.valueOf(String.valueOf(formObject.get("okrKeyId"))));
