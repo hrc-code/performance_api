@@ -16,10 +16,7 @@ import com.example.workflow.listener.EmpPositionExcelReadListener;
 import com.example.workflow.listener.ScoreExcelReadListener;
 import com.example.workflow.mapper.EmpPositionViewMapper;
 import com.example.workflow.mapper.TaskViewMapper;
-import com.example.workflow.pojo.EmpPositionExcel;
-import com.example.workflow.pojo.EmpScoreExcel;
-import com.example.workflow.pojo.ResultEmpPositionExcel;
-import com.example.workflow.pojo.ScoreExcel;
+import com.example.workflow.pojo.*;
 import com.example.workflow.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -234,6 +231,18 @@ public class EmployeePositionController {
 
     @PostMapping("/update")
     private R update(@RequestBody JSONObject form){
+        List<EmpReward> empReward=EmpRewardService.lambdaQuery()
+                .eq(EmpReward::getEmpId,form.getString("empId"))
+                .apply(StringUtils.checkValNotNull(beginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
+                .apply(StringUtils.checkValNotNull(endTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
+                .list();
+
+        if(!empReward.isEmpty()){
+            R.error("该员工当月已有导入特殊绩效，请将该员工特殊绩效删除后再做修改");
+        }
+
         JSONArray formArray = form.getJSONArray("positionList");
         /*List<String> positionList = new ArrayList<>();
         for (int i = 0; i < formArray.size(); i++) {
