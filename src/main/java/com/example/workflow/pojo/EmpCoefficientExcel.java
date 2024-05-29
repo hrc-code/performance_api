@@ -10,9 +10,9 @@ public class EmpCoefficientExcel {
     @ExcelProperty("序号")
     private Integer serialNum;
     @ExcelProperty("员工工号")
-    private Integer num;
+    private String num;
     @ExcelProperty("员工姓名")
-    private Long empName;
+    private String empName;
     @ExcelProperty("岗位系数")
     private BigDecimal positionCoefficient;
     @ExcelProperty("服务地区")
