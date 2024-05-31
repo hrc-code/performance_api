@@ -127,7 +127,6 @@ public class OkrExcelReadListener implements ReadListener<OkrExcel> {
                     okrRule.setCreateTime(createTime);
                     Db.save(okrRule);
                 }
-                System.out.println(okrRule);
                 
                 if (Check.noNull(emp)) {
                     OkrKey okrKey = new OkrKey();;
@@ -138,7 +137,7 @@ public class OkrExcelReadListener implements ReadListener<OkrExcel> {
                     okrKey.setLiaEmpId(emp.getEmpId());
                     okrKey.setUpdateTime(createTime);
                     okrKey.setCreateTime(updateTime);
-                    System.out.println(okrKey);
+
                     Db.save(okrKey);
                 }
             });

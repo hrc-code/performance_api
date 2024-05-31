@@ -50,12 +50,15 @@ public class OkrRuleController {
 
     @GetMapping("/page")
     public R<Page> page(@RequestParam("page") String page, @RequestParam("page_size") String pageSize){
+        LocalDateTime lastBeginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
+        LocalDateTime latsEndTime = LocalDateTime.of(today.withDayOfMonth(1).minusDays(1), LocalTime.MAX);
+
         Page<OkrView> pageInfo=new Page<OkrView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<OkrView> queryWrapper=new LambdaQueryWrapper<>();
-        queryWrapper.apply(StringUtils.checkValNotNull(beginTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
-                .apply(StringUtils.checkValNotNull(endTime),
-                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+        queryWrapper.apply(StringUtils.checkValNotNull(lastBeginTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", lastBeginTime)
+                .apply(StringUtils.checkValNotNull(latsEndTime),
+                        "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", latsEndTime);
         OkrViewService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);
