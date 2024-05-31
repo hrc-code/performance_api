@@ -9,7 +9,6 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * 员工表
@@ -105,6 +104,11 @@ public class Employee implements Serializable {
      * 角色id
      */
     private Long roleId;
+
+    /**
+     * 该员工是否已经修改默认密码
+     */
+    private Long isChangePwd;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

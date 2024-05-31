@@ -21,7 +21,7 @@ public interface EmployeeService extends IService<Employee> {
 
     Collection<EmployeeExcel> getEmployeeExcels(Long deptId, String name, String numb);
 
-    List<EmployeeVo> getList(String name, String num);
+    List<EmployeeVo> getList(String name, String num,Long roleId,Long id);
 
     R allByCeoId(Long ceoId);
 

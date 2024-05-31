@@ -212,11 +212,16 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
      */
 
     @Override
-    public List<EmployeeVo> getList(String name, String num) {
+    public List<EmployeeVo> getList(String name, String num,Long roleId,Long id) {
         List<EmployeeVo> employeeVos = new ArrayList<>();
 
         // 获取员工基本信息
-        List<Employee> employees = lambdaQuery().like(Objects.nonNull(name), Employee::getName, name).like(Objects.nonNull(num), Employee::getNum, num).list();
+        List<Employee> employees = lambdaQuery()
+                .like(Objects.nonNull(name), Employee::getName, name)
+                .like(Objects.nonNull(num), Employee::getNum, num)
+                .eq(Objects.nonNull(roleId), Employee::getRoleId, roleId)
+                .eq(Objects.nonNull(id), Employee::getId, id)
+                .list();
         // 为员工添加额外信息
         wrapperToEmployeeVo(employees, employeeVos);
         return employeeVos;

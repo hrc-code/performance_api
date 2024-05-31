@@ -50,8 +50,8 @@ public class EmployeeController {
 
     /** 根据员工姓名获取信息， 信息可以不全*/
     @GetMapping("/infoList")
-    public R<List<EmployeeVo>> getByName(String name, String num) {
-        List<EmployeeVo> list = employeeService.getList(name, num);
+    public R<List<EmployeeVo>> getByName(String name, String num,Long roleId,Long id) {
+        List<EmployeeVo> list = employeeService.getList(name, num,roleId,id);
         return R.success(list);
     }
 
@@ -218,10 +218,11 @@ public class EmployeeController {
     /**
      * 修改密码*/
     @GetMapping("/changePwd")
-    public R changePwd(String newPwd,Long id)  {
+    public R changePwd(String newPwd,Long id,Long isChangePwd)  {
         Employee employee = new Employee();
         employee.setId(id);
         employee.setPassword(newPwd);
+        employee.setIsChangePwd(isChangePwd);
 
         employeeService.updateById(employee);
 
