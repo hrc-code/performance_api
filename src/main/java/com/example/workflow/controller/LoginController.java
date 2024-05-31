@@ -82,12 +82,13 @@ public class LoginController {
     @PostMapping("/login")
     public R<Object> login(@RequestBody LoginDto dto, HttpSession session) {
 
-//        CheckCode checkCode = (CheckCode) session.getAttribute("verifyCode");
-//
-//       if(checkCode.isExpired()) return R.error("验证码已过期，请点击重新生成！");
-//       if (!checkCode.getCode().equalsIgnoreCase(dto.getVerifyCode())) return R.error("验证码错误，请重新输入！");
+       CheckCode checkCode = (CheckCode) session.getAttribute("verifyCode");
 
-       LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
+      if(checkCode.isExpired()) return R.error("验证码已过期，请点击重新生成！");
+      if (!checkCode.getCode().equalsIgnoreCase(dto.getVerifyCode())) return R.error("验证码错误，请重新输入！");
+
+
+      LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
        wrapper.eq(Employee::getNum, dto.getUsername()).eq(Employee::getPassword, dto.getPassword());
 
         Employee employee = employeeService.getOne(wrapper);
