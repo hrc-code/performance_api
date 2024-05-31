@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.List;
 
 @Slf4j
@@ -139,6 +140,7 @@ public class OkrRuleController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
         OkrKeyService.remove(queryWrapper);
 
+        System.out.println(obj.getString("id"));
         OkrRuleService.removeById(obj.getString("id"));
 
         return R.success();
@@ -161,9 +163,12 @@ public class OkrRuleController {
 
     @PostMapping("/getEmpPositionOkr")
     private R<List<OkrView>> getEmpPositionOkr(@RequestBody JSONObject obj){
-        LocalDate lastToday = LocalDate.now().minusMonths(1);
+        YearMonth lastMonth = YearMonth.now().minusMonths(1);
+        LocalDateTime lastBeginTime = lastMonth.atDay(1).atStartOfDay();
+        LocalDateTime lastEndTime = lastMonth.atEndOfMonth().atTime(LocalTime.MAX);
+        /*LocalDate lastToday = LocalDate.now().minusMonths(1);
         LocalDateTime lastBeginTime = LocalDateTime.of(lastToday.withDayOfMonth(1), LocalTime.MIN);
-        LocalDateTime lastEndTime = LocalDateTime.of(lastToday.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
+        LocalDateTime lastEndTime = LocalDateTime.of(lastToday.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);*/
 
         List<OkrView> list= OkrViewService.lambdaQuery()
                 .eq(OkrView::getPositionId,obj.getString("positionId"))
