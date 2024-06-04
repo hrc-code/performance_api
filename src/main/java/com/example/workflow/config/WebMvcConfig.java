@@ -4,6 +4,7 @@ import com.example.workflow.interceptor.TokenCheckInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -24,5 +25,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(tokenCheckInterceptor)
                 .addPathPatterns("/**") // 指定拦截的路径模式
                 .excludePathPatterns("/login","/getVerifyCode"); // 排除的路径
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }
