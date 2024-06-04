@@ -1,6 +1,6 @@
 package com.example.workflow.config;
 
-import com.example.workflow.interceptor.LoginCheckInterceptor;
+import com.example.workflow.interceptor.TokenCheckInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +19,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     //     converters.add(0,messageConverter);
     // }
     @Autowired
-    private LoginCheckInterceptor loginCheckInterceptor;
+    private TokenCheckInterceptor tokenCheckInterceptor;
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(loginCheckInterceptor)
+        registry.addInterceptor(tokenCheckInterceptor)
                 .addPathPatterns("/**") // 指定拦截的路径模式
                 .excludePathPatterns("/login","/getVerifyCode"); // 排除的路径
     }

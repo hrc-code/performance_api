@@ -15,7 +15,7 @@ import javax.servlet.http.HttpSession;
 import java.util.Map;
 
 @Component
-public class LoginCheckInterceptor implements HandlerInterceptor {
+public class TokenCheckInterceptor implements HandlerInterceptor {
 
     @Autowired
     private HttpSession session;
