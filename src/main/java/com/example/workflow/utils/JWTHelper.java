@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class JWTHelper {//过期时间
-    public static final long EXPIRE_TIME = 24 * 60 * 60 * 1000;//默认15分钟
+    public static final long EXPIRE_TIME =   30 * 60 * 1000;//默认30分钟
     //私钥
     private static final String TOKEN_SECRET = "privateKey";
 

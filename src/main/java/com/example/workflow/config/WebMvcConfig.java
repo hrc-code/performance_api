@@ -1,49 +1,28 @@
 package com.example.workflow.config;
 
-//import com.performance.common.JacksonObjectMapper;
-import com.example.workflow.common.JacksonObjectMapper;
+import com.example.workflow.interceptor.LoginCheckInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.cbor.MappingJackson2CborHttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-
-import java.util.List;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Slf4j
 @Configuration
-public class WebMvcConfig {
-    protected void addResourceHandlers(ResourceHandlerRegistry registry){
-        registry.addResourceHandler("/backend/**").addResourceLocations("classpath:/backend/");
-        registry.addResourceHandler("/front/**").addResourceLocations("classpath:/front/");
-    }
+public class WebMvcConfig implements WebMvcConfigurer {
+
     //@JsonFormat(shape = JsonFormat.Shape.STRING)
-    protected void extendMessageConverters(List<HttpMessageConverter<?>> converters){
-        log.info("拓展消息转换器");
-        MappingJackson2CborHttpMessageConverter messageConverter=new MappingJackson2CborHttpMessageConverter();
-        messageConverter.setObjectMapper(new JacksonObjectMapper());
-        converters.add(0,messageConverter);
+    // public void extendMessageConverters(List<HttpMessageConverter<?>> converters){
+    //     log.info("拓展消息转换器");
+    //     MappingJackson2CborHttpMessageConverter messageConverter=new MappingJackson2CborHttpMessageConverter();
+    //     messageConverter.setObjectMapper(new JacksonObjectMapper());
+    //     converters.add(0,messageConverter);
+    // }
+    @Autowired
+    private LoginCheckInterceptor loginCheckInterceptor;
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loginCheckInterceptor)
+                .addPathPatterns("/**") // 指定拦截的路径模式
+                .excludePathPatterns("/login","/getVerifyCode"); // 排除的路径
     }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
 }

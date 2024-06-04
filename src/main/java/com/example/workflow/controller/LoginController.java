@@ -1,5 +1,6 @@
 package com.example.workflow.controller;
 
+import cn.hutool.http.server.HttpServerRequest;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.workflow.bean.CheckCode;
 import com.example.workflow.common.R;
@@ -9,6 +10,7 @@ import com.example.workflow.service.EmployeeService;
 import com.example.workflow.utils.JWTHelper;
 import com.example.workflow.utils.VerifyCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -100,15 +102,31 @@ public class LoginController {
         }
         Map<String, String> payload = new HashMap<>();
         payload.put("id", String.valueOf(employee.getId()));
-        payload.put("username", employee.getNum());
+        payload.put("num", employee.getNum());
+        payload.put("roleId", String.valueOf(employee.getRoleId()));
 
-        long timestamp = JWTHelper.generateExpireDate(JWTHelper.EXPIRE_TIME);
+        Long timestamp = JWTHelper.generateExpireDate(JWTHelper.EXPIRE_TIME);
         String token = JWTHelper.createToken(timestamp, payload);
         Map <String, Object> map = new HashMap<>();
         map.put("token", token);
         map.put("userInfo", employee);
         map.put("timestamp", timestamp);//给这个的目的是让前端每次请求时校验是否过期token，如果还差一分钟就过期就应该马上更新token
+        session.setAttribute(token, timestamp);
+
         return R.success(map);
+    }
+
+    /** 退出接口*/
+    @GetMapping("/logout")
+    public R<Object> logout(HttpSession session, HttpServerRequest request) {
+        //获取请求头中的令牌(token)
+        String token = request.getHeader("Authorization");
+        //判断令牌是否存在，如果不存在，返回错误结果(未登陆)
+        if (StringUtils.hasLength(token)) {
+            token = token.replace("Bearer ","");
+            session.removeAttribute(token);
+        }
+        return R.success();
     }
 }
 

@@ -9,7 +9,7 @@ server:
   servlet:
     context-path: /api
     session:
-      timeout: PT60M
+      timeout: 30m
 
 spring:
   main:
