@@ -41,6 +41,12 @@ public class R<T> {
         r.code=100;
         return r;
     }
+    public static <T> R<T> error(int code, String msg){
+        R<T> r = new R<>();
+        r.setCode(code);
+        r.setMessage(msg);
+        return r;
+    }
     public static <T> R<T> error(String msg,T data){
         R<T> r=new R();
         r.message=msg;

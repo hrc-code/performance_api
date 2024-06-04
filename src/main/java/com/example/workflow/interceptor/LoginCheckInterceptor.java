@@ -29,7 +29,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         String token = request.getHeader("Authorization");
         //判断令牌是否存在，如果不存在，返回错误结果(未登陆)
         if (!StringUtils.hasLength(token)) {
-            throw new BaseException("403", "未登录，请先登录1");
+            throw new BaseException("403", "登录信息无效，请先登录");
         }
         token = token.replace("Bearer ","");
 
@@ -37,16 +37,14 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         Map<String, Claim> map = JWTHelper.verifyToken(token);
 
         if (map == null) {
-            throw new BaseException("403", "登录信息无效，请先登录2");
+            throw new BaseException("403", "登录信息无效，请先登录，token is invalid");
         }
         Long exp = (Long) session.getAttribute(token);
         if (exp == null) {
-            throw new BaseException("403", "登录信息无效，请先登录3");
+            //在规定时间内没有发送请求，则token过期
+            throw new BaseException("403", "登录信息无效，请先登录,token已过期");
         }
-        //自动续期
-        if (exp < System.currentTimeMillis()) {
-            session.setAttribute(token, String.valueOf(System.currentTimeMillis()) + JWTHelper.EXPIRE_TIME);
-        }
+        //session可以在规定时间内发送请求自动续约
         return true;
     }
 

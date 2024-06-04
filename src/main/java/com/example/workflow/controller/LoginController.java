@@ -55,7 +55,6 @@ public class LoginController {
             CheckCode checkCode = new CheckCode(randomText,60);
 
             session.setAttribute("verifyCode", checkCode);
-            System.out.println(session);
 
             response.setContentType("image/png");//必须设置响应内容类型为图片，否则前台不识别
 
