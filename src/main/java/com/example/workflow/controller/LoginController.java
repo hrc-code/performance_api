@@ -1,6 +1,5 @@
 package com.example.workflow.controller;
 
-import cn.hutool.http.server.HttpServerRequest;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.workflow.bean.CheckCode;
 import com.example.workflow.common.R;
@@ -10,7 +9,6 @@ import com.example.workflow.service.EmployeeService;
 import com.example.workflow.utils.JWTHelper;
 import com.example.workflow.utils.VerifyCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -117,14 +115,9 @@ public class LoginController {
 
     /** 退出接口*/
     @GetMapping("/logout")
-    public R<Object> logout(HttpSession session, HttpServerRequest request) {
-        //获取请求头中的令牌(token)
-        String token = request.getHeader("Authorization");
-        //判断令牌是否存在，如果不存在，返回错误结果(未登陆)
-        if (StringUtils.hasLength(token)) {
-            token = token.replace("Bearer ","");
-            session.removeAttribute(token);
-        }
+    public R<Object> logout(HttpSession session) {
+        // 使session失效
+        session.invalidate();
         return R.success();
     }
 }
