@@ -9,6 +9,7 @@ import com.example.workflow.entity.TaskView;
 import com.example.workflow.pojo.EmpIdAndStateId;
 import com.example.workflow.service.EmployeeService;
 import com.example.workflow.service.TaskViewService;
+import com.example.workflow.utils.Check;
 import com.example.workflow.vo.EmployeeVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -219,6 +220,9 @@ public class EmployeeController {
      * 修改密码*/
     @GetMapping("/changePwd")
     public R changePwd(String newPwd,Long id,Long isChangePwd)  {
+        if (!Check.isStrongPassword(newPwd)){
+            return R.error("密码中至少包含一个数字、一个小写字母、一个大写字母、一个特殊字符，并且长度不少于6个字符");
+        }
         Employee employee = new Employee();
         employee.setId(id);
         employee.setPassword(newPwd);
