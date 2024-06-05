@@ -24,7 +24,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenCheckInterceptor)
                 .addPathPatterns("/**") // 指定拦截的路径模式
-                .excludePathPatterns("/login","/getVerifyCode"); // 排除的路径
+                .excludePathPatterns("/login","/getVerifyCode","/logout"); // 排除的路径
     }
 
     @Override

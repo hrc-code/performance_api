@@ -29,7 +29,11 @@ public class TokenCheckInterceptor implements HandlerInterceptor {
         String token = request.getHeader("Authorization");
         //判断令牌是否存在，如果不存在，返回错误结果(未登陆)
         if (!StringUtils.hasLength(token)) {
-            throw new BaseException("403", "登录信息无效，请先登录");
+            //去url中获取
+            token= request.getParameter("token");
+            if (!StringUtils.hasLength(token)) {
+                throw new BaseException("403", "登录信息无效，请先登录");
+            }
         }
         token = token.replace("Bearer ","");
 
