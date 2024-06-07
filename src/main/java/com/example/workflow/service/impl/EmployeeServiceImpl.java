@@ -501,7 +501,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         // 获取全部满足条件的员工
         List<Employee> employees = Db.lambdaQuery(Employee.class).like(num != null, Employee::getNum, num).like(name != null, Employee::getName, name).eq(roleId != null, Employee::getRoleId, roleId).eq(Employee::getState, 1).list();
 
-        if (!CollectionUtils.isEmpty(employees)) {
+        if (CollectionUtils.isEmpty(employees)) {
             return R.error("没有员工");
         }
         // 根据员工id分组后的全部员工
@@ -776,7 +776,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
      */
     @Transactional
     @Override
-    public R updateEmployee(EmployeeFormDto employeeFormDto) throws Exception {
+    public R updateEmployee(EmployeeFormDto employeeFormDto) {
         Long id = employeeFormDto.getId();
         // 更新员工基本信息
         Employee employee = new Employee();
@@ -909,30 +909,25 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     }
 
     /**
-     * 传进来一个员工id,   操作  员工表  角色按钮表  按钮表  角色路由表   路由表
-     * return   返回这个id的路由信息和按钮权限
+     * @param roleId 员工角色id
+     * @return 按钮权限
      */
     @Override
-    public R router(Long id) {
+    public R router(Long roleId) {
         RouterAndButtonVo routerAndButtonVo = new RouterAndButtonVo();
-        // 首先根据员工id去员工表查询角色id
-        Employee employee = getById(id);
-        if (employee == null) {
-            return R.error("没有这位员工");
-        }
-        Long roleId = employee.getRoleId();
         // 然后根据角色id去角色按钮表查询按钮id集合
         List<Long> idList = roleBtnService.lambdaQuery().eq(RoleBtn::getRoleId, roleId).list().stream().map(RoleBtn::getBtnId).collect(Collectors.toList());
         // 再根据按钮id去按钮表查询所有的按钮权限
-        ArrayList<String> buttonCode = new ArrayList<>();
-        idList.forEach(buttonId -> {
-            String name = buttonService.getById(buttonId).getName();
-            buttonCode.add(name);
-        });
+        List<Button> buttons = buttonService.listByIds(idList);
+        ArrayList<String> buttonCode = buttons.stream().map(Button::getName).distinct().collect(Collectors.toCollection(ArrayList::new));
         routerAndButtonVo.setButtonCode(buttonCode);
         return R.success(routerAndButtonVo);
     }
 
+   /**
+    * @param deptId 部门id
+    * @return 员工信息集合
+    */
     @Override
     public List<EmployeeVo> getEmployeeVoListByDeptId(Long deptId) {
         ArrayList<EmployeeVo> employeeVos = new ArrayList<>();
