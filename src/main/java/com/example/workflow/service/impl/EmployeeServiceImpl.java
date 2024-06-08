@@ -698,6 +698,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
      * id 员工id
      */
     @Override
+    @Deprecated
     public R getEmployeeById(List<Long> ids) {
         List<EmployeeVo> result = new ArrayList<>();
 
@@ -772,7 +773,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
 
 
     /**
-     * 更新员工  操作  员工表  员工岗位表  员工绩效表
+     * 更新员工  操作  员工表  员工岗位表    角色表  地域系数表 员工系数表
      */
     @Transactional
     @Override
@@ -804,20 +805,12 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
 
         LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
         // 更改员工的地域
-        // 先查询是否有，没有之间添加
         List<EmpCoefficient> empCoefficientList = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getCreateTime, time[0], time[1]).list();
         Long regionId = employeeFormDto.getRegionId();
         BigDecimal grade = employeeFormDto.getGrade();
         if (!CollectionUtils.isEmpty(empCoefficientList)) {
             empCoefficientService.lambdaUpdate().set(Objects.nonNull(regionId), EmpCoefficient::getRegionCoefficientId, regionId).set(Objects.nonNull(grade), EmpCoefficient::getPositionCoefficient, grade).between(EmpCoefficient::getCreateTime, time[0], time[1]).eq(EmpCoefficient::getEmpId, id).update();
-        } else {
-            EmpCoefficient empCoefficient = new EmpCoefficient();
-            empCoefficient.setEmpId(id);
-            empCoefficient.setRegionCoefficientId(regionId);
-            empCoefficient.setPositionCoefficient(grade);
-            empCoefficientService.save(empCoefficient);
         }
-
 
         return R.success("员工信息更新成功");
     }
