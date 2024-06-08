@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -83,7 +84,7 @@ public class LoginController {
 
        CheckCode checkCode = (CheckCode) session.getAttribute("verifyCode");
 
-      if(checkCode.isExpired()) return R.error("验证码已过期，请点击重新生成！");
+      if(Objects.isNull(checkCode)||checkCode.isExpired()) return R.error("验证码已过期，请点击重新生成！");
       if (!checkCode.getCode().equalsIgnoreCase(dto.getVerifyCode())) return R.error("验证码错误，请重新输入！");
 
 
