@@ -3,22 +3,17 @@ package com.example.workflow.listener;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.util.ListUtils;
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.example.workflow.entity.*;
-import com.example.workflow.feedback.EmpKpiError;
+import com.example.workflow.entity.Employee;
+import com.example.workflow.entity.EmployeePosition;
+import com.example.workflow.entity.PositionView;
 import com.example.workflow.feedback.EmpPositionError;
 import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.pojo.EmpPositionExcel;
-import com.example.workflow.pojo.KpiExcel;
-import com.example.workflow.service.EmployeePositionService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,9 +21,6 @@ import java.util.Objects;
 public class EmpPositionExcelReadListener implements ReadListener<EmpPositionExcel> {
     private static final int BATCH_COUNT = 20;
 
-    LocalDate today = LocalDate.now();
-    LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
-    LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
     private List<EmpPositionExcel> cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
     public EmpPositionExcelReadListener() {
 

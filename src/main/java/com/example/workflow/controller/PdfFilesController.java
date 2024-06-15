@@ -1,22 +1,14 @@
 package com.example.workflow.controller;
 
 
-import cn.hutool.poi.excel.ExcelReader;
-import cn.hutool.poi.excel.ExcelUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.bean.PageBean;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.EmpKpi;
-import com.example.workflow.entity.EmpPiece;
-import com.example.workflow.entity.KpiRule;
 import com.example.workflow.entity.PdfFile;
-import com.example.workflow.entity.PieceRule;
 import com.example.workflow.repository.PdfFileRepository;
 import com.example.workflow.service.PdfFileService;
-import com.example.workflow.vo.EmpKpiExcel;
-import com.example.workflow.vo.EmpPieceExcel;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -43,10 +35,7 @@ import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -211,109 +200,4 @@ public class PdfFilesController {
         }
     }
 
-
-    /**
-     * 导入计件条目
-     * @param file
-     * @return  List<EmpPiece> 错误的计件条目
-     * @throws IOException
-     */
-    /*@PostMapping("/importNumber")
-    public R importNumber(MultipartFile file) throws IOException {
-        ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
-        List<EmpPieceExcel> empPieceExcels = reader.readAll(EmpPieceExcel.class);
-
-        List<PieceRule> pieceRules = Db.lambdaQuery(PieceRule.class).list();
-
-        Map<String,Long> pieceRulesMap = new HashMap<>();
-
-        for (PieceRule pieceRule : pieceRules) {
-            pieceRulesMap.put(pieceRule.getName(),pieceRule.getId());
-        }
-
-        //可以插入的计件条目
-        List<EmpPiece> addEmpPieces = new ArrayList<>();
-        //返回的错误计件条目
-        List<EmpPiece> noEmpPieces = new ArrayList<>();
-
-        for (EmpPieceExcel empPieceExcel : empPieceExcels) {
-            EmpPiece empPiece = new EmpPiece();
-
-            empPiece.setId(empPieceExcel.getId());
-            empPiece.setEmpId(empPieceExcel.getEmpId());
-            empPiece.setWorkOrder(empPieceExcel.getWorkOrder());
-
-            //在计件规则中有相同计件名称，则插入数据库
-            if (pieceRulesMap.containsKey(empPieceExcel.getItem())) {
-                empPiece.setPieceId(pieceRulesMap.get(empPieceExcel.getItem()));
-                addEmpPieces.add(empPiece);
-            }else {
-                noEmpPieces.add(empPiece);
-            }
-        }
-
-        if (!addEmpPieces.isEmpty()) Db.saveBatch(addEmpPieces);
-
-        if (noEmpPieces.isEmpty()) return R.success();
-        else return R.error("导入错误");
-    }*/
-
-    /**
-     * 导入kpi
-     * @param file
-     * @return  List<EmpKpi> 错误的kpi条目
-     * @throws IOException
-     */
-    @PostMapping("/importKpi")
-    public R importKpi(MultipartFile file) throws IOException {
-        ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
-        List<EmpKpiExcel> empKpiExcels = reader.readAll(EmpKpiExcel.class);
-
-        List<KpiRule> kpiRules = Db.lambdaQuery(KpiRule.class).list();
-
-        //项目名称匹配map
-        Map<String,Long> kpiName = new HashMap<>();
-        //条目一名称匹配map
-        Map<String,Long> kpiTarget1 = new HashMap<>();
-        //条目二名称匹配map
-        Map<String,Long> kpiTarget2 = new HashMap<>();
-
-        for (KpiRule kpiRule : kpiRules) {
-            kpiName.put(kpiRule.getName(),kpiRule.getId());
-
-            kpiTarget1.put(kpiRule.getTarget1(),kpiRule.getId());
-
-            kpiTarget2.put(kpiRule.getTarget2(),kpiRule.getId());
-        }
-
-        //可以插入的kpi条目
-        List<EmpKpi> addEmpKpis = new ArrayList<>();
-        //返回的错误的kpi条目
-        List<EmpKpi> noEmpKpis = new ArrayList<>();
-
-        for (EmpKpiExcel empKpiExcel : empKpiExcels) {
-            EmpKpi empKpi = new EmpKpi();
-
-            empKpi.setId(empKpiExcel.getId());
-            empKpi.setEmpId(empKpiExcel.getEmpId());
-            empKpi.setInTarget1(empKpiExcel.getInTarget1());
-            empKpi.setInTarget2(empKpiExcel.getInTarget2());
-
-            //kpi项目名、条目一、条目二同时匹配时，插入数据库
-            if (kpiName.containsKey(empKpiExcel.getName())
-                    && kpiTarget1.containsKey(empKpiExcel.getTarget1())
-                    && kpiTarget2.containsKey(empKpiExcel.getTarget2())) {
-                empKpi.setKpiId(kpiName.get(empKpiExcel.getName()));
-
-                addEmpKpis.add(empKpi);
-            }else {
-                noEmpKpis.add(empKpi);
-            }
-        }
-
-        if (!addEmpKpis.isEmpty()) Db.saveBatch(addEmpKpis);
-
-        if (noEmpKpis.isEmpty()) return R.success();
-        else return R.error("导入错误");
-    }
 }

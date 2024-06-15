@@ -1,14 +1,7 @@
 package com.example.workflow.pojo;
 
 import com.alibaba.excel.annotation.ExcelProperty;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
-import org.springframework.web.bind.annotation.DeleteMapping;
-
-import java.math.BigDecimal;
 
 @Data
 public class EmpPositionExcel {

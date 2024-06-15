@@ -1,20 +1,29 @@
 package com.example.workflow.controller;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.*;
+import com.example.workflow.entity.CoefficientView;
+import com.example.workflow.entity.KpiRulePercent;
+import com.example.workflow.entity.PieceRule;
+import com.example.workflow.entity.PositionKpiView;
+import com.example.workflow.entity.PositionPieceView;
+import com.example.workflow.entity.PositionScoreView;
+import com.example.workflow.entity.RegionCoefficient;
+import com.example.workflow.entity.ScoreRule;
 import com.example.workflow.mapper.PositionKpiViewMapper;
 import com.example.workflow.mapper.PositionPieceViewMapper;
 import com.example.workflow.mapper.PositionScoreViewMapper;
 import com.example.workflow.mapper.RegionCoefficientMapper;
-import com.example.workflow.service.*;
+import com.example.workflow.service.CoefficientViewService;
+import com.example.workflow.service.KpiRulePercentService;
+import com.example.workflow.service.PieceRuleService;
+import com.example.workflow.service.PositionAssessorViewService;
+import com.example.workflow.service.ScoreRuleService;
 import com.example.workflow.vo.PositionAssessorView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 

@@ -2,7 +2,6 @@ package com.example.workflow.feedback;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
-import org.springframework.boot.test.autoconfigure.data.cassandra.DataCassandraTest;
 
 import java.math.BigDecimal;
 

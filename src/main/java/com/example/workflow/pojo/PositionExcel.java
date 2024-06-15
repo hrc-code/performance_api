@@ -3,8 +3,6 @@ package com.example.workflow.pojo;
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 @Data
 public class PositionExcel {
     @ExcelProperty("序号")

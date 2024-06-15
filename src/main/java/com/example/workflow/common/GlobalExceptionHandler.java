@@ -2,7 +2,6 @@ package com.example.workflow.common;
 
 import com.example.workflow.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,7 +33,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BaseException.class)
-    public R<T> exceptionHandler(BaseException ex){
+    public R<String> exceptionHandler(BaseException ex){
         String message = ex.getMessage();
         log.error(message);
         if (message.contains("登录信息无效，请先登录")) {

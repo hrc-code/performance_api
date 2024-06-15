@@ -1,27 +1,18 @@
 package com.example.workflow.listener;
 
-import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.example.workflow.common.R;
-import com.example.workflow.entity.Dept;
-import com.example.workflow.entity.Position;
 import com.example.workflow.entity.ScoreRule;
 import com.example.workflow.feedback.ErrorExcelWrite;
 import com.example.workflow.feedback.ScoreError;
-import com.example.workflow.pojo.PositionExcel;
 import com.example.workflow.pojo.ScoreExcel;
 import com.example.workflow.utils.Check;
-import com.thoughtworks.xstream.converters.ErrorWriter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
