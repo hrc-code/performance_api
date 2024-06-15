@@ -1,8 +1,8 @@
 package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.Button;
 import com.example.workflow.mapper.ButtonMapper;
+import com.example.workflow.model.entity.Button;
 import com.example.workflow.service.ButtonService;
 import org.springframework.stereotype.Service;
 

@@ -2,12 +2,12 @@ package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.example.workflow.entity.EmpReward;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.entity.PdfFile;
-import com.example.workflow.entity.Position;
 import com.example.workflow.mapper.EmpRewardMapper;
-import com.example.workflow.pojo.EmployeeRewardExcel;
+import com.example.workflow.model.entity.EmpReward;
+import com.example.workflow.model.entity.Employee;
+import com.example.workflow.model.entity.PdfFile;
+import com.example.workflow.model.entity.Position;
+import com.example.workflow.model.pojo.EmployeeRewardExcel;
 import com.example.workflow.service.EmpRewardService;
 import com.example.workflow.utils.Check;
 import org.springframework.stereotype.Service;

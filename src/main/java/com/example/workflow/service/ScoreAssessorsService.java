@@ -1,8 +1,8 @@
 package com.example.workflow.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.workflow.entity.ScoreAssessors;
-import com.example.workflow.entity.ScoreRuleForm;
+import com.example.workflow.model.entity.ScoreAssessors;
+import com.example.workflow.model.entity.ScoreRuleForm;
 
 import java.util.List;
 

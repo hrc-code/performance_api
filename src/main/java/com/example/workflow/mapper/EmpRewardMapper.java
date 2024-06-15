@@ -1,7 +1,7 @@
 package com.example.workflow.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.example.workflow.entity.EmpReward;
+import com.example.workflow.model.entity.EmpReward;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

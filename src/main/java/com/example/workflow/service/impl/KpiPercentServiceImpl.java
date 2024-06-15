@@ -1,9 +1,9 @@
 package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.KpiPercent;
-import com.example.workflow.entity.KpiRuleForm;
 import com.example.workflow.mapper.KpiPercentMapper;
+import com.example.workflow.model.entity.KpiPercent;
+import com.example.workflow.model.entity.KpiRuleForm;
 import com.example.workflow.service.KpiPercentService;
 import org.springframework.stereotype.Service;
 

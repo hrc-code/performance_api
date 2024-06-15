@@ -2,9 +2,9 @@ package com.example.workflow.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.workflow.common.R;
-import com.example.workflow.dto.DeptFormDto;
-import com.example.workflow.entity.Dept;
-import com.example.workflow.vo.DeptVo;
+import com.example.workflow.model.dto.DeptFormDto;
+import com.example.workflow.model.entity.Dept;
+import com.example.workflow.model.vo.DeptVo;
 
 import java.util.List;
 import java.util.Map;

@@ -2,7 +2,7 @@ package com.example.workflow.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.workflow.entity.BackWait;
+import com.example.workflow.model.entity.BackWait;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 
 public interface BackWaitService extends IService<BackWait> {

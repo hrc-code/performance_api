@@ -2,8 +2,8 @@ package com.example.workflow.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.ResultSecondExamine;
+import com.example.workflow.model.entity.EmployeePosition;
+import com.example.workflow.model.entity.ResultSecondExamine;
 
 public interface ResultSecondExamineService extends IService<ResultSecondExamine> {
 

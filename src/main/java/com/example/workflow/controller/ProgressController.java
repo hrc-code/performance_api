@@ -2,12 +2,12 @@ package com.example.workflow.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.EmpPositionView;
-import com.example.workflow.entity.TaskView;
+import com.example.workflow.model.entity.EmpPositionView;
+import com.example.workflow.model.entity.TaskView;
+import com.example.workflow.model.vo.HistoryTask;
 import com.example.workflow.service.EmpPositionViewService;
 import com.example.workflow.service.HistoryTaskService;
 import com.example.workflow.service.TaskViewService;
-import com.example.workflow.vo.HistoryTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

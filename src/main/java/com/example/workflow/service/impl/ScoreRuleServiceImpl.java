@@ -2,11 +2,11 @@ package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.PositionScore;
-import com.example.workflow.entity.ScoreAssessors;
-import com.example.workflow.entity.ScoreRule;
-import com.example.workflow.entity.ScoreRuleForm;
 import com.example.workflow.mapper.ScoreRuleMapper;
+import com.example.workflow.model.entity.PositionScore;
+import com.example.workflow.model.entity.ScoreAssessors;
+import com.example.workflow.model.entity.ScoreRule;
+import com.example.workflow.model.entity.ScoreRuleForm;
 import com.example.workflow.service.PositionScoreService;
 import com.example.workflow.service.ScoreAssessorsService;
 import com.example.workflow.service.ScoreRuleService;

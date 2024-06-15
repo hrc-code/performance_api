@@ -3,10 +3,10 @@ package com.example.workflow.controller;
 
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
-import com.example.workflow.dto.DeptFormDto;
-import com.example.workflow.entity.Dept;
+import com.example.workflow.model.dto.DeptFormDto;
+import com.example.workflow.model.entity.Dept;
+import com.example.workflow.model.vo.DeptVo;
 import com.example.workflow.service.DeptService;
-import com.example.workflow.vo.DeptVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

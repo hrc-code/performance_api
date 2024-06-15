@@ -1,9 +1,9 @@
 package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.OkrForm;
-import com.example.workflow.entity.OkrRule;
 import com.example.workflow.mapper.OkrRuleMapper;
+import com.example.workflow.model.entity.OkrForm;
+import com.example.workflow.model.entity.OkrRule;
 import com.example.workflow.service.OkrRuleService;
 import org.springframework.stereotype.Service;
 

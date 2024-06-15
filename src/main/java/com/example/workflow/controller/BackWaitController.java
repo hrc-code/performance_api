@@ -2,7 +2,7 @@ package com.example.workflow.controller;
 
 
 import com.example.workflow.common.R;
-import com.example.workflow.entity.BackWait;
+import com.example.workflow.model.entity.BackWait;
 import com.example.workflow.service.BackWaitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,9 @@
 package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.Position;
-import com.example.workflow.entity.PositionForm;
 import com.example.workflow.mapper.PositionMapper;
+import com.example.workflow.model.entity.Position;
+import com.example.workflow.model.entity.PositionForm;
 import com.example.workflow.service.PositionService;
 import org.springframework.stereotype.Service;
 

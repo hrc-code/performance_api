@@ -1,8 +1,8 @@
 package com.example.workflow.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.workflow.entity.KpiPercent;
-import com.example.workflow.entity.KpiRuleForm;
+import com.example.workflow.model.entity.KpiPercent;
+import com.example.workflow.model.entity.KpiRuleForm;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package com.example.workflow.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.workflow.dto.RoleFormDto;
-import com.example.workflow.entity.Role;
+import com.example.workflow.model.dto.RoleFormDto;
+import com.example.workflow.model.entity.Role;
 
 /**
  * <p>

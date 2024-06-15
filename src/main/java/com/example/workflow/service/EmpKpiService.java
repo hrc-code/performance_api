@@ -2,9 +2,9 @@ package com.example.workflow.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.workflow.entity.EmpKpi;
-import com.example.workflow.entity.EmpKpiView;
-import com.example.workflow.entity.KpiPercent;
+import com.example.workflow.model.entity.EmpKpi;
+import com.example.workflow.model.entity.EmpKpiView;
+import com.example.workflow.model.entity.KpiPercent;
 
 import java.math.BigDecimal;
 import java.util.List;

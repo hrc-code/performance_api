@@ -1,8 +1,8 @@
 package com.example.workflow.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.workflow.entity.KpiRule;
-import com.example.workflow.entity.KpiRuleForm;
+import com.example.workflow.model.entity.KpiRule;
+import com.example.workflow.model.entity.KpiRuleForm;
 
 public interface KpiRuleService extends IService<KpiRule> {
 

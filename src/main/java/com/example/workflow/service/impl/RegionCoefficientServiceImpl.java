@@ -2,8 +2,8 @@ package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.RegionCoefficient;
 import com.example.workflow.mapper.RegionCoefficientMapper;
+import com.example.workflow.model.entity.RegionCoefficient;
 import com.example.workflow.service.RegionCoefficientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

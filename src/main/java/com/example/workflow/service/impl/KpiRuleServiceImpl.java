@@ -2,11 +2,11 @@ package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.KpiPercent;
-import com.example.workflow.entity.KpiRule;
-import com.example.workflow.entity.KpiRuleForm;
-import com.example.workflow.entity.PositionKpi;
 import com.example.workflow.mapper.KpiRuleMapper;
+import com.example.workflow.model.entity.KpiPercent;
+import com.example.workflow.model.entity.KpiRule;
+import com.example.workflow.model.entity.KpiRuleForm;
+import com.example.workflow.model.entity.PositionKpi;
 import com.example.workflow.service.KpiPercentService;
 import com.example.workflow.service.KpiRuleService;
 import com.example.workflow.service.PositionKpiSerivce;

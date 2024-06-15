@@ -2,9 +2,9 @@ package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.PieceRule;
-import com.example.workflow.entity.PositionPiece;
 import com.example.workflow.mapper.PieceRuleMapper;
+import com.example.workflow.model.entity.PieceRule;
+import com.example.workflow.model.entity.PositionPiece;
 import com.example.workflow.service.PieceRuleService;
 import com.example.workflow.service.PositionPieceService;
 import lombok.extern.slf4j.Slf4j;

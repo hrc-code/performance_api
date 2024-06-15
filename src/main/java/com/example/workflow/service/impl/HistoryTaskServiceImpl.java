@@ -2,8 +2,8 @@ package com.example.workflow.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.workflow.mapper.HistoryTaskMapper;
+import com.example.workflow.model.vo.HistoryTask;
 import com.example.workflow.service.HistoryTaskService;
-import com.example.workflow.vo.HistoryTask;
 import org.springframework.stereotype.Service;
 
 @Service

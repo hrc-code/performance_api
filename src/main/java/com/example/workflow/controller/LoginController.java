@@ -1,10 +1,10 @@
 package com.example.workflow.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.workflow.bean.CheckCode;
 import com.example.workflow.common.R;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.entity.LoginDto;
+import com.example.workflow.model.bean.CheckCode;
+import com.example.workflow.model.entity.Employee;
+import com.example.workflow.model.entity.LoginDto;
 import com.example.workflow.service.EmployeeService;
 import com.example.workflow.utils.JWTHelper;
 import com.example.workflow.utils.VerifyCode;

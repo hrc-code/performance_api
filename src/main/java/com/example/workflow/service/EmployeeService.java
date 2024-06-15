@@ -2,11 +2,11 @@ package com.example.workflow.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.workflow.common.R;
-import com.example.workflow.dto.EmployeeFormDto;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.pojo.EmpIdAndStateId;
-import com.example.workflow.pojo.EmployeeExcel;
-import com.example.workflow.vo.EmployeeVo;
+import com.example.workflow.model.dto.EmployeeFormDto;
+import com.example.workflow.model.entity.Employee;
+import com.example.workflow.model.pojo.EmpIdAndStateId;
+import com.example.workflow.model.pojo.EmployeeExcel;
+import com.example.workflow.model.vo.EmployeeVo;
 
 import java.util.Collection;
 import java.util.List;

@@ -2,8 +2,8 @@ package com.example.workflow.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.workflow.entity.BackWait;
 import com.example.workflow.mapper.BackWaitMapper;
+import com.example.workflow.model.entity.BackWait;
 import com.example.workflow.service.BackWaitService;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.springframework.stereotype.Service;

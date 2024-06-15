@@ -1,7 +1,7 @@
 package com.example.workflow.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.example.workflow.entity.RegionCoefficient;
+import com.example.workflow.model.entity.RegionCoefficient;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

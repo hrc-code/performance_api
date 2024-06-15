@@ -4,12 +4,12 @@ import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.example.workflow.entity.Employee;
-import com.example.workflow.entity.EmployeePosition;
-import com.example.workflow.entity.PositionView;
-import com.example.workflow.feedback.EmpPositionError;
-import com.example.workflow.feedback.ErrorExcelWrite;
-import com.example.workflow.pojo.EmpPositionExcel;
+import com.example.workflow.model.entity.Employee;
+import com.example.workflow.model.entity.EmployeePosition;
+import com.example.workflow.model.entity.PositionView;
+import com.example.workflow.model.feedback.EmpPositionError;
+import com.example.workflow.model.feedback.ErrorExcelWrite;
+import com.example.workflow.model.pojo.EmpPositionExcel;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 
