@@ -72,10 +72,12 @@ public class TaskViewController {
             queryWrapper.eq(EmployeePosition::getProcessDefinitionId,x.getProcInstId());
             EmployeePosition one=EmployeePositionMapper.selectOne(queryWrapper);
 
-            LambdaQueryWrapper<EmpPositionView> query=new LambdaQueryWrapper<>();
-            query.eq(EmpPositionView::getEmpId,one.getEmpId())
-                    .eq(EmpPositionView::getPositionId,one.getPositionId());
-            empList.add(EmpPositionViewMapper.selectOne(query));
+            if(Objects.nonNull(one)){
+                LambdaQueryWrapper<EmpPositionView> query=new LambdaQueryWrapper<>();
+                query.eq(EmpPositionView::getEmpId,one.getEmpId())
+                        .eq(EmpPositionView::getPositionId,one.getPositionId());
+                empList.add(EmpPositionViewMapper.selectOne(query));
+            }
         });
         return R.success(empList);
     }
