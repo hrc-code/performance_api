@@ -104,10 +104,10 @@ public class WageEmpController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
-        ;
         List<EmpKpiView> list1= EmpKpiViewMapper.selectList(queryWrapper1);
-        if(!list1.isEmpty())
+        if(!list1.isEmpty()) {
             state.setKpiState(1);
+        }
 
         LambdaQueryWrapper<EmpPieceView> queryWrapper2=new LambdaQueryWrapper<>();
         queryWrapper2.eq(EmpPieceView::getEmpId,obj.getString("empId"))
@@ -116,10 +116,10 @@ public class WageEmpController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
-        ;
         List<EmpPieceView> list2= EmpPieceViewMapper.selectList(queryWrapper2);
-        if(!list2.isEmpty())
+        if(!list2.isEmpty()) {
             state.setPieceState(1);
+        }
 
         if(state.getKpiState().equals(0)
                 &&state.getOkrState().equals(0)
@@ -153,15 +153,13 @@ public class WageEmpController {
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
                         .list();
 
-                assessor.forEach(z->{
-                    assessorList1.add(String.valueOf(z.getAssessorId()));
-                });
+                assessor.forEach(z-> assessorList1.add(String.valueOf(z.getAssessorId())));
             });
 
         List<String> assessors1=assessorList1.stream().distinct().collect(Collectors.toList());
-        if(assessors1.isEmpty())
+        if(assessors1.isEmpty()) {
             map.put("scoreAppoint", "false");
-        else{
+        } else{
             map.put("ASList", assessors1);
             map.put("scoreAppoint", "true");
         }
@@ -173,10 +171,11 @@ public class WageEmpController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
                 .list();
-        if(pieceList.isEmpty())
+        if(pieceList.isEmpty()) {
             map.put("pieceAppoint", "false");
-        else
+        } else {
             map.put("pieceAppoint", "true");
+        }
 
         List<PositionKpi> kpiList= PositionKpiSerivce.lambdaQuery()
                 .eq(PositionKpi::getPositionId,obj.getString("positionId"))
@@ -185,10 +184,11 @@ public class WageEmpController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
                 .list();
-        if(kpiList.isEmpty())
+        if(kpiList.isEmpty()) {
             map.put("kpiAppoint", "false");
-        else
+        } else {
             map.put("kpiAppoint", "true");
+        }
 
         LocalDateTime lastBeginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
         LocalDateTime latsEndTime = LocalDateTime.of(today.withDayOfMonth(1).minusDays(1), LocalTime.MAX);
@@ -202,14 +202,17 @@ public class WageEmpController {
                 .list();
         List<String> assessorList2=new ArrayList<>();
         keyList.forEach(x->{
-            assessorList2.add(OkrRuleService.lambdaQuery()
-                    .eq(OkrRule::getId,x.getRuleId())
-                    .one().getAssessorId().toString());
+            OkrRule okrRule = OkrRuleService.lambdaQuery()
+                    .eq(OkrRule::getId, x.getRuleId())
+                    .one();
+            if (Objects.nonNull(okrRule)) {
+                assessorList2.add(okrRule.getAssessorId().toString());
+            }
         });
         List<String> assessors2=assessorList2.stream().distinct().collect(Collectors.toList());
-        if(assessors2.isEmpty())
+        if(assessors2.isEmpty()) {
             map.put("okrAppoint", "false");
-        else{
+        } else{
             map.put("AOList", assessors2);
             map.put("okrAppoint", "true");
         }
@@ -259,8 +262,9 @@ public class WageEmpController {
 
     @PostMapping("/updateFlowAll")
     private R updateFlowAll(@RequestBody List<EmployeePosition> list){
-        if(list.isEmpty())
+        if(list.isEmpty()) {
             return R.error("未选择申报对象，请选择申报对象");
+        }
 
         list.forEach(x->{
             Map<String,Object> map = new HashMap<>();
@@ -278,15 +282,13 @@ public class WageEmpController {
                         .apply(StringUtils.checkValNotNull(endTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
                         .list();
-                assessor.forEach(z->{
-                    assessorList1.add(String.valueOf(z.getAssessorId()));
-                });
+                assessor.forEach(z-> assessorList1.add(String.valueOf(z.getAssessorId())));
             });
 
             List<String> assessors1=assessorList1.stream().distinct().collect(Collectors.toList());
-            if(assessors1.isEmpty())
+            if(assessors1.isEmpty()) {
                 map.put("scoreAppoint", "false");
-            else{
+            } else{
                 map.put("ASList", assessors1);
                 map.put("scoreAppoint", "true");
             }
@@ -298,10 +300,11 @@ public class WageEmpController {
                     .apply(StringUtils.checkValNotNull(endTime),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
                     .list();
-            if(pieceList.isEmpty())
+            if(pieceList.isEmpty()) {
                 map.put("pieceAppoint", "false");
-            else
+            } else {
                 map.put("pieceAppoint", "true");
+            }
 
             List<PositionKpi> kpiList= PositionKpiSerivce.lambdaQuery()
                     .eq(PositionKpi::getPositionId,x.getPositionId())
@@ -310,10 +313,11 @@ public class WageEmpController {
                     .apply(StringUtils.checkValNotNull(endTime),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')",endTime)
                     .list();
-            if(kpiList.isEmpty())
+            if(kpiList.isEmpty()) {
                 map.put("kpiAppoint", "false");
-            else
+            } else {
                 map.put("kpiAppoint", "true");
+            }
 
             LocalDateTime lastBeginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
             LocalDateTime latsEndTime = LocalDateTime.of(today.withDayOfMonth(1).minusDays(1), LocalTime.MAX);
@@ -326,15 +330,13 @@ public class WageEmpController {
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", latsEndTime)
                     .list();
             List<String> assessorList2=new ArrayList<>();
-            keyList.forEach(y->{
-                assessorList2.add(OkrRuleService.lambdaQuery()
-                        .eq(OkrRule::getId,y.getRuleId())
-                        .one().getAssessorId().toString());
-            });
+            keyList.forEach(y-> assessorList2.add(OkrRuleService.lambdaQuery()
+                    .eq(OkrRule::getId,y.getRuleId())
+                    .one().getAssessorId().toString()));
             List<String> assessors2=assessorList2.stream().distinct().collect(Collectors.toList());
-            if(assessors2.isEmpty())
+            if(assessors2.isEmpty()) {
                 map.put("okrAppoint", "false");
-            else{
+            } else{
                 map.put("AOList", assessors2);
                 map.put("okrAppoint", "true");
             }
