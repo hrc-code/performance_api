@@ -330,9 +330,12 @@ public class WageEmpController {
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", latsEndTime)
                     .list();
             List<String> assessorList2=new ArrayList<>();
-            keyList.forEach(y-> assessorList2.add(OkrRuleService.lambdaQuery()
-                    .eq(OkrRule::getId,y.getRuleId())
-                    .one().getAssessorId().toString()));
+            keyList.forEach(y-> {
+                OkrRule okrRule = OkrRuleService.lambdaQuery()
+                        .eq(OkrRule::getId, y.getRuleId())
+                        .one();
+                assessorList2.add(okrRule.getAssessorId().toString());
+            });
             List<String> assessors2=assessorList2.stream().distinct().collect(Collectors.toList());
             if(assessors2.isEmpty()) {
                 map.put("okrAppoint", "false");
