@@ -16,8 +16,6 @@ import com.example.workflow.model.entity.TaskState;
 import com.example.workflow.model.entity.TaskView;
 import com.example.workflow.service.BackWaitService;
 import com.example.workflow.service.EmployeePositionService;
-import com.example.workflow.service.PositionAssessorService;
-import com.example.workflow.service.PositionViewService;
 import com.example.workflow.service.TaskViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,24 +44,15 @@ public class TaskViewController {
     @Autowired
     private EmployeePositionMapper EmployeePositionMapper;
     @Autowired
-    private PositionAssessorService PositionAssessorService;
-    @Autowired
     private PositionViewMapper PositionViewMapper;
     @Autowired
     private BackWaitMapper BackWaitMapper;
     @Autowired
-            private PositionViewService PositionViewService;
+    private TaskViewService TaskViewService;
     @Autowired
-            private TaskViewService TaskViewService;
+    private BackWaitService BackWaitService;
     @Autowired
-            private BackWaitService BackWaitService;
-    @Autowired
-            private EmployeePositionService EmployeePositionService;
-
-    LocalDate today = LocalDate.now();
-    LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
-    LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
-
+    private EmployeePositionService EmployeePositionService;
 
     @PostMapping("/getWageTask")
     private R<List<EmpPositionView>> getWageTask(@RequestBody JSONObject obj){
@@ -134,10 +120,12 @@ public class TaskViewController {
         List<TaskView> task=TaskViewMapper.selectList(Wrapper);
 
         task.forEach(x->{
-            if(x.getName().equals("kpi"))
+            if("kpi".equals(x.getName())) {
                 state.setKpiState(1);
-            if(x.getName().equals("piece"))
+            }
+            if("piece".equals(x.getName())) {
                 state.setPieceState(1);
+            }
         });
 
         return R.success(state);
@@ -187,10 +175,12 @@ public class TaskViewController {
         List<TaskView> task=TaskViewMapper.selectList(Wrapper);
 
         task.forEach(x->{
-            if(x.getName().equals("score"))
+            if("score".equals(x.getName())) {
                 state.setScoreState(1);
-            if(x.getName().equals("okr"))
+            }
+            if("okr".equals(x.getName())) {
                 state.setOkrState(1);
+            }
         });
         return R.success(state);
     }
@@ -239,9 +229,7 @@ public class TaskViewController {
 
         List<EmployeePosition> EmployeePositionServices=EmployeePositionService.list();
         List<Long> allPosition=new ArrayList<>();
-        EmployeePositionServices.forEach(x->{
-            allPosition.add(x.getPositionId());
-        });
+        EmployeePositionServices.forEach(x-> allPosition.add(x.getPositionId()));
         Map<Long, Integer> count = new HashMap<>();
         for (Long num : allPosition) {
             count.put(num, count.getOrDefault(num, 0) + 1);
@@ -313,7 +301,7 @@ public class TaskViewController {
             LambdaQueryWrapper<EmpPositionView> queryWrapper=new LambdaQueryWrapper<>();
             queryWrapper.eq(EmpPositionView::getEmpId,x.getEmpId())
                     .eq(EmpPositionView::getPositionId,x.getPositionId())
-                    .eq(EmpPositionView::getState,1);;
+                    .eq(EmpPositionView::getState,1);
             empList.add(EmpPositionViewMapper.selectOne(queryWrapper));
         });
         return R.success(empList);
@@ -419,7 +407,7 @@ public class TaskViewController {
             LambdaQueryWrapper<EmpPositionView> queryWrapper=new LambdaQueryWrapper<>();
             queryWrapper.eq(EmpPositionView::getEmpId,x.getEmpId())
                     .eq(EmpPositionView::getPositionId,x.getPositionId())
-                    .eq(EmpPositionView::getState,1);;
+                    .eq(EmpPositionView::getState,1);
             empList.add(EmpPositionViewMapper.selectOne(queryWrapper));
         });
         return R.success(empList);
@@ -656,10 +644,12 @@ public class TaskViewController {
             queryWrapper.eq(EmployeePosition::getProcessDefinitionId,x.getProcInstId());
             EmployeePosition one=EmployeePositionMapper.selectOne(queryWrapper);
 
-            LambdaQueryWrapper<EmpPositionView> query=new LambdaQueryWrapper<>();
-            query.eq(EmpPositionView::getEmpId,one.getEmpId())
-                    .eq(EmpPositionView::getPositionId,one.getPositionId());
-            empList.add(EmpPositionViewMapper.selectOne(query));
+            if (Objects.nonNull(one)) {
+                LambdaQueryWrapper<EmpPositionView> query=new LambdaQueryWrapper<>();
+                query.eq(EmpPositionView::getEmpId,one.getEmpId())
+                        .eq(EmpPositionView::getPositionId,one.getPositionId());
+                empList.add(EmpPositionViewMapper.selectOne(query));
+            }
         });
         Integer count2 = empList.size();
 
@@ -815,9 +805,7 @@ public class TaskViewController {
 
         List<EmployeePosition> EmployeePositionServices=EmployeePositionService.list();
         List<Long> allPosition=new ArrayList<>();
-        EmployeePositionServices.forEach(x->{
-            allPosition.add(x.getPositionId());
-        });
+        EmployeePositionServices.forEach(x-> allPosition.add(x.getPositionId()));
         Map<Long, Integer> count = new HashMap<>();
         for (Long num : allPosition) {
             count.put(num, count.getOrDefault(num, 0) + 1);
@@ -901,14 +889,12 @@ public class TaskViewController {
                 .list();
 
         List<BackWait> backWaitList=new ArrayList<>();
-        task.forEach(x->{
-            backWaitList.add(
-                    BackWaitService.lambdaQuery()
-                            .eq(BackWait::getEmpId,x.getStartUserId())
-                            .eq(BackWait::getProcessDefineId,x.getProcInstId())
-                            .eq(BackWait::getType,"back_second_okr")
-                            .one());
-        });
+        task.forEach(x-> backWaitList.add(
+                BackWaitService.lambdaQuery()
+                        .eq(BackWait::getEmpId,x.getStartUserId())
+                        .eq(BackWait::getProcessDefineId,x.getProcInstId())
+                        .eq(BackWait::getType,"back_second_okr")
+                        .one()));
         Map<Long, Integer> countMap1 = new HashMap<>();
         for (BackWait backWait : backWaitList) {
             Long positionId = backWait.getPositionId();
@@ -930,7 +916,7 @@ public class TaskViewController {
             Integer count1 = entry.getValue();
             Integer count2 = countMap2.get(positionId);
 
-            if (count2 != null && count1.equals(count2)) {
+            if (count1 != null && count1.equals(count2)) {
                 samePositionIds.add(positionId);
             }
         }
@@ -946,14 +932,12 @@ public class TaskViewController {
                 .list();
 
         List<BackWait> backWaitList=new ArrayList<>();
-        task.forEach(x->{
-            backWaitList.add(
-                    BackWaitService.lambdaQuery()
-                            .eq(BackWait::getEmpId,x.getStartUserId())
-                            .eq(BackWait::getProcessDefineId,x.getProcInstId())
-                            .eq(BackWait::getType,"back_second_piece")
-                            .one());
-        });
+        task.forEach(x-> backWaitList.add(
+                BackWaitService.lambdaQuery()
+                        .eq(BackWait::getEmpId,x.getStartUserId())
+                        .eq(BackWait::getProcessDefineId,x.getProcInstId())
+                        .eq(BackWait::getType,"back_second_piece")
+                        .one()));
         Map<Long, Integer> countMap1 = new HashMap<>();
         for (BackWait backWait : backWaitList) {
             Long positionId = backWait.getPositionId();
@@ -975,7 +959,7 @@ public class TaskViewController {
             Integer count1 = entry.getValue();
             Integer count2 = countMap2.get(positionId);
 
-            if (count2 != null && count1.equals(count2)) {
+            if (count1 != null && count1.equals(count2)) {
                 samePositionIds.add(positionId);
             }
         }
@@ -991,14 +975,12 @@ public class TaskViewController {
                 .list();
 
         List<BackWait> backWaitList=new ArrayList<>();
-        task.forEach(x->{
-            backWaitList.add(
-                    BackWaitService.lambdaQuery()
-                            .eq(BackWait::getEmpId,x.getStartUserId())
-                            .eq(BackWait::getProcessDefineId,x.getProcInstId())
-                            .eq(BackWait::getType,"back_second_score")
-                            .one());
-        });
+        task.forEach(x-> backWaitList.add(
+                BackWaitService.lambdaQuery()
+                        .eq(BackWait::getEmpId,x.getStartUserId())
+                        .eq(BackWait::getProcessDefineId,x.getProcInstId())
+                        .eq(BackWait::getType,"back_second_score")
+                        .one()));
         Map<Long, Integer> countMap1 = new HashMap<>();
         for (BackWait backWait : backWaitList) {
             Long positionId = backWait.getPositionId();
@@ -1020,7 +1002,7 @@ public class TaskViewController {
             Integer count1 = entry.getValue();
             Integer count2 = countMap2.get(positionId);
 
-            if (count2 != null && count1.equals(count2)) {
+            if (count1 != null && count1.equals(count2)) {
                 samePositionIds.add(positionId);
             }
         }
@@ -1035,14 +1017,12 @@ public class TaskViewController {
                 .list();
 
         List<BackWait> backWaitList=new ArrayList<>();
-        task.forEach(x->{
-            backWaitList.add(
-                    BackWaitService.lambdaQuery()
-                            .eq(BackWait::getEmpId,x.getStartUserId())
-                            .eq(BackWait::getProcessDefineId,x.getProcInstId())
-                            .eq(BackWait::getType,"back_second_kpi")
-                            .one());
-        });
+        task.forEach(x-> backWaitList.add(
+                BackWaitService.lambdaQuery()
+                        .eq(BackWait::getEmpId,x.getStartUserId())
+                        .eq(BackWait::getProcessDefineId,x.getProcInstId())
+                        .eq(BackWait::getType,"back_second_kpi")
+                        .one()));
         Map<Long, Integer> countMap1 = new HashMap<>();
         for (BackWait backWait : backWaitList) {
             Long positionId = backWait.getPositionId();
@@ -1064,7 +1044,7 @@ public class TaskViewController {
             Integer count1 = entry.getValue();
             Integer count2 = countMap2.get(positionId);
 
-            if (count2 != null && count1.equals(count2)) {
+            if (count1 != null && count1.equals(count2)) {
                 samePositionIds.add(positionId);
             }
         }
