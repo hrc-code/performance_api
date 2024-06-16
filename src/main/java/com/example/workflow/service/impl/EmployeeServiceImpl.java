@@ -942,9 +942,11 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         // 然后根据角色id去角色按钮表查询按钮id集合
         List<Long> idList = roleBtnService.lambdaQuery().eq(RoleBtn::getRoleId, roleId).list().stream().map(RoleBtn::getBtnId).collect(Collectors.toList());
         // 再根据按钮id去按钮表查询所有的按钮权限
-        List<Button> buttons = buttonService.listByIds(idList);
-        ArrayList<String> buttonCode = buttons.stream().map(Button::getName).distinct().collect(Collectors.toCollection(ArrayList::new));
-        routerAndButtonVo.setButtonCode(buttonCode);
+        if (!CollectionUtils.isEmpty(idList)) {
+            List<Button> buttons = buttonService.listByIds(idList);
+            ArrayList<String> buttonCode = buttons.stream().map(Button::getName).distinct().collect(Collectors.toCollection(ArrayList::new));
+            routerAndButtonVo.setButtonCode(buttonCode);
+        }
         return R.success(routerAndButtonVo);
     }
 
