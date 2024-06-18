@@ -220,6 +220,9 @@ public class EmployeeController {
      * 修改密码*/
     @GetMapping("/changePwd")
     public R changePwd(String newPwd,Long id,Long isChangePwd)  {
+
+        System.out.println("修改密码");
+
         if (!Check.isStrongPassword(newPwd)){
             return R.error("密码中至少包含一个数字、一个小写字母、一个大写字母、一个特殊字符，并且长度不少于6个字符");
         }
@@ -227,9 +230,18 @@ public class EmployeeController {
         employee.setId(id);
         employee.setPassword(newPwd);
         employee.setIsChangePwd(isChangePwd);
-
         employeeService.updateById(employee);
+        return R.success();
+    }
 
+    @GetMapping("/resetPwd")
+    public R resetPwd(String newPwd,Long id,Long isChangePwd)  {
+        System.out.println("重置密码");
+        Employee employee = new Employee();
+        employee.setId(id);
+        employee.setPassword(newPwd);
+        employee.setIsChangePwd(isChangePwd);
+        employeeService.updateById(employee);
         return R.success();
     }
 }

@@ -84,12 +84,12 @@ public class LoginController {
 
        CheckCode checkCode = (CheckCode) session.getAttribute("verifyCode");
 
-      if(Objects.isNull(checkCode)||checkCode.isExpired()) return R.error("验证码已过期，请点击重新生成！");
-      if (!checkCode.getCode().equalsIgnoreCase(dto.getVerifyCode())) return R.error("验证码错误，请重新输入！");
+        if(Objects.isNull(checkCode)||checkCode.isExpired()) return R.error("验证码已过期，请点击重新生成！");
+        if (!checkCode.getCode().equalsIgnoreCase(dto.getVerifyCode())) return R.error("验证码错误，请重新输入！");
 
 
-      LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
-       wrapper.eq(Employee::getNum, dto.getUsername()).eq(Employee::getPassword, dto.getPassword());
+        LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Employee::getNum, dto.getUsername()).eq(Employee::getPassword, dto.getPassword());
 
         Employee employee = employeeService.getOne(wrapper);
 
