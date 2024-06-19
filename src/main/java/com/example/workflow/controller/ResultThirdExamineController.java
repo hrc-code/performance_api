@@ -272,6 +272,7 @@ public class ResultThirdExamineController {
         state.setOkrState(0);
         state.setScoreState(0);
 
+        System.out.println(1);
         LambdaQueryWrapper<EmpScoreView> queryWrapper1=new LambdaQueryWrapper<>();
         queryWrapper1.eq(EmpScoreView::getEmpId,obj.getString("empId"))
                 .eq(EmpScoreView::getPositionId,obj.getString("positionId"))
@@ -280,6 +281,9 @@ public class ResultThirdExamineController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
         List<EmpScoreView> list1= EmpScoreViewMapper.selectList(queryWrapper1);
+
+        System.out.println(2);
+
         if(!list1.isEmpty())
             state.setScoreState(1);
 
@@ -291,6 +295,7 @@ public class ResultThirdExamineController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
         List<EmpPieceView> list2= EmpPieceViewMapper.selectList(queryWrapper2);
+        System.out.println(3);
         if(!list2.isEmpty())
             state.setPieceState(1);
 
@@ -302,6 +307,7 @@ public class ResultThirdExamineController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);;
         List<EmpKpiView> list3= EmpKpiViewMapper.selectList(queryWrapper3);
+        System.out.println(4);
         if(!list3.isEmpty())
             state.setKpiState(1);
 
@@ -313,6 +319,7 @@ public class ResultThirdExamineController {
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         List<EmpOkrView> list4= EmpOkrViewMapper.selectList(queryWrapper4);
+        System.out.println(5);
         if(!list4.isEmpty())
             state.setOkrState(1);
 
@@ -340,6 +347,9 @@ public class ResultThirdExamineController {
         resultMap.put("okr",okr);
         resultMap.put("state", taskState);
 
+        System.out.println("======================");
+        System.out.println(resultMap);
+        System.out.println("======================");
         return R.success(resultMap);
     }
 

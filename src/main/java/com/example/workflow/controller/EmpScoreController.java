@@ -171,6 +171,7 @@ public class EmpScoreController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
+
         EmpScoreViewService.page(pageInfo,queryWrapper);
 
         return R.success(pageInfo);

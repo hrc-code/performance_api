@@ -33,6 +33,11 @@ public class EmpScoreView {
     private Long scoreAssessorsId;
     private BigDecimal score;
     private BigDecimal correctedValue;
+    private String typeName;
+    private String deptName;
+    private String position;
+
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private LocalDateTime updateTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")

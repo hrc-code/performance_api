@@ -97,6 +97,7 @@ public class EmpPieceController {
     public R<Page> nowPage(@RequestParam("page") String page
             , @RequestParam("page_size") String pageSize){
 
+        System.out.println("计件结算开始");
         Page<EmpPieceView> pageInfo=new Page<EmpPieceView>(Long.parseLong(page),Long.parseLong(pageSize));
         LambdaQueryWrapper<EmpPieceView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByAsc(EmpPieceView::getEmpId)
@@ -107,6 +108,7 @@ public class EmpPieceController {
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime);
         EmpPieceViewService.page(pageInfo,queryWrapper);
 
+        System.out.println("计件结算结束");
         return R.success(pageInfo);
     }
 
