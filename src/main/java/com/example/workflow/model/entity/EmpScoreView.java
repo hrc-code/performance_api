@@ -1,6 +1,7 @@
 package com.example.workflow.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
@@ -37,6 +38,9 @@ public class EmpScoreView {
     private String deptName;
     private String position;
 
+//    //得分
+//    @JsonIgnore
+//    private double grade;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private LocalDateTime updateTime;

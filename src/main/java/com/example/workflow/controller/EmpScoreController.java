@@ -174,6 +174,7 @@ public class EmpScoreController {
 
         EmpScoreViewService.page(pageInfo,queryWrapper);
 
+
         return R.success(pageInfo);
     }
 
