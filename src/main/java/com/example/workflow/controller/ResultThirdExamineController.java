@@ -356,6 +356,9 @@ public class ResultThirdExamineController {
 
     @PostMapping("/add")
     private R add(@RequestBody ResultThirdExamineForm form){
+
+        System.out.println(form);
+
         ResultThirdExamine examin= new ResultThirdExamine();
         BeanUtil.copyProperties(form, examin);
         ResultThirdExamineService.save(examin);
@@ -367,30 +370,44 @@ public class ResultThirdExamineController {
             suspendFlow(form);
         }
         return R.success();
+
     }
 
 
     @PostMapping("/addBackScore")
     private R addBack(@RequestBody JSONObject obj){
+
+        Long assessorId = Long.valueOf(obj.getString("assessorId"));
         Long empId=Long.valueOf(obj.getString("empId"));
         Long positionId=Long.valueOf(obj.getString("positionId"));
+
+        System.out.println("===============1=============================");
+
 
         ResultThirdExamine examine= ResultThirdExamineService.lambdaQuery()
                 .eq(ResultThirdExamine::getEmpId,empId)
                 .eq(ResultThirdExamine::getPositionId,positionId)
+                .eq(ResultThirdExamine::getAssessorId,assessorId)
+                .eq(ResultThirdExamine::getScoreExamine,2)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') <= date_format ({0},'%Y-%m-%d %H:%i:%s')", endTime)
                 .one();
+        System.out.println("===================111=========================");
         examine.setScoreExamine(new Short("1"));
+        System.out.println("==================222==========================");
         ResultThirdExamineService.updateById(examine);
+
+        System.out.println("=================2===========================");
 
         LambdaQueryWrapper<BackWait> queryWrapper1=new LambdaQueryWrapper<>();
         queryWrapper1.eq(BackWait::getEmpId,empId)
                 .eq(BackWait::getPositionId,positionId)
                 .eq(BackWait::getType,"third_score_back");
         BackWait backWait=BackWaitService.getOne(queryWrapper1);
+
+        System.out.println("===================3=========================");
 
         if(backWait!=null) {
             LambdaQueryWrapper<TaskView> queryWrapper = new LambdaQueryWrapper<>();
@@ -416,11 +433,16 @@ public class ResultThirdExamineController {
             }
         }
 
+        System.out.println("===================4=========================");
+
         LambdaQueryWrapper<BackWait> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(BackWait::getEmpId,empId)
                 .eq(BackWait::getPositionId,positionId)
                 .eq(BackWait::getType,"back_second_score");
         BackWait backWaitSecond=BackWaitService.getOne(queryWrapper);
+
+
+        System.out.println("======================5======================");
 
         if(backWaitSecond!=null){
             PositionAssessor nextAssessor = PositionAssessorService.lambdaQuery()
@@ -444,6 +466,9 @@ public class ResultThirdExamineController {
 
             taskService.complete(task.getId(),map);
         }
+
+        System.out.println("====================6========================");
+
         return R.success();
     }
 

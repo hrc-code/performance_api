@@ -131,12 +131,26 @@ public class PositionController {
     public R<Page> searchPage(@RequestParam("page") String page
             , @RequestParam("page_size") String pageSize
             ,@RequestParam(defaultValue = "") String position
-            ,@RequestParam(defaultValue = "") String dept){
+            ,@RequestParam(defaultValue = "") String dept
+            ,@RequestParam(defaultValue = "0") String auditStatus
+    ){
+
+        System.out.println("前auditStatus:"+auditStatus);
+        switch(auditStatus){
+            case "未考核":	auditStatus="0";break;
+            case "考核中":	auditStatus="1";break;
+            case "暂停":	    auditStatus="2";break;
+            case "完成考核":	auditStatus="3"; break;
+        }
+        System.out.println("后auditStatus:"+auditStatus);
+
         Page<PositionView> pageInfo=new Page<PositionView>(Long.parseLong(page),Long.parseLong(pageSize));
+
         LambdaQueryWrapper<PositionView> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(PositionView::getPosition)
                 .like(PositionView::getPosition,position)
                 .like(PositionView::getDeptName,dept)
+                .eq(PositionView::getAuditStatus,auditStatus)
                 .eq(PositionView::getState,1);
         PositionViewService.page(pageInfo,queryWrapper);
         return R.success(pageInfo);

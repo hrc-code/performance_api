@@ -20,13 +20,17 @@ public class EmpScoreExcel {
     @ExcelProperty("评分")
     private BigDecimal score;
     @ExcelProperty("评分占比%")
-    private BigDecimal scorePercent;
+    private String scorePercent;
     @ExcelProperty("评分人")
     private String assessorName;
     @ExcelProperty("评分人占比%")
-    private BigDecimal assessorPercent;
+    private String assessorPercent;
+    @ExcelProperty("得分")
+    private BigDecimal grade;
     @ExcelProperty("修正值")
     private int correctedValue;
+
+
 //    @ExcelProperty("当前状态")
 //    private String state;
 //    @ExcelProperty("考核条目备注")

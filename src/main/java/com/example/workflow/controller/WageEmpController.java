@@ -156,6 +156,7 @@ public class WageEmpController {
                 assessor.forEach(z-> assessorList1.add(String.valueOf(z.getAssessorId())));
             });
 
+
         List<String> assessors1=assessorList1.stream().distinct().collect(Collectors.toList());
         if(assessors1.isEmpty()) {
             map.put("scoreAppoint", "false");

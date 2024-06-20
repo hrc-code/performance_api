@@ -307,9 +307,11 @@ public class ResultSecondExamineController {
         return R.success(resultMap);
     }
 
-
+    //=====================================================================
+    //终审需查看
     @PostMapping("/add")
     private R add(@RequestBody JSONObject form){
+
         LambdaQueryWrapper<EmployeePosition> Wrapper=new LambdaQueryWrapper<>();
         Wrapper.eq(EmployeePosition::getPositionId,form.getString("positionId"));
         List<EmployeePosition> empList= EmployeePositionService.list(Wrapper);

@@ -73,7 +73,11 @@ public class EmpScoreController {
     @PostMapping("/downLoad")
     private void downLoad(HttpServletResponse response) throws IOException {
         List<EmpScoreView> list=EmpScoreViewService.lambdaQuery()
-                .orderByAsc(EmpScoreView::getEmpId)
+                .orderByDesc(EmpScoreView::getPosition)
+                .orderByDesc(EmpScoreView::getEmpName)
+                .orderByDesc(EmpScoreView::getScorePercent)
+                .orderByDesc(EmpScoreView::getTarget)
+
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -81,9 +85,15 @@ public class EmpScoreController {
                 .list();
 
         List<EmpScoreExcel> result=new ArrayList<>();
+
         list.forEach(x->{
+
             EmpScoreExcel one=new EmpScoreExcel();
+
             BeanUtils.copyProperties(x,one);
+            one.setScorePercent(x.getScorePercent()+"%");
+            one.setAssessorPercent(x.getAssessorPercent()+"%");
+            one.setGrade(x.getScore().multiply(x.getScorePercent()).multiply(x.getAssessorPercent()).divide(BigDecimal.valueOf(10000)));
             result.add(one);
         });
 
