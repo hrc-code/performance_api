@@ -132,16 +132,23 @@ public class PositionController {
             , @RequestParam("page_size") String pageSize
             ,@RequestParam(defaultValue = "") String position
             ,@RequestParam(defaultValue = "") String dept
-            ,@RequestParam(defaultValue = "0") String auditStatus
+            ,@RequestParam(defaultValue = "") String auditStatus
     ){
 
-        System.out.println("前auditStatus:"+auditStatus);
+        List<Integer> list = new ArrayList<>();
+        list.add(0);
+        list.add(1);
+        list.add(2);
+        list.add(3);
+
         switch(auditStatus){
-            case "未考核":	auditStatus="0";break;
-            case "考核中":	auditStatus="1";break;
-            case "暂停":	    auditStatus="2";break;
-            case "完成考核":	auditStatus="3"; break;
+            case "未考核":	list.clear();list.add(0);break;
+            case "考核中":	list.clear();list.add(1);break;
+            case "暂停":	    list.clear();list.add(2);break;
+            case "考核完成":	list.clear();list.add(3); break;
         }
+
+
         System.out.println("后auditStatus:"+auditStatus);
 
         Page<PositionView> pageInfo=new Page<PositionView>(Long.parseLong(page),Long.parseLong(pageSize));
@@ -150,7 +157,7 @@ public class PositionController {
         queryWrapper.orderByDesc(PositionView::getPosition)
                 .like(PositionView::getPosition,position)
                 .like(PositionView::getDeptName,dept)
-                .eq(PositionView::getAuditStatus,auditStatus)
+                .in(PositionView::getAuditStatus,list)
                 .eq(PositionView::getState,1);
         PositionViewService.page(pageInfo,queryWrapper);
         return R.success(pageInfo);
