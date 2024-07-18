@@ -20,16 +20,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
-    <springboot.version>2.7.3</springboot.version>
     <mybatis-plus.version>3.5.3.1</mybatis-plus.version>
-    <logback.version>1.2.10</logback.version>
     <mysql.version>8.0.23</mysql.version>
-    <aspectjweaver.version>1.9.4</aspectjweaver.version>
     <fastjson.version>1.2.66</fastjson.version>
-    <commons.lang3.version>3.4</commons.lang3.version>
-    <commons.codec.version>1.9</commons.codec.version>
-    <commons.io.version>2.5</commons.io.version>
-    <okhttp3.version>3.2.0</okhttp3.version>
   </properties>
 
   <dependencyManagement>
@@ -48,22 +41,7 @@
     <!--流程引擎-->
     <dependency>
       <groupId>org.camunda.bpm.springboot</groupId>
-      <artifactId>camunda-bpm-spring-boot-starter-rest</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.camunda.bpm.springboot</groupId>
       <artifactId>camunda-bpm-spring-boot-starter-webapp</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.camunda.bpm</groupId>
-      <artifactId>camunda-engine-plugin-spin</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.camunda.spin</groupId>
-      <artifactId>camunda-spin-dataformat-all</artifactId>
     </dependency>
 
     <!--规则引擎drools-->
@@ -104,12 +82,7 @@
       <artifactId>mybatis-plus-boot-starter</artifactId>
       <version>${mybatis-plus.version}</version>
     </dependency>
-    <!--mybatis-->
-    <dependency>
-      <groupId>org.mybatis.spring.boot</groupId>
-      <artifactId>mybatis-spring-boot-starter</artifactId>
-      <version>2.2.2</version>
-    </dependency>
+
 
   <!--读写excel工具-->
     <dependency>
@@ -147,6 +120,18 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
+    </dependency>
+    <!--mapstruct-->
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <version>1.5.2.Final</version> <!-- 或者选择最新的版本 -->
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct-processor</artifactId>
+      <version>1.5.2.Final</version> <!-- 或者选择最新的版本 -->
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>
