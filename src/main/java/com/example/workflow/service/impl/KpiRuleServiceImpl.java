@@ -20,8 +20,7 @@ import java.util.List;
 
 @Service
 public class KpiRuleServiceImpl extends ServiceImpl<KpiRuleMapper, KpiRule> implements KpiRuleService {
-    @Autowired
-    private KpiRuleService KpiRuleService;
+
     @Autowired
     private PositionKpiSerivce PositionKpiSerivce;
     @Autowired
@@ -34,7 +33,7 @@ public class KpiRuleServiceImpl extends ServiceImpl<KpiRuleMapper, KpiRule> impl
         LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()).minusMonths(1), LocalTime.MAX);
 
-        List<KpiRule> list=KpiRuleService.lambdaQuery()
+        List<KpiRule> list= lambdaQuery()
                 .eq(KpiRule::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -57,7 +56,7 @@ public class KpiRuleServiceImpl extends ServiceImpl<KpiRuleMapper, KpiRule> impl
                     .list();
 
             x.setId(null);
-            KpiRuleService.save(x);
+            save(x);
 
             positionKpis.forEach(y->{
                 y.setId(null);

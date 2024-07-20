@@ -20,8 +20,7 @@ import java.util.List;
 @Service
 public class PieceRuleServiceImpl extends ServiceImpl<PieceRuleMapper, PieceRule> implements PieceRuleService {
 
-    @Autowired
-    private PieceRuleService PieceRuleService;
+
     @Autowired
     private PositionPieceService PositionPieceService;
 
@@ -32,7 +31,7 @@ public class PieceRuleServiceImpl extends ServiceImpl<PieceRuleMapper, PieceRule
         LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()).minusMonths(1), LocalTime.MAX);
 
-        List<PieceRule> list=PieceRuleService.lambdaQuery()
+        List<PieceRule> list= lambdaQuery()
                 .eq(PieceRule::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -50,7 +49,7 @@ public class PieceRuleServiceImpl extends ServiceImpl<PieceRuleMapper, PieceRule
                     .list();
 
             x.setId(null);
-            PieceRuleService.save(x);
+            save(x);
 
             positionPieces.forEach(y->{
                 y.setId(null);

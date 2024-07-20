@@ -20,8 +20,7 @@ import java.util.List;
 
 @Service
 public class ScoreRuleServiceImpl extends ServiceImpl<ScoreRuleMapper, ScoreRule> implements ScoreRuleService {
-    @Autowired
-    private ScoreRuleService ScoreRuleService;
+
     @Autowired
     private PositionScoreService PositionScoreService;
     @Autowired
@@ -34,7 +33,7 @@ public class ScoreRuleServiceImpl extends ServiceImpl<ScoreRuleMapper, ScoreRule
         LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()).minusMonths(1), LocalTime.MAX);
 
-        List<ScoreRule> list=ScoreRuleService.lambdaQuery()
+        List<ScoreRule> list= lambdaQuery()
                 .eq(ScoreRule::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -53,7 +52,7 @@ public class ScoreRuleServiceImpl extends ServiceImpl<ScoreRuleMapper, ScoreRule
                     .list();
 
             x.setId(null);
-            ScoreRuleService.save(x);
+            save(x);
 
             positionScores.forEach(y->{
                 List<ScoreAssessors> scoreAssessors= ScoreAssessorsService.lambdaQuery()

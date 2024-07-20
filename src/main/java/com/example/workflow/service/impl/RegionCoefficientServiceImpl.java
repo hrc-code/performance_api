@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.workflow.mapper.RegionCoefficientMapper;
 import com.example.workflow.model.entity.RegionCoefficient;
 import com.example.workflow.service.RegionCoefficientService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,8 +14,7 @@ import java.util.List;
 
 @Service
 public class RegionCoefficientServiceImpl extends ServiceImpl<RegionCoefficientMapper, RegionCoefficient> implements RegionCoefficientService {
-    @Autowired
-    private RegionCoefficientService RegionCoefficientService;
+
     @Override
     public String defineRule(List<RegionCoefficient> list){
         String rule= "package resources.rules;\r\n";
@@ -42,7 +40,7 @@ public class RegionCoefficientServiceImpl extends ServiceImpl<RegionCoefficientM
         LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()).minusMonths(1), LocalTime.MAX);
 
-        List<RegionCoefficient> list=RegionCoefficientService.lambdaQuery()
+        List<RegionCoefficient> list=lambdaQuery()
                 .eq(RegionCoefficient::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -52,7 +50,7 @@ public class RegionCoefficientServiceImpl extends ServiceImpl<RegionCoefficientM
 
         list.forEach(x->{
             x.setId(null);
-            RegionCoefficientService.save(x);
+            save(x);
         });
     }
 }

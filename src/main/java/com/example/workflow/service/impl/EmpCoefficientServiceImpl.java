@@ -17,8 +17,7 @@ import java.util.List;
 
 @Service
 public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper, EmpCoefficient> implements EmpCoefficientService {
-    @Autowired
-    private EmpCoefficientService EmpCoefficientService;
+
     @Autowired
     private RegionCoefficientService RegionCoefficientService;
     @Override
@@ -28,7 +27,7 @@ public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper,
         LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()).minusMonths(1), LocalTime.MAX);
 
-        List<EmpCoefficient> list=EmpCoefficientService.lambdaQuery()
+        List<EmpCoefficient> list= lambdaQuery()
                 .eq(EmpCoefficient::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -54,7 +53,7 @@ public class EmpCoefficientServiceImpl extends ServiceImpl<EmpCoefficientMapper,
                             .one();
 
             x.setRegionCoefficientId(regionCoefficient.getId());
-            EmpCoefficientService.save(x);
+           save(x);
         });
     }
 }

@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.workflow.mapper.PositionAssessorMapper;
 import com.example.workflow.model.entity.PositionAssessor;
 import com.example.workflow.service.PositionAssessorService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,8 +14,7 @@ import java.util.List;
 
 @Service
 public class PositionAssessorServiceImpl extends ServiceImpl<PositionAssessorMapper, PositionAssessor> implements PositionAssessorService {
-    @Autowired
-    private PositionAssessorService PositionAssessorService;
+
 
 
     @Override
@@ -25,7 +23,7 @@ public class PositionAssessorServiceImpl extends ServiceImpl<PositionAssessorMap
         LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1).minusMonths(1), LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()).minusMonths(1), LocalTime.MAX);
 
-        List<PositionAssessor> list=PositionAssessorService.lambdaQuery()
+        List<PositionAssessor> list= lambdaQuery()
                 .eq(PositionAssessor::getState,1)
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -35,7 +33,7 @@ public class PositionAssessorServiceImpl extends ServiceImpl<PositionAssessorMap
 
         list.forEach(x->{
             x.setId(null);
-            PositionAssessorService.save(x);
+            save(x);
         });
     }
 
