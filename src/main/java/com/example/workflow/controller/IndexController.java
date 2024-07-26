@@ -11,6 +11,7 @@ import com.example.workflow.service.IndexService;
 import com.example.workflow.service.RoleRouterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -27,9 +30,9 @@ public class IndexController {
     @Autowired
     private IndexService IndexService;
     @Autowired
-    private RoleRouterService RoleRouterService;
+    private RoleRouterService roleRouterService;
     @Autowired
-    private RouterMapper RouterMapper;
+    private RouterMapper routerMapper;
 
     @PostMapping("/getPermission")
     public R<List<Router>> getPermission(@RequestBody JSONObject obj){
@@ -37,30 +40,28 @@ public class IndexController {
         LambdaQueryWrapper<RoleRouter> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(RoleRouter::getRoleId,obj.getString("roleId"))
                 .eq(RoleRouter::getState,1);
-        List<RoleRouter> routerList= RoleRouterService.list(queryWrapper);
+        List<RoleRouter> routerList= roleRouterService.list(queryWrapper);
+        if (!CollectionUtils.isEmpty(routerList)) {
+            Set<String> routerSet = routerList.stream().map(RoleRouter::getRouterId).collect(Collectors.toSet());
+            LambdaQueryWrapper<Router> wrapper = new LambdaQueryWrapper<>();
+            wrapper.in(Router::getId, routerSet);
+            List<Router> routers = routerMapper.selectList(wrapper);
 
-        List<Router> list=new ArrayList<>();
-        List<Router> parent=new ArrayList<>();
-        routerList.forEach(x->{
-            LambdaQueryWrapper<Router> Wrapper=new LambdaQueryWrapper<>();
-            Wrapper.eq(Router::getId,x.getRouterId());
-            Router router= RouterMapper.selectOne(Wrapper);
-            list.add(router);
+            // 筛选出全部的父路由
+            List<Router> parentRouterSet = routers.stream().filter(router -> router.getType().equals(1)).collect(Collectors.toList());
 
-            if(router.getType().equals(1)){
-                parent.add(router);
+            for (Router router : parentRouterSet) {
+                Integer id = Integer.valueOf(router.getId());
+                // 筛选出它的子路由
+                List<Router> childrenRouterSet = routers.stream().filter(router1 -> router1.getParentId().equals(id)).collect(Collectors.toList());
+                router.setChildren(childrenRouterSet);
             }
-        });
+            return R.success(parentRouterSet);
 
-        parent.forEach(x->{
-            List<Router> children= new ArrayList<>();
-            list.forEach(y->{
-                if(y.getParentId().equals(Integer.valueOf(x.getId())))
-                    children.add(y);
-            });
-            x.setChildren(children);
-        });
-        return R.success(parent);
+        } else {
+            return R.success(new ArrayList<>(0));
+        }
+
     }
 
     @PostMapping("/getCaptchaCode")
