@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
+import com.example.workflow.enums.PositionEnum;
 import com.example.workflow.mapper.EmployeeMapper;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.model.dto.EmployeeFormDto;
@@ -51,6 +52,7 @@ import com.example.workflow.service.RegionCoefficientService;
 import com.example.workflow.service.RoleBtnService;
 import com.example.workflow.service.RoleService;
 import com.example.workflow.service.ScoreAssessorsService;
+import com.example.workflow.utils.Check;
 import com.example.workflow.utils.DateTimeUtils;
 import com.example.workflow.utils.Find;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +75,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -118,18 +121,18 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     @Autowired
     private EmpOkrService EmpOkrService;
 
-    //改变员工账号状态
+    // 改变员工账号状态
     @Override
     public void setStateToEmployee(List<EmpIdAndStateId> empIdAndStateIdList) {
-        //stateId = 0 停用
+        // stateId = 0 停用
         Set<Long> state0EmpSet = empIdAndStateIdList.stream().filter(empIdAndStateId -> empIdAndStateId.getStateId().equals(Short.valueOf("0"))).map(EmpIdAndStateId::getEmpId).collect(Collectors.toSet());
-        if (!CollectionUtils.isEmpty(state0EmpSet)){
-            lambdaUpdate().set(Employee::getState, 0).in(Employee::getId,state0EmpSet).update();
+        if (!CollectionUtils.isEmpty(state0EmpSet)) {
+            lambdaUpdate().set(Employee::getState, 0).in(Employee::getId, state0EmpSet).update();
         }
-        //stateId = 1 恢复
+        // stateId = 1 恢复
         Set<Long> state1EmpSet = empIdAndStateIdList.stream().filter(empIdAndStateId -> empIdAndStateId.getStateId().equals(Short.valueOf("1"))).map(EmpIdAndStateId::getEmpId).collect(Collectors.toSet());
-        if (!CollectionUtils.isEmpty(state1EmpSet)){
-            lambdaUpdate().set(Employee::getState, 1).in(Employee::getId,state1EmpSet).update();
+        if (!CollectionUtils.isEmpty(state1EmpSet)) {
+            lambdaUpdate().set(Employee::getState, 1).in(Employee::getId, state1EmpSet).update();
         }
     }
 
@@ -243,7 +246,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
      */
 
     @Override
-    public List<EmployeeVo> getList(String name, String num,Long roleId,Long id) {
+    public List<EmployeeVo> getList(String name, String num, Long roleId, Long id) {
         List<EmployeeVo> employeeVos = new ArrayList<>();
 
         // 获取员工基本信息
@@ -254,9 +257,124 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
                 .eq(Objects.nonNull(id), Employee::getId, id)
                 .list();
         // 为员工添加额外信息
-        wrapperToEmployeeVo(employees, employeeVos);
+        wrapperToEmployeeVo2(employees, employeeVos);
         return employeeVos;
     }
+
+    /**
+     * 使用map提高性能
+     */
+
+    private void wrapperToEmployeeVo2(List<Employee> employees, List<EmployeeVo> employeeVos) {
+        // 角色
+        Set<Long> roleIdSet = employees.stream().map(Employee::getRoleId).collect(Collectors.toSet());
+        List<Role> roleList = roleService.listByIds(roleIdSet);
+        Map<Long, Role> roleMap = roleList.stream().collect(Collectors.toMap(Role::getId, Function.identity()));
+
+        // 员工系数
+        List<Long> employeeIdList = employees.stream().map(Employee::getId).distinct().collect(Collectors.toList());
+        LocalDateTime[] times = DateTimeUtils.getTheStartAndEndTimeOfMonth();
+        List<EmpCoefficient> empCoefficientList = empCoefficientService.lambdaQuery().eq(EmpCoefficient::getEmpId, employeeIdList).between(EmpCoefficient::getCreateTime, times[0], times[1]).list();
+        Map<Long, EmpCoefficient> empCoefficientMap = empCoefficientList.stream().collect(Collectors.toMap(EmpCoefficient::getEmpId, Function.identity()));
+
+        // 地域系数
+        List<Long> regionCoefficientIdList = empCoefficientList.stream().map(EmpCoefficient::getRegionCoefficientId).distinct().collect(Collectors.toList());
+        Map<Long, RegionCoefficient> regionCoefficientMap = getRegionCoefficientMap(regionCoefficientIdList);
+
+        // 员工岗位
+        List<EmployeePosition> employeePositionList = employeePositionService.lambdaQuery().eq(EmployeePosition::getEmpId, employeeIdList).list();
+        List<Long> positionIdList = employeePositionList.stream().map(EmployeePosition::getPositionId).distinct().collect(Collectors.toList());
+        List<Position> positions = new ArrayList<>(0);
+        if (!CollectionUtils.isEmpty(positionIdList)) {
+            positions = positionService.listByIds(positionIdList);
+        }
+        Map<Long, List<Position>> employeePositionMap = getEmployeePositionMap(employeeIdList, positions, employeePositionList);
+
+
+
+        // 部门名
+        Map<Long, String> deptNameMap = deptService.getDeptNameMap(positionIdList);
+
+        for (Employee employee : employees) {
+            EmployeeVo employeeVo = new EmployeeVo();
+            BeanUtils.copyProperties(employee, employeeVo);
+
+            // 职务名
+            Long roleId = employee.getRoleId();
+            Role role = roleMap.get(roleId);
+            if (Check.noNull(roleId, role)) {
+                String roleName = role.getRoleName();
+                employeeVo.setRoleName(roleName);
+            }
+
+            //系数与地域
+            Long employeeId = employee.getId();
+            EmpCoefficient empCoefficient = empCoefficientMap.get(employeeId);
+            if (Objects.nonNull(empCoefficient)) {
+                // 员工级别
+                BigDecimal grade = empCoefficient.getPositionCoefficient();
+                employeeVo.setGrade(grade);
+
+                // 地域名称
+                Long regionCoefficientId = empCoefficient.getRegionCoefficientId();
+                RegionCoefficient regionCoefficient = regionCoefficientMap.get(regionCoefficientId);
+                if (Objects.nonNull(regionCoefficient)) {
+                    String region = regionCoefficient.getRegion();
+                    employeeVo.setRegionName(region);
+                }
+            }
+
+            //岗位与部门
+            List<Position> employeePositions = employeePositionMap.get(employeeId);
+            if (!CollectionUtils.isEmpty(employeePositions)) {
+                //岗位名
+                List<String> positionNameList = employeePositions.stream()
+                        .map(Position::getPosition)
+                        .collect(Collectors.toList());
+                employeeVo.setPostName(positionNameList);
+
+                // 部门名
+                Set<Long> deptIdSet = employeePositions.stream().map(Position::getDeptId).collect(Collectors.toSet());
+                List<String> deptNameList = deptNameMap.entrySet().stream()
+                        .filter(entry -> deptIdSet.contains(entry.getKey()))
+                        .map(Map.Entry::getValue)
+                        .collect(Collectors.toList());
+                employeeVo.setDeptNames(deptNameList);
+
+            }
+
+            employeeVos.add(employeeVo);
+        }
+    }
+
+    /**
+     * 获取地域系数
+     */
+
+    private Map<Long, RegionCoefficient> getRegionCoefficientMap(List<Long> regionCoefficientIdList) {
+        if (!CollectionUtils.isEmpty(regionCoefficientIdList)) {
+            List<RegionCoefficient> regionCoefficientList = regionCoefficientService.listByIds(regionCoefficientIdList);
+            return regionCoefficientList.stream().collect(Collectors.toMap(RegionCoefficient::getId, Function.identity()));
+        }
+        return new HashMap<>(0);
+    }
+
+    /**
+     * 获取员工岗位
+     */
+    private Map<Long, List<Position>> getEmployeePositionMap(List<Long> employeeIdList, List<Position> positions, List<EmployeePosition> employeePositionList) {
+
+        Map<Long, Position> positionMap = positions.stream().collect(Collectors.toMap(Position::getId, Function.identity()));
+        Map<Long, Set<Long>> poitionIdMap = employeePositionList.stream().collect(Collectors.groupingBy(EmployeePosition::getEmpId, Collectors.mapping(EmployeePosition::getPositionId, Collectors.toSet())));
+
+        Map<Long, List<Position>> employeePositionMap = new HashMap<>(employeeIdList.size());
+        poitionIdMap.forEach((empId, positionIdSet) -> {
+            List<Position> positionList = positionIdSet.stream().distinct().map(positionMap::get).collect(Collectors.toList());
+            employeePositionMap.put(empId, positionList);
+        });
+        return employeePositionMap;
+    }
+
 
     // 为员工添加额外信息
     private void wrapperToEmployeeVo(List<Employee> employees, List<EmployeeVo> employeeVos) {
@@ -437,7 +555,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         HashMap<Long, String> positionMap = new HashMap<>();
 
         // 哈希表降低查询岗位名称的时间复杂度
-        for (Position position : positions) positionMap.put(position.getId(), position.getPosition());
+        for (Position position : positions) {
+            positionMap.put(position.getId(), position.getPosition());
+        }
 
         if (employeePositions != null) {
             employeePositions.stream().filter(Objects::nonNull).forEach(employeePosition -> {
@@ -598,7 +718,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         List<Role> roles = Db.lambdaQuery(Role.class).list();
         // 将角色转换为map，提高检索时的效率
         Map<Long, String> roleMap = new HashMap<>();
-        for (Role role : roles) roleMap.put(role.getId(), role.getRoleName());
+        for (Role role : roles) {
+            roleMap.put(role.getId(), role.getRoleName());
+        }
 
         // 根据岗位id分组之后的岗位
         Map<Long, List<Position>> positionMap = positions.stream().collect(Collectors.groupingBy(Position::getId));
@@ -626,7 +748,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
                             // 再根据部门id调用deptService的getDeptName()获得部门name
                             String deptName = deptIdNameMap.get(deptId1);
 
-                            if (Find.findPathDeptId(deptHierarchyMap, deptId, deptId1)) hasDeptIdFlag.set(true);
+                            if (Find.findPathDeptId(deptHierarchyMap, deptId, deptId1)) {
+                                hasDeptIdFlag.set(true);
+                            }
                             positionIds.add(positionId);
                             postNames.add(postName);
                             deptIds.add(deptId1);
@@ -696,22 +820,39 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         log.info(employee.toString());
 
         List<PostIdPercent> postIdPercentList = employeeFormDto.getPostIdPercent();
+        Set<Long> postIdSet = postIdPercentList.stream()
+                .map(PostIdPercent::getPostId)
+                .collect(Collectors.toSet());
         // 岗位所对应的绩效
-        Map<Long, BigDecimal> map = postIdPercentList.stream().collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
-        map.forEach((postId, percent) -> {
-            // 向员工岗位表插入数据
-            EmployeePosition employeePosition = new EmployeePosition();
-            employeePosition.setEmpId(employee.getId());
-            employeePosition.setState(1);
-            employeePosition.setPositionId(postId);
-            employeePosition.setPosiPercent(map.get(postId));
+        Map<Long, BigDecimal> percentMap = postIdPercentList.stream().collect(Collectors.toMap(PostIdPercent::getPostId, PostIdPercent::getPercent));
+        List<Position> positionList = Db.lambdaQuery(Position.class).in(Position::getId, postIdSet).list();
 
-            Short type = Db.lambdaQuery(Position.class).eq(Position::getId, postId).one().getType();
-            if (type == 5) employeePosition.setProcessKey("Process_1gzouwy");
-            else if (type == 4) employeePosition.setProcessKey("Process_1whe0gq");
-            else if (type == 3) employeePosition.setProcessKey("Process_01p7ac7");
-            employeePositionService.save(employeePosition);
-        });
+        if (!CollectionUtils.isEmpty(positionList)) {
+            Map<Long, Short> typeMap = positionList.stream().collect(Collectors.toMap(Position::getId, Position::getType));
+
+            List<EmployeePosition> employeePositionList = postIdSet.stream().map(postId -> {
+                // 向员工岗位表插入数据
+                EmployeePosition employeePosition = new EmployeePosition();
+                employeePosition.setEmpId(employee.getId());
+                employeePosition.setState(1);
+                employeePosition.setPositionId(postId);
+                employeePosition.setPosiPercent(percentMap.get(postId));
+
+                Short type = typeMap.get(postId);
+                if (type.equals(PositionEnum.ONE.getType())) {
+                    employeePosition.setProcessKey(PositionEnum.ONE.getProcessKey());
+                } else if (type.equals(PositionEnum.FOUR.getType())) {
+                    employeePosition.setProcessKey(PositionEnum.FOUR.getProcessKey());
+                } else if (type.equals(PositionEnum.THREE.getType())) {
+                    employeePosition.setProcessKey(PositionEnum.THREE.getProcessKey());
+                }
+                return employeePosition;
+            }).collect(Collectors.toList());
+
+            employeePositionService.saveBatch(employeePositionList);
+
+        }
+
 
         // 向员工绩效表中添加数据
         EmpCoefficient empCoefficient = new EmpCoefficient();
@@ -871,45 +1012,45 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
             wrapper1.eq(EmpCoefficient::getEmpId, id).between(EmpCoefficient::getUpdateTime, time[0], time[1]);
             empCoefficientService.remove(wrapper1);
 
-            LambdaUpdateWrapper<PositionAssessor> deleteWapper1=new LambdaUpdateWrapper<>();
-            deleteWapper1.set(PositionAssessor::getFourthAssessorId,null)
-                    .eq(PositionAssessor::getFourthAssessorId,id)
+            LambdaUpdateWrapper<PositionAssessor> deleteWapper1 = new LambdaUpdateWrapper<>();
+            deleteWapper1.set(PositionAssessor::getFourthAssessorId, null)
+                    .eq(PositionAssessor::getFourthAssessorId, id)
                     .between(PositionAssessor::getUpdateTime, time[0], time[1]);
             PositionAssessorService.update(deleteWapper1);
-            LambdaUpdateWrapper<PositionAssessor> deleteWapper2=new LambdaUpdateWrapper<>();
-            deleteWapper2.set(PositionAssessor::getThirdAssessorId,null)
-                    .eq(PositionAssessor::getThirdAssessorId,id)
+            LambdaUpdateWrapper<PositionAssessor> deleteWapper2 = new LambdaUpdateWrapper<>();
+            deleteWapper2.set(PositionAssessor::getThirdAssessorId, null)
+                    .eq(PositionAssessor::getThirdAssessorId, id)
                     .between(PositionAssessor::getUpdateTime, time[0], time[1]);
             PositionAssessorService.update(deleteWapper2);
-            LambdaUpdateWrapper<PositionAssessor> deleteWapper3=new LambdaUpdateWrapper<>();
-            deleteWapper3.set(PositionAssessor::getSecondAssessorId,null)
-                    .eq(PositionAssessor::getSecondAssessorId,id)
+            LambdaUpdateWrapper<PositionAssessor> deleteWapper3 = new LambdaUpdateWrapper<>();
+            deleteWapper3.set(PositionAssessor::getSecondAssessorId, null)
+                    .eq(PositionAssessor::getSecondAssessorId, id)
                     .between(PositionAssessor::getUpdateTime, time[0], time[1]);
             PositionAssessorService.update(deleteWapper3);
 
-            LambdaQueryWrapper<ScoreAssessors> deleteWapper5=new LambdaQueryWrapper<>();
-            deleteWapper5.eq(ScoreAssessors::getAssessorId,id)
+            LambdaQueryWrapper<ScoreAssessors> deleteWapper5 = new LambdaQueryWrapper<>();
+            deleteWapper5.eq(ScoreAssessors::getAssessorId, id)
                     .between(ScoreAssessors::getUpdateTime, time[0], time[1]);
             ScoreAssessorsService.remove(deleteWapper5);
 
-            LambdaQueryWrapper<EmpKpi> deleteWapper6=new LambdaQueryWrapper<>();
-            deleteWapper6.eq(EmpKpi::getEmpId,id)
+            LambdaQueryWrapper<EmpKpi> deleteWapper6 = new LambdaQueryWrapper<>();
+            deleteWapper6.eq(EmpKpi::getEmpId, id)
                     .between(EmpKpi::getUpdateTime, time[0], time[1]);
             EmpKpiService.remove(deleteWapper6);
-            LambdaQueryWrapper<EmpPiece> deleteWapper7=new LambdaQueryWrapper<>();
-            deleteWapper7.eq(EmpPiece::getEmpId,id)
+            LambdaQueryWrapper<EmpPiece> deleteWapper7 = new LambdaQueryWrapper<>();
+            deleteWapper7.eq(EmpPiece::getEmpId, id)
                     .between(EmpPiece::getUpdateTime, time[0], time[1]);
             EmpPieceService.remove(deleteWapper7);
-            LambdaQueryWrapper<EmpReward> deleteWapper8=new LambdaQueryWrapper<>();
-            deleteWapper8.eq(EmpReward::getEmpId,id)
+            LambdaQueryWrapper<EmpReward> deleteWapper8 = new LambdaQueryWrapper<>();
+            deleteWapper8.eq(EmpReward::getEmpId, id)
                     .between(EmpReward::getUpdateTime, time[0], time[1]);
             EmpRewardService.remove(deleteWapper8);
-            LambdaQueryWrapper<EmpScore> deleteWapper9=new LambdaQueryWrapper<>();
-            deleteWapper9.eq(EmpScore::getEmpId,id)
+            LambdaQueryWrapper<EmpScore> deleteWapper9 = new LambdaQueryWrapper<>();
+            deleteWapper9.eq(EmpScore::getEmpId, id)
                     .between(EmpScore::getUpdateTime, time[0], time[1]);
             EmpScoreService.remove(deleteWapper9);
-            LambdaQueryWrapper<EmpOkr> deleteWapper10=new LambdaQueryWrapper<>();
-            deleteWapper10.eq(EmpOkr::getEmpId,id)
+            LambdaQueryWrapper<EmpOkr> deleteWapper10 = new LambdaQueryWrapper<>();
+            deleteWapper10.eq(EmpOkr::getEmpId, id)
                     .between(EmpOkr::getUpdateTime, time[0], time[1]);
             EmpOkrService.remove(deleteWapper10);
         });
@@ -950,10 +1091,10 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         return R.success(routerAndButtonVo);
     }
 
-   /**
-    * @param deptId 部门id
-    * @return 员工信息集合
-    */
+    /**
+     * @param deptId 部门id
+     * @return 员工信息集合
+     */
     @Override
     public List<EmployeeVo> getEmployeeVoListByDeptId(Long deptId) {
         ArrayList<EmployeeVo> employeeVos = new ArrayList<>();
