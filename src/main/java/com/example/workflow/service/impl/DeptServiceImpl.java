@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
+import com.example.workflow.converter.DeptConverter;
 import com.example.workflow.mapper.DeptHierarchyMapper;
 import com.example.workflow.mapper.DeptMapper;
 import com.example.workflow.model.dto.DeptFormDto;
@@ -22,9 +23,9 @@ import com.example.workflow.service.DeptHierarchyService;
 import com.example.workflow.service.DeptService;
 import com.example.workflow.service.EmployeePositionService;
 import com.example.workflow.service.PositionService;
+import com.example.workflow.utils.Check;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -60,9 +62,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
     private final PositionService positionService;
 
     private final EmployeePositionService employeePositionService;
-
-    @Autowired
-    private DeptService DeptService;
+    private final DeptConverter deptConverter;
 
     /**
      * 操作 部门表  部门继承表
@@ -70,6 +70,9 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
      */
     @Override
     public Map<Long, String> getDeptNameMap(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return  new HashMap<>(0);
+        }
         // 首先根据部门id获取部门
         List<Dept> depts = lambdaQuery().in(Dept::getId, ids).list();
         if (CollectionUtils.isEmpty(depts)) {
@@ -174,48 +177,34 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
 
     @Override
     public List<DeptVo> getDeptTree(Integer id) {
-        if (id == 5) {
-            id = 4;
-        }
         // 查询到的部门列表
-        List<Dept> dept = Db.lambdaQuery(Dept.class)
-                .le(id != null, Dept::getLevel, id)
+        List<Dept> deptList = Db.lambdaQuery(Dept.class)
+                .le(Dept::getLevel, id)
                 .list();
         // 初始化部门树列表
-        List<DeptVo> deptVos = BeanUtil.copyToList(dept, DeptVo.class);
+        List<DeptVo> deptVos = deptList.stream()
+                .map(deptConverter::po2vo)
+                .collect(Collectors.toList());
 
-        Map<Long, DeptVo> deptMap = new HashMap<>();
-        for (DeptVo deptVo : deptVos) {
-            deptVo.setChildren(new ArrayList<>()); // 初始化子部门列表
-            deptMap.put(deptVo.getId(), deptVo);
-        }
+        Map<Long, DeptVo> deptVoMap = deptVos.stream()
+                .peek(deptVo -> deptVo.setChildren(new ArrayList<>()))
+                .collect(Collectors.toMap(DeptVo::getId, Function.identity()));
 
         // 获取部门层级关系
         List<DeptHierarchy> deptHierarchyList = Db.lambdaQuery(DeptHierarchy.class).list();
 
-        Set<Long> deptHierarchySet = new HashSet<>();
 
-        for (DeptHierarchy dh : deptHierarchyList) {
-            deptHierarchySet.add(dh.getChildId());
-
-            DeptVo parentDept = deptMap.get(dh.getParentId());
-            DeptVo childDept = deptMap.get(dh.getChildId());
-
-            if (parentDept != null && childDept != null) {
-                parentDept.getChildren().add(childDept);
-            }
-        }
+        deptHierarchyList.stream()
+                .filter(dh -> Check.noNull(deptVoMap.get(dh.getParentId()), deptVoMap.get(dh.getChildId())))
+                .forEach(dh -> {
+                    deptVoMap.get(dh.getParentId()).getChildren().add(deptVoMap.get(dh.getChildId()));
+                });
 
         // 找到根部门,对deptList过滤
-        List<DeptVo> rootDepths = new ArrayList<>();
-        for (DeptVo deptVo : deptVos) {
-            if (!deptHierarchySet.contains(deptVo.getId())) {
-                // 如果部门没有父部门，则该部门为根部门
-                rootDepths.add(deptVo);
-            }
-        }
-
-        return rootDepths;
+        return deptHierarchyList.stream()
+                .filter(dh -> dh.getParentId().equals(1L))
+                .map(dh -> deptVoMap.get(dh.getChildId()))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -226,12 +215,12 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
     public Boolean addDept(DeptFormDto deptFormDto) {
         Dept dept = new Dept();
         BeanUtil.copyProperties(deptFormDto, dept);
-        int level = deptFormDto.getParentLevel() + 1;
+        Short level = Short.valueOf(String.valueOf(deptFormDto.getParentLevel() + 1));
         dept.setLevel(level);
         // 查询同级部门是否存在同名的 where level = ? and  dept_name = ?
         LambdaQueryWrapper<Dept> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Dept::getDeptName, dept.getDeptName());
-        Dept one = DeptService.getOne(queryWrapper);
+        Dept one = getOne(queryWrapper);
 
         if (one == null) {
             save(dept);
@@ -368,7 +357,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
             parentId = deptHierarchy.getParentId();
         }
         // 要查询的部门的父部门等级  默认为自己  若有父部门则为父部门
-        Integer parentLevel = dept.getLevel();
+        Short parentLevel = dept.getLevel();
         Dept parentDept = Db.lambdaQuery(Dept.class).eq(Dept::getId, parentId).one();
         if (parentDept != null) {
             parentLevel = parentDept.getLevel();
@@ -487,7 +476,7 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
     /**
      * 根据父部门id获取这个部门的全部后代id
      */
-
+    @Override
     public Set<Long> getChildeDeptIdSet(Long parentId) {
         HashSet<Long> deptIdSet = new HashSet<>();
         getChildrenDeptIdSet(parentId, deptIdSet);
