@@ -70,6 +70,9 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
      */
     @Override
     public Map<Long, String> getDeptNameMap(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return Collections.emptyMap();
+        }
         // 首先根据部门id获取部门
         List<Dept> depts = lambdaQuery().in(Dept::getId, ids).list();
         if (CollectionUtils.isEmpty(depts)) {
