@@ -33,7 +33,7 @@ public class Dept implements Serializable {
     /**
      * 部门级别
      */
-    private Short level;
+    private Integer level;
 
     /**
      * 状态

@@ -13,7 +13,7 @@ public class DeptFormDto {
     /**
      * 父部门等级
      */
-    private Short parentLevel;
+    private Integer parentLevel;
     /**
      * 部门名称
      */

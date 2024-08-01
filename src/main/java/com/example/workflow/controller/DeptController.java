@@ -3,7 +3,6 @@ package com.example.workflow.controller;
 
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
-import com.example.workflow.constant.MyConstant;
 import com.example.workflow.model.dto.DeptFormDto;
 import com.example.workflow.model.entity.Dept;
 import com.example.workflow.model.vo.DeptVo;
@@ -96,7 +95,7 @@ public class DeptController {
     @PostMapping("/add")
     public R addDept(@RequestBody DeptFormDto deptFormDto) {
         // 不允许超过五级
-        if (deptFormDto.getParentLevel() >= MyConstant.DEPT_MIN_LEVEL) {
+        if (deptFormDto.getParentLevel() >= 4) {
             return R.error("不能新增五级部门");
         }
 
@@ -154,7 +153,7 @@ public class DeptController {
         if (parentLevel != null) parentLevel += 1;
         Dept dept = Db.lambdaQuery(Dept.class)
                 .eq(parentLevel != null, Dept::getLevel,parentLevel)
-                .eq( Dept::getDeptName,decodedStr)
+                .eq(deptName != null, Dept::getDeptName,decodedStr)
                 .ne(id != null, Dept::getId,id)
                 .one();
         if (dept != null) return R.error("部门名称重复");
