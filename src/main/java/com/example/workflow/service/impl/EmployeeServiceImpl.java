@@ -257,7 +257,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
                 .eq(Objects.nonNull(id), Employee::getId, id)
                 .list();
         // 为员工添加额外信息
-        wrapperToEmployeeVo2(employees, employeeVos);
+        wrapperToEmployeeVo(employees, employeeVos);
         return employeeVos;
     }
 
