@@ -23,7 +23,7 @@ public class DateTimeUtils {
         return new LocalDateTime[]{startOfMonth, endOfMonth};
     }
 
-    /* 返回现在的时间 */
+    /** 返回现在的时间 */
     public static String now(String format) {
         LocalDateTime localDateTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
