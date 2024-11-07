@@ -6,27 +6,33 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JWTHelper {//过期时间
-    public static final long EXPIRE_TIME =   30 * 60 * 1000;//默认30分钟
-    //私钥
+
+@Slf4j
+public class JwtHelper {
+    /**
+     * 过期时间
+     * 默认30分钟
+     */
+    public static final long EXPIRE_TIME = 30 * 60 * 1000;
+    /**
+     * 私钥
+     */
     private static final String TOKEN_SECRET = "privateKey";
 
     /**
      * 生成token，自定义过期时间 毫秒
-     *
-     * @param **username**
-     * @param **password**
-     * @return
      */
     public static String createToken(long expireDate, Map<String, String> payload) {
         try {
             // 设置过期时间
-            Date date = new Date(expireDate);
+            Instant instant = Instant.ofEpochMilli(expireDate).atZone(ZoneOffset.UTC).toInstant();
             // 私钥和加密算法
             Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
             // 设置头部信息
@@ -36,7 +42,7 @@ public class JWTHelper {//过期时间
             // 返回token字符串
             JWTCreator.Builder builder = JWT.create()
                     .withHeader(header)
-                    .withExpiresAt(date);
+                    .withExpiresAt(instant);
             for (Map.Entry<String, String> entry : payload.entrySet()) {
                 builder.withClaim(entry.getKey(), entry.getValue());
             }
@@ -44,7 +50,7 @@ public class JWTHelper {//过期时间
 
             return builder.sign(algorithm);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             return null;
         }
     }
@@ -55,9 +61,6 @@ public class JWTHelper {//过期时间
 
     /**
      * 检验token是否正确
-     *
-     * @param **token**
-     * @return
      */
     public static Map<String, Claim> verifyToken(String token) {
         try {
@@ -70,5 +73,14 @@ public class JWTHelper {//过期时间
         }
     }
 
-
+    public static boolean isExpired(String token) {
+        Map<String, Claim> map = verifyToken(token);
+        if (map == null) {
+            return false;
+        }
+        Claim exp = map.get("exp");
+        Long expLong = exp.asLong();
+        long nowMilli = Instant.now().toEpochMilli();
+        return expLong < nowMilli;
+    }
 }
