@@ -10,9 +10,9 @@ import com.example.workflow.model.entity.ScoreRuleForm;
 import com.example.workflow.service.PositionScoreService;
 import com.example.workflow.service.ScoreAssessorsService;
 import com.example.workflow.service.ScoreRuleService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -20,11 +20,12 @@ import java.util.List;
 
 @Service
 public class ScoreRuleServiceImpl extends ServiceImpl<ScoreRuleMapper, ScoreRule> implements ScoreRuleService {
+    @Resource
+    private ScoreAssessorsService scoreAssessorsService;
+    @Resource
+    private PositionScoreService positionScoreService;
 
-    @Autowired
-    private PositionScoreService PositionScoreService;
-    @Autowired
-    private ScoreAssessorsService ScoreAssessorsService;
+
 
 
     @Override
@@ -42,8 +43,7 @@ public class ScoreRuleServiceImpl extends ServiceImpl<ScoreRuleMapper, ScoreRule
                 .list();
 
         list.forEach(x->{
-
-            List<PositionScore> positionScores= PositionScoreService.lambdaQuery()
+            List<PositionScore> positionScores = positionScoreService.lambdaQuery()
                     .eq(PositionScore::getScoreId,x.getId())
                     .apply(StringUtils.checkValNotNull(beginTime),
                             "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -55,7 +55,7 @@ public class ScoreRuleServiceImpl extends ServiceImpl<ScoreRuleMapper, ScoreRule
             save(x);
 
             positionScores.forEach(y->{
-                List<ScoreAssessors> scoreAssessors= ScoreAssessorsService.lambdaQuery()
+                List<ScoreAssessors> scoreAssessors = scoreAssessorsService.lambdaQuery()
                         .eq(ScoreAssessors::getPositionScoreId,y.getId())
                         .apply(StringUtils.checkValNotNull(beginTime),
                                 "date_format (create_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
@@ -65,12 +65,12 @@ public class ScoreRuleServiceImpl extends ServiceImpl<ScoreRuleMapper, ScoreRule
 
                 y.setId(null);
                 y.setScoreId(x.getId());
-                PositionScoreService.save(y);
+                positionScoreService.save(y);
 
                 scoreAssessors.forEach(z->{
                     z.setId(null);
                     z.setPositionScoreId(y.getId());
-                    ScoreAssessorsService.save(z);
+                    scoreAssessorsService.save(z);
                 });
             });
         });
