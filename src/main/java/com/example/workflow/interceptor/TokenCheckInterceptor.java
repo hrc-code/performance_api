@@ -1,9 +1,7 @@
 package com.example.workflow.interceptor;
 
-import com.auth0.jwt.interfaces.Claim;
 import com.example.workflow.exception.BaseException;
-import com.example.workflow.utils.JWTHelper;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.workflow.utils.JwtHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -11,18 +9,14 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.util.Map;
+import javax.ws.rs.HttpMethod;
 
 @Component
 public class TokenCheckInterceptor implements HandlerInterceptor {
 
-    @Autowired
-    private HttpSession session;
-
-    @Override//目标资源（controller接口）放行前运行，返回true:放行，返回false:不放行
+    @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if (request.getMethod().equals("OPTIONS")) {
+        if (HttpMethod.OPTIONS.equals(request.getMethod())) {
             return true;
         }
         // 获取请求头中的令牌(token)
@@ -37,27 +31,15 @@ public class TokenCheckInterceptor implements HandlerInterceptor {
         }
         token = token.replace("Bearer ","");
 
-        //解析token,如果解析失败，返回错误结果（token失效）
-        Map<String, Claim> map = JWTHelper.verifyToken(token);
-
-        if (map == null) {
-            throw new BaseException("403", "登录信息无效，请先登录，token is invalid");
-        }
-        Long exp = (Long) session.getAttribute(token);
-        if (exp == null) {
-            //在规定时间内没有发送请求，则token过期
-            throw new BaseException("403", "登录信息无效，请先登录,token已过期");
-        }
-        //session可以在规定时间内发送请求自动续约
-        return true;
+        return !JwtHelper.isExpired(token);
     }
 
-    @Override//目标资源方法运行后运行
+    @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
         HandlerInterceptor.super.postHandle(request, response, handler, modelAndView);
     }
 
-    @Override//视图渲染完毕后运行，最后运行
+    @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
     }
