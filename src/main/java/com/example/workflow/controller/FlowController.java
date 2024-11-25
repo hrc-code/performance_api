@@ -5,10 +5,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.workflow.common.R;
-import com.example.workflow.mapper.ActReDeploymentMapper;
+import com.example.workflow.enums.ProcessState;
 import com.example.workflow.mapper.EmployeePositionMapper;
 import com.example.workflow.mapper.TaskViewMapper;
-import com.example.workflow.model.entity.ActReDeployment;
 import com.example.workflow.model.entity.BackWait;
 import com.example.workflow.model.entity.EmpKpi;
 import com.example.workflow.model.entity.EmpOkr;
@@ -47,17 +46,9 @@ import com.example.workflow.service.ScoreAssessorsService;
 import com.example.workflow.utils.DateTimeUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.IdentityService;
-import org.camunda.bpm.engine.ProcessEngine;
-import org.camunda.bpm.engine.ProcessEngines;
-import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
-import org.camunda.bpm.engine.history.HistoricTaskInstance;
-import org.camunda.bpm.engine.repository.Deployment;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-import org.camunda.bpm.engine.task.IdentityLink;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -75,10 +66,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class FlowController {
 
-    private final ActReDeploymentMapper actReDeploymentMapper;
-    private final RepositoryService repositoryService;
     private final RuntimeService runtimeService;
-    private final TaskService taskService;
     private final IdentityService identityService;
     private final EmployeePositionMapper employeePositionMapper;
     private final EmployeePositionService employeePositionService;
@@ -100,22 +88,6 @@ public class FlowController {
     private final BackWaitService backWaitService;
 
 
-
-    @PostMapping("/list")
-    private R<List<ActReDeployment>> list() {
-        List<ActReDeployment> list = actReDeploymentMapper.selectList(null);
-
-        return R.success(list);
-    }
-
-    @PostMapping("/deployee")
-    private void deploy(String name, String resource) {
-        Deployment deploy = repositoryService.createDeployment()
-                .name(name)
-                .addClasspathResource(resource)
-                .deploy();
-        System.out.println("deploy.getId() = " + deploy.getId());
-    }
 
 
     @PostMapping("/startFlow")
@@ -186,12 +158,12 @@ public class FlowController {
         queryWrapper.eq(EmployeePosition::getPositionId, obj.getString("positionId"));
         List<EmployeePosition> empList = employeePositionMapper.selectList(queryWrapper);
 
-        empList.forEach(x->{
-            LambdaQueryWrapper<TaskView> Wrapper=new LambdaQueryWrapper<>();
-            Wrapper.eq(TaskView::getStartUserId,x.getEmpId())
-                    .eq(TaskView::getProcInstId,x.getProcessDefinitionId())
-                    .eq(TaskView::getState,"ACTIVE");
-            List<TaskView> taskViewList=TaskViewMapper.selectList(Wrapper);
+        empList.forEach(x -> {
+            LambdaQueryWrapper<TaskView> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TaskView::getStartUserId, x.getEmpId())
+                    .eq(TaskView::getProcInstId, x.getProcessDefinitionId())
+                    .eq(TaskView::getState, ProcessState.ACTIVE.getState());
+            List<TaskView> taskViewList = taskViewMapper.selectList(wrapper);
 
             taskViewList.forEach(y -> {
                 if (y != null) {
@@ -394,53 +366,6 @@ public class FlowController {
         });
 
         return R.success();
-    }
-
-
-    @PostMapping("/userId")
-    private R<List<IdentityLink>> searchId(String taskId) {
-        List<IdentityLink> id = taskService.getIdentityLinksForTask(taskId);
-        return R.success(id);
-    }
-
-    @PostMapping("/complete")
-    private R<Void> complete(String id) {
-        List<String> assessorList1 = new ArrayList<>(4);
-        assessorList1.add("userOne");
-        assessorList1.add("userTwo");
-        List<String> assessorList2 = new ArrayList<>(4);
-        assessorList2.add("userThree");
-        Map<String, Object> map = new HashMap<>(32);
-        map.put("appoint", "no");
-        map.put("assessor", "xxy");
-        map.put("declear", "q");
-        map.put("pieceAppoint", "true");
-        map.put("scoreAppoint", "false");
-        map.put("kpiAppoint", "true");
-        map.put("okrAppoint", "false");
-        map.put("ASList", assessorList1);
-        map.put("AKList", assessorList1);
-        map.put("APList", assessorList2);
-        map.put("AOList", assessorList2);
-        map.put("AThirdList", assessorList2);
-        taskService.complete(id, map);
-        return R.success();
-    }
-
-    @PostMapping("/getComplete")
-    private R<List<HistoricTaskInstance>> getCompleteList() {
-        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
-        HistoryService historyService = processEngine.getHistoryService();
-
-        List<HistoricTaskInstance> completedTasks = historyService.createHistoricTaskInstanceQuery()
-                .finished()
-                .list();
-
-        for (HistoricTaskInstance task : completedTasks) {
-            System.out.println("Completed task id: " + task.getId());
-        }
-
-        return R.success(completedTasks);
     }
 
 }
