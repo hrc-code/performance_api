@@ -7,12 +7,11 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.example.workflow.common.R;
 import com.example.workflow.model.bean.PageBean;
 import com.example.workflow.model.entity.PdfFile;
-import com.example.workflow.repository.PdfFileRepository;
 import com.example.workflow.service.PdfFileService;
+import com.example.workflow.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,9 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -47,17 +44,16 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/pdf")
 public class PdfFilesController {
-    private final PdfFileRepository pdfFileRepository;
-    @Autowired
-    private PdfFileService PdfFileService;
 
-    LocalDate today = LocalDate.now();
-    LocalDateTime beginTime = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
-    LocalDateTime endTime = LocalDateTime.of(today.withDayOfMonth(today.lengthOfMonth()), LocalTime.MAX);
+    private final PdfFileService pdfFileService;
 
-    @PostMapping("/getNowList")
-    private R<List<PdfFile>> getNowList(){
-        List<PdfFile> list= PdfFileService.lambdaQuery()
+
+    @GetMapping("/getNowList")
+    public R<List<PdfFile>> getNowList() {
+        LocalDateTime[] time = DateTimeUtils.getTheStartAndEndTimeOfMonth();
+        LocalDateTime beginTime = time[0];
+        LocalDateTime endTime = time[1];
+        List<PdfFile> list = pdfFileService.lambdaQuery()
                 .apply(StringUtils.checkValNotNull(beginTime),
                         "date_format (update_time,'%Y-%m-%d %H:%i:%s') >= date_format ({0},'%Y-%m-%d %H:%i:%s')", beginTime)
                 .apply(StringUtils.checkValNotNull(endTime),
@@ -68,9 +64,9 @@ public class PdfFilesController {
     }
 
     /**
-     * 导入依据pdf文件
+     * 获取依据pdf文件
+     *
      * @return List<PdfFile>
-     * @throws IOException
      */
     @GetMapping("/list")
     public R<PageBean> getPdfFileList(
@@ -79,68 +75,62 @@ public class PdfFilesController {
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
 
-        Page<PdfFile> page = new Page<>(pageNum,pageSize);
+        Page<PdfFile> page = new Page<>(pageNum, pageSize);
 
-       Page pdfFiles = Db.lambdaQuery(PdfFile.class)
-               .select(PdfFile::getId,PdfFile::getFileName,PdfFile::getUploadTime,PdfFile::getUpdateTime)
-               .like(fileName != null,PdfFile::getFileName,fileName)
-               .like(id != null,PdfFile::getId,id)
-               .page(page);
+        Page pdfFiles = Db.lambdaQuery(PdfFile.class)
+                .select(PdfFile::getId, PdfFile::getFileName, PdfFile::getUploadTime, PdfFile::getUpdateTime)
+                .like(fileName != null, PdfFile::getFileName, fileName)
+                .like(id != null, PdfFile::getId, id)
+                .page(page);
 
-       PageBean pageBean = new PageBean(pdfFiles.getTotal(),pdfFiles.getRecords());
+        PageBean pageBean = new PageBean(pdfFiles.getTotal(), pdfFiles.getRecords());
 
-       return R.success(pageBean);
+        return R.success(pageBean);
     }
 
     /**
      * 删除依据pdf文件
+     *
      * @return R
-     * @throws IOException
      */
     @DeleteMapping("/delete/{ids}")
     public R deletePdf(@PathVariable List<Long> ids) {
 
-        Boolean bool = Db.removeByIds(ids,PdfFile.class);
+        boolean bool = Db.removeByIds(ids, PdfFile.class);
 
-        if (bool) return R.success();
+        if (bool) {
+            return R.success();
+        }
         return R.error("删除文件失败");
     }
 
     /**
      * 导入依据pdf文件
-     * @param file
-     * @return
-     * @throws IOException
      */
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(MultipartFile file) {
+    public ResponseEntity<String> uploadFile(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             return new ResponseEntity<>("请上传文件", HttpStatus.BAD_REQUEST);
         }
 
-        try {
-            PdfFile pdfFile = new PdfFile();
-            pdfFile.setFileName(file.getOriginalFilename());
-            pdfFile.setFileContent(file.getBytes());
-            pdfFile.setUploadTime(LocalDateTime.now());
-            pdfFile.setId(String.valueOf(System.currentTimeMillis()));
+        PdfFile pdfFile = new PdfFile();
+        pdfFile.setFileName(file.getOriginalFilename());
+        pdfFile.setFileContent(file.getBytes());
+        pdfFile.setUploadTime(LocalDateTime.now());
+        pdfFile.setId(String.valueOf(System.currentTimeMillis()));
 
-            pdfFileRepository.save(pdfFile);
+        pdfFileService.save(pdfFile);
+        return new ResponseEntity<>("上传文件成功", HttpStatus.OK);
 
-            return new ResponseEntity<>("上传文件成功", HttpStatus.OK);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("上传文件失败", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     /**
      * 预览pdf文件
      */
     @GetMapping("/preview/{id}")
-    public void showPDF(@PathVariable Long id, HttpServletRequest request, HttpServletResponse response) {
+    public void showPDF(@PathVariable Long id, HttpServletRequest request, HttpServletResponse response) throws IOException {
         InputStream inputStream;
-        try {
+
             //获取pdf文件
             PdfFile pdfFile = Db.lambdaQuery(PdfFile.class).eq(id != null,PdfFile::getId,id).one();
 
@@ -162,39 +152,31 @@ public class PdfFilesController {
                 document.save(out); //输出
                 document.close();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
      * 下载pdf文件
      */
     @GetMapping("/download/{id}")
-    public void downloadPDF(@PathVariable Long id, HttpServletRequest request, HttpServletResponse response) {
-        try {
-            //获取pdf文件
-            PdfFile pdfFile = Db.lambdaQuery(PdfFile.class).eq(id != null,PdfFile::getId,id).one();
+    public void downloadPDF(@PathVariable Long id, HttpServletResponse response) throws IOException {
 
-            //二进制文件内容
-            byte[] content = pdfFile.getFileContent();
+        // 获取pdf文件
+        PdfFile pdfFile = Db.lambdaQuery(PdfFile.class).eq(id != null, PdfFile::getId, id).one();
 
-            if (null != content && content.length > 0) {
-                String fileName =  pdfFile.getFileName();
-                // 设置响应内容类型为 PDF
-                response.setContentType(MediaType.APPLICATION_PDF_VALUE);
-                response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
+        // 二进制文件内容
+        byte[] content = pdfFile.getFileContent();
 
-                // 将二进制数据写入 HttpServletResponse 的输出流
-                try (OutputStream outputStream = response.getOutputStream()) {
-                    outputStream.write(content);
-                    outputStream.flush();
-                }
+        if (null != content && content.length > 0) {
+            String fileName = pdfFile.getFileName();
+            // 设置响应内容类型为 PDF
+            response.setContentType(MediaType.APPLICATION_PDF_VALUE);
+            response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
+
+            // 将二进制数据写入 HttpServletResponse 的输出流
+            try (OutputStream outputStream = response.getOutputStream()) {
+                outputStream.write(content);
+                outputStream.flush();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
