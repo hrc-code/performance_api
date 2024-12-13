@@ -2,6 +2,7 @@ package com.example.workflow.interceptor;
 
 import com.example.workflow.exception.BaseException;
 import com.example.workflow.utils.JwtHelper;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -9,14 +10,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.HttpMethod;
 
 @Component
 public class TokenCheckInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if (HttpMethod.OPTIONS.equals(request.getMethod())) {
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
         }
         // 获取请求头中的令牌(token)
