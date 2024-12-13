@@ -1,9 +1,11 @@
 package com.example.workflow.config;
 
+import com.example.workflow.common.filter.CorsFilter;
 import com.example.workflow.interceptor.TokenCheckInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -25,13 +27,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/login", "/getVerifyCode", "/logout", "/login/test");
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
+    @Bean
+    public FilterRegistrationBean<CorsFilter> loggingFilter(CorsFilter corsFilter) {
+        FilterRegistrationBean<CorsFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(corsFilter);
+        registrationBean.addUrlPatterns("/*");  // 应用到所有URL路径
+        return registrationBean;
     }
+
 }
