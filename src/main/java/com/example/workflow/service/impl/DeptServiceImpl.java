@@ -199,7 +199,10 @@ public class DeptServiceImpl extends ServiceImpl<DeptMapper, Dept>
         Set<Long> deptHierarchySet = new HashSet<>();
 
         for (DeptHierarchy dh : deptHierarchyList) {
-            deptHierarchySet.add(dh.getChildId());
+            if (!dh.getParentId().equals(1L)) {
+                deptHierarchySet.add(dh.getChildId());
+            }
+
 
             DeptVo parentDept = deptMap.get(dh.getParentId());
             DeptVo childDept = deptMap.get(dh.getChildId());
