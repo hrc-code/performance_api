@@ -1,6 +1,17 @@
+
+
+.run/
+
+redis/
+
+sql/
+
+mysql/
+
+deploy/
+
 target/
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
