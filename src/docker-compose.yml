@@ -1,0 +1,93 @@
+version: '3.8'
+services:
+  performance_api-nacos:
+    container_name: performance_api-nacos
+    image: nacos/nacos-server
+    build:
+      context: ./nacos
+    environment:
+      - MODE=standalone
+    volumes:
+      - ./nacos/logs/:/home/nacos/logs
+      - ./nacos/conf/application.properties:/home/nacos/conf/application.properties
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    depends_on:
+      - mysql
+
+  performance_api-nacos-mysql:
+    container_name: performance_api-nacos-mysql
+    image: nacos/nacos-mysql:8.0.16
+    build:
+      context: ./mysql/nacos
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/logs:/logs
+      - /mnt/docker/mysql/nacos/performance_api:/var/lib/mysql
+    command: [
+      'mysqld',
+      '--innodb-buffer-pool-size=80M',
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--default-time-zone=+8:00',
+      '--lower-case-table-names=1'
+    ]
+    environment:
+      MYSQL_DATABASE: 'root'
+      MYSQL_ROOT_PASSWORD: root
+  performance_api-mysql:
+    container_name: performance_api-mysql
+    image: mysql:8.0.23
+    build:
+      context: ./mysql
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/logs:/logs
+      - /mnt/docker/mysql/performance_api:/var/lib/mysql
+    command: [
+      'mysqld',
+      '--innodb-buffer-pool-size=80M',
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--default-time-zone=+8:00',
+      '--lower-case-table-names=1'
+    ]
+    environment:
+      MYSQL_DATABASE: 'root'
+      MYSQL_ROOT_PASSWORD: root
+  performance_api-redis:
+    container_name: performance_api-redis
+    image: redis
+    build:
+      context: ./redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/conf/redis.conf:/home/redis/redis.conf
+      - ./redis/data:/data
+    command: redis-server /home/redis/redis.conf
+  performance_api-nginx:
+    container_name: performance_api-nginx
+    image: nginx
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/html/dist:/home/projects/
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/conf.d:/etc/nginx/conf.d
+# 决定容器依赖那些容器，需要启动这些依赖容器
+#    depends_on:
+#      -
+
+#设置容器间的链接,可以在它们之间进行网络通信
+#    links:
+#      -

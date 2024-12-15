@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  performance_api:
+    container_name: performance_api
+    image: huthrc/performance_api:1.0.0
+    build:
+      context: ./
+    #    volumes:
+    #      - ./performance/jar:/app/jar
+    #      - ./performance/config:/app/config
+    ports:
+      - "8848:9090"
+#    command:
+#      - "java -Dspring.config.location=/app/config/application.yml -jar /app/jar/my-project-1.0.0-SNAPSHOT.jar --server.port=9090"
