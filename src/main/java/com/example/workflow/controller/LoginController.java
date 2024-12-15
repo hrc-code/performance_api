@@ -3,6 +3,7 @@ package com.example.workflow.controller;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.workflow.common.R;
+import com.example.workflow.content.session.VerifyCodeSessionContent;
 import com.example.workflow.model.bean.CheckCode;
 import com.example.workflow.model.entity.Employee;
 import com.example.workflow.model.entity.LoginDto;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
@@ -52,9 +54,9 @@ public class LoginController {
 
             //功能是生成验证码字符并加上噪点，干扰线，返回值为验证码字符
             CheckCode checkCode = new CheckCode(randomText, 60);
-
-            session.setAttribute("verifyCode", checkCode);
-
+            response.setHeader("X-Request-ID", session.getId());
+            VerifyCodeSessionContent.setVerifyCode(session.getId(), checkCode);
+            // session.setAttribute("verifyCode", checkCode);
             // 必须设置响应内容类型为图片，否则前台不识别
             response.setContentType("image/png");
             // 输出图片流
@@ -68,9 +70,11 @@ public class LoginController {
      * 登陆接口
      */
     @PostMapping("/login")
-    public R<Object> login(@RequestBody LoginDto dto, HttpSession session) {
+    public R<Object> login(@RequestBody LoginDto dto, HttpSession session, HttpServletRequest request) {
+        String sessionKey = request.getHeader("X-Request-ID");
+        CheckCode checkCode = (CheckCode) VerifyCodeSessionContent.getVerifyCode(sessionKey);
 
-       CheckCode checkCode = (CheckCode) session.getAttribute("verifyCode");
+        // CheckCode checkCode = (CheckCode) session.getAttribute("verifyCode");
 
         if (Objects.isNull(checkCode) || checkCode.isExpired()) {
             return R.error("验证码已过期，请点击重新生成！");
