@@ -78,9 +78,10 @@ public class JwtHelper {
         if (map == null) {
             return false;
         }
+        // TODO (hrc,2024/12/15,16:50) jwt 中的exp的时间戳单位是秒
         Claim exp = map.get("exp");
         Long expLong = exp.asLong();
         long nowMilli = Instant.now().toEpochMilli();
-        return expLong < nowMilli;
+        return expLong * 1000 < nowMilli;
     }
 }
