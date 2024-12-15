@@ -13,21 +13,23 @@ spring:
     hiddenmethod:
       filter:
         enabled: true
+  web:
+    resources:
+      add-mappings: false
   datasource:
-    url: jdbc:mysql://localhost:3306/performance?useSSL=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8
+    url: jdbc:mysql://root:7fjj2cth@bja.sealos.run:46198/performance?useSSL=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8
     username: root
-    password: root
+    password: 7fjj2cth
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  #    hikari:
-  #      pool-name: HikariCPDatasource
-  #      minimum-idle: 5
-  #      idle-timeout: 180000
-  #      maximum-pool-size: 10
-  #      auto-commit: true
-  #      max-lifetime: 1800000
-  #      connection-timeout: 30000
-  #      connection-test-query: SELECT 1
+    hikari:
+      pool-name: HikariCPDatasource
+      minimum-idle: 5
+      idle-timeout: 180000
+      maximum-pool-size: 10
+      auto-commit: true
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd hh:mm:ss
